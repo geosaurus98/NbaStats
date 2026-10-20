@@ -17,7 +17,7 @@ function Row({ c, game }: { c: Competitor; game: Game }) {
   );
 }
 
-export function GameCard({ game }: { game: Game }) {
+export function GameCard({ game, favourite }: { game: Game; favourite?: boolean }) {
   const status =
     game.state === 'pre' ? formatTime(game.date) : game.state === 'in' ? game.statusDetail : game.statusDetail || 'Final';
   const leaders = [game.away, game.home]
@@ -25,9 +25,12 @@ export function GameCard({ game }: { game: Game }) {
     .filter((x) => x.top);
 
   return (
-    <Link to={`/game/${game.id}`} className={`game-card state-${game.state}`}>
+    <Link to={`/game/${game.id}`} className={`game-card state-${game.state}${favourite ? ' fav' : ''}`}>
       <div className="gc-head">
-        <span className={`gc-status${game.state === 'in' ? ' live' : ''}`}>{status}</span>
+        <span className={`gc-status${game.state === 'in' ? ' live' : ''}`}>
+          {favourite && '★ '}
+          {status}
+        </span>
         {game.broadcasts.length > 0 && <span className="muted">{game.broadcasts.slice(0, 2).join(', ')}</span>}
       </div>
       {game.note && <div className="gc-note">{game.note}</div>}

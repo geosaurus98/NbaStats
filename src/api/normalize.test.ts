@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  normalizeGameLog,
   normalizeLeaders,
   normalizeScoreboard,
   normalizeStandings,
@@ -214,5 +215,29 @@ describe('normalizeLeaders', () => {
     expect(t.columns.map((c) => c.label)).toEqual(['GP', 'PTS']);
     expect(t.rows[0]).toMatchObject({ athlete: 'Shai Gilgeous-Alexander', team: 'OKC' });
     expect(t.rows[0].values['offensive.avgPoints']).toBe('32.7');
+  });
+});
+
+describe('normalizeGameLog', () => {
+  it('joins stat rows to event metadata and splits season types', () => {
+    const log = normalizeGameLog({
+      labels: ['MIN', 'PTS'],
+      events: {
+        '2': { gameDate: '2026-01-02T00:00Z', atVs: '@', gameResult: 'L', score: '99-101', opponent: { id: '2', abbreviation: 'BOS' } },
+        '1': { gameDate: '2026-01-01T00:00Z', atVs: 'vs', gameResult: 'W', score: '110-100', opponent: { id: '2', abbreviation: 'BOS' } },
+        '9': { gameDate: '2026-04-20T00:00Z', atVs: 'vs', gameResult: 'W', score: '1-0', opponent: { id: '2', abbreviation: 'BOS' } },
+      },
+      seasonTypes: [
+        { displayName: '2025-26 Postseason', categories: [{ events: [{ eventId: '9', stats: ['40', '41'] }] }] },
+        {
+          displayName: '2025-26 Regular Season',
+          categories: [{ events: [{ eventId: '2', stats: ['30', '20'] }] }, { events: [{ eventId: '1', stats: ['35', '30'] }] }],
+        },
+        { displayName: '2025-26 Preseason', categories: [{ events: [{ eventId: '7', stats: ['10', '5'] }] }] },
+      ],
+    });
+    expect(log.games.map((g) => g.gameId)).toEqual(['1', '2', '9']);
+    expect(log.games[0]).toMatchObject({ result: 'W', atVs: 'vs', seasonType: 'regular', stats: { MIN: '35', PTS: '30' } });
+    expect(log.games[2].seasonType).toBe('playoffs');
   });
 });

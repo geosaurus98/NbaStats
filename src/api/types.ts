@@ -12,6 +12,7 @@ export interface TeamRef {
 export interface Leader {
   category: string;
   athlete: string;
+  athleteId?: string;
   value: string;
 }
 
@@ -90,4 +91,40 @@ export interface LeaderRow {
 export interface LeaderTable {
   columns: { key: string; label: string }[];
   rows: LeaderRow[];
+}
+
+export interface PlayerProfile {
+  id: string;
+  name: string;
+  headshot?: string;
+  position?: string;
+  jersey?: string;
+  height?: string;
+  weight?: string;
+  age?: number;
+  team?: TeamRef;
+}
+
+export type LogSeasonType = 'regular' | 'playoffs';
+
+export interface GameLogEntry {
+  gameId: string;
+  date: string;
+  opponent: TeamRef;
+  atVs: string;
+  result: string;
+  score: string;
+  seasonType: LogSeasonType;
+  /** Keyed by column label, e.g. PTS, REB, 3PT ("3-7"). */
+  stats: Record<string, string>;
+}
+
+export interface GameLog {
+  labels: string[];
+  games: GameLogEntry[];
+}
+
+export interface TeamStatTable {
+  columns: { key: string; label: string }[];
+  rows: { teamId: string; values: Record<string, number | undefined> }[];
 }

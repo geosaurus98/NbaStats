@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { fetchStandings } from '../api/espn';
+import { RaceChart } from '../components/RaceChart';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
@@ -63,6 +64,7 @@ export function Standings() {
         ))}
       </div>
       <p className="muted small">Line after 6th: guaranteed playoff spots. Line after 10th: play-in cut-off.</p>
+      {data && data.length > 0 && <RaceChart season={season.year} conferences={data} />}
     </section>
   );
 }
