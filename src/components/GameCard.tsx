@@ -21,7 +21,7 @@ export function GameCard({ game, favourite }: { game: Game; favourite?: boolean 
   const status =
     game.state === 'pre' ? formatTime(game.date) : game.state === 'in' ? game.statusDetail : game.statusDetail || 'Final';
   const leaders = [game.away, game.home]
-    .map((c) => ({ c, top: c.leaders.find((l) => l.category === 'PTS' || l.category === 'points') }))
+    .map((c) => ({ c, top: c.leaders.find((l) => /^(pts|points)$/i.test(l.category)) }))
     .filter((x) => x.top);
 
   return (

@@ -7,7 +7,8 @@ export function Loading({ label = 'Loading…' }: { label?: string }) {
 export function ErrorBox({ error }: { error: Error }) {
   return (
     <div className="status error">
-      Couldn't load data: {error.message}. ESPN's public API may be unavailable — try again shortly.
+      <div>Couldn't load data: {error.message}.</div>
+      <button className="chip retry" onClick={() => window.location.reload()}>Try again</button>
     </div>
   );
 }

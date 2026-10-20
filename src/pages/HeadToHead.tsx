@@ -13,7 +13,7 @@ export function HeadToHead() {
   const [params, setParams] = useSearchParams();
   const a = params.get('a') ?? '';
   const b = params.get('b') ?? '';
-  const teams = useAsync(() => fetchTeams(), []);
+  const teams = useAsync(() => fetchTeams(season.year), [season.year]);
 
   const set = (key: 'a' | 'b', v: string) => {
     const next = new URLSearchParams(params);

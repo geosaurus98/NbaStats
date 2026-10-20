@@ -4,9 +4,11 @@ import { FavouriteStar } from '../components/FavouriteStar';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
+import { useSeason } from '../SeasonContext';
 
 export function Teams() {
-  const { data, error, loading } = useAsync(() => fetchTeams(), []);
+  const { season } = useSeason();
+  const { data, error, loading } = useAsync(() => fetchTeams(season.year), [season.year]);
   return (
     <section>
       <h1>Teams</h1>
