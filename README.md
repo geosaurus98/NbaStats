@@ -8,15 +8,17 @@ It opens on the **2025-26 season** because that season is complete. You can swit
 
 | Page | What it shows |
 | --- | --- |
-| **Scores** | Any day's fixtures, live games and results. Step through dates or jump to opening night / the last regular-season day. Live games refresh every 30s. |
-| **Game** | Scoreline, scores by quarter, team stat comparison, and full player box scores for both teams. |
-| **Standings** | East and West tables: W-L, PCT, GB, home/road, last 10, streak, PPG and points allowed. Lines mark the playoff and play-in cut-offs. |
-| **Leaders** | The top 50 qualified players, sortable by points, rebounds, assists, steals, blocks or 3P%. Regular season or playoffs. |
-| **Teams** | Every team's season: record, PPG, net rating, last 10, and full lists of fixtures and results. |
+| **Scores** | Any day's fixtures, live games and results, with your favourite team's game pinned first and a countdown to its next game. Live games refresh every 30s. |
+| **Game** | Scoreline, scores by quarter, team stat comparison and full box scores. Player names link to their pages. |
+| **Player** | Season averages, a per-game trend chart (points, rebounds, assists, threes, minutes) with a 10-game average, and the full game log. |
+| **Standings** | Conference tables with playoff/play-in lines, plus a "games above .500" race chart (highlight up to 3 teams). |
+| **Playoffs** | The full bracket with seeds and series scores; expand a series to see its games. |
+| **Leaders** | Top 50 per-game leaders, and a *Season highs* tab with the best single games and most triple-doubles. |
+| **Rankings** | Every team ranked by any column: record, PPG, points allowed, margin, home/road, close games, best winning run, strength of schedule (played and remaining), shooting %, rebounds, assists, turnovers. |
+| **Teams** | Record, margin-by-game and games-above-.500 charts, schedule as a list or month calendar, a ☆ to make it your favourite, and an *Add to calendar* (.ics) download. |
+| **H2H** | Pick two teams to see their meetings, head-to-head wins and season numbers side by side. |
 
-## Data
-
-All data comes from ESPN's public NBA API. It needs no API key and is fetched straight from the browser, so there is no backend. These endpoints are unofficial and may change. All parsing is in `src/api/normalize.ts`, so if a payload's shape changes, that is the only file to fix.
+Your favourite team and season choice are saved in your browser.
 
 ## Quick start (no install)
 

@@ -1,32 +1,45 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { fetchTeamSchedule, type SeasonType } from '../api/espn';
 import type { Game } from '../api/types';
+import { ColumnChart, LineChart } from '../components/Charts';
+import { FavouriteStar } from '../components/FavouriteStar';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
+import { Tile } from '../components/Tile';
 import { useAsync } from '../hooks/useAsync';
-import { formatShortDate, formatTime } from '../lib/dates';
+import { formatShortDate, formatTime, parseISODate, toISODate } from '../lib/dates';
+import { downloadFile, gamesToICS } from '../lib/ics';
+import { isFinal, raceSeries, sides, won } from '../lib/league';
 import { useSeason } from '../SeasonContext';
-import { SeasonTypeToggle } from './Leaders';
+import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 
 export function Team() {
   const { id = '' } = useParams();
   const { season } = useSeason();
+  const navigate = useNavigate();
   const [type, setType] = useState<SeasonType>(2);
+  const [view, setView] = useState<'list' | 'calendar'>('list');
   const { data, error, loading } = useAsync(
     () => fetchTeamSchedule(id, season.year, type),
     [id, season.year, type],
   );
 
   const games = data?.games ?? [];
-  const results = games.filter((g) => g.state === 'post');
-  const fixtures = games.filter((g) => g.state !== 'post');
-  const side = (g: Game) => (g.home.team.id === id ? g.home : g.away);
-  const opp = (g: Game) => (g.home.team.id === id ? g.away : g.home);
-  const wins = results.filter((g) => side(g).winner).length;
-  const pf = results.reduce((s, g) => s + (side(g).score ?? 0), 0);
-  const pa = results.reduce((s, g) => s + (opp(g).score ?? 0), 0);
-  const team = data?.team ?? (games[0] && side(games[0]).team);
+  const results = games.filter(isFinal);
+  const fixtures = games.filter((g) => !isFinal(g));
+  const wins = results.filter((g) => won(g, id)).length;
+  const pf = results.reduce((s, g) => s + (sides(g, id)[0].score ?? 0), 0);
+  const pa = results.reduce((s, g) => s + (sides(g, id)[1].score ?? 0), 0);
+  const team = data?.team ?? (games[0] && sides(games[0], id)[0].team);
+  const recent = results.slice(-10);
+  const recentWins = recent.filter((g) => won(g, id)).length;
+
+  const exportICS = () => {
+    if (!team) return;
+    const label = type === 3 ? 'playoffs' : 'season';
+    downloadFile(`${team.abbr}-${season.label}-${label}.ics`, gamesToICS(games, `${team.name} ${season.label}`), 'text/calendar');
+  };
 
   return (
     <section>
@@ -34,8 +47,17 @@ export function Team() {
         <h1 className="team-title">
           {team && <TeamLogo team={team} size={40} />}
           {team?.name ?? 'Team'} <span className="muted">{season.label}</span>
+          {team && <FavouriteStar teamId={team.id} teamName={team.name} />}
         </h1>
         <SeasonTypeToggle value={type} onChange={setType} />
+      </div>
+      <div className="actions">
+        {games.length > 0 && (
+          <button className="chip" onClick={exportICS}>
+            📅 Add {fixtures.length > 0 ? 'fixtures' : 'schedule'} to calendar (.ics)
+          </button>
+        )}
+        <Link className="chip" to={`/h2h?a=${id}`}>Compare head-to-head</Link>
       </div>
       {loading && <Loading />}
       {error && <ErrorBox error={error} />}
@@ -44,23 +66,37 @@ export function Team() {
       {results.length > 0 && (
         <div className="stat-tiles">
           <Tile label="Record" value={`${wins}-${results.length - wins}`} />
-          <Tile label="PPG" value={(pf / results.length).toFixed(1)} />
-          <Tile label="Opp PPG" value={(pa / results.length).toFixed(1)} />
-          <Tile label="Net / game" value={signed((pf - pa) / results.length)} />
-          <Tile label="Last 10" value={lastN(results, side, 10)} />
+          <Tile label="Points per game" value={(pf / results.length).toFixed(1)} />
+          <Tile label="Points allowed" value={(pa / results.length).toFixed(1)} />
+          <Tile label="Average margin" value={signed((pf - pa) / results.length)} />
+          <Tile label="Last 10" value={`${recentWins}-${recent.length - recentWins}`} />
         </div>
       )}
 
-      {fixtures.length > 0 && (
+      {results.length > 1 && <TeamCharts id={id} results={results} onSelect={(g) => navigate(`/game/${g.id}`)} />}
+
+      {games.length > 0 && (
+        <div className="page-head">
+          <h2>Schedule</h2>
+          <div className="segmented">
+            <button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}>List</button>
+            <button className={view === 'calendar' ? 'active' : ''} onClick={() => setView('calendar')}>Calendar</button>
+          </div>
+        </div>
+      )}
+
+      {view === 'calendar' && games.length > 0 && <TeamCalendar id={id} games={games} />}
+
+      {view === 'list' && fixtures.length > 0 && (
         <>
-          <h2>Fixtures ({fixtures.length})</h2>
-          <ScheduleTable games={fixtures} opp={opp} side={side} />
+          <h3>Fixtures ({fixtures.length})</h3>
+          <ScheduleTable games={fixtures} id={id} />
         </>
       )}
-      {results.length > 0 && (
+      {view === 'list' && results.length > 0 && (
         <>
-          <h2>Results ({results.length})</h2>
-          <ScheduleTable games={[...results].reverse()} opp={opp} side={side} />
+          <h3>Results ({results.length})</h3>
+          <ScheduleTable games={[...results].reverse()} id={id} />
         </>
       )}
     </section>
@@ -71,37 +107,50 @@ function signed(n: number) {
   return `${n > 0 ? '+' : ''}${n.toFixed(1)}`;
 }
 
-function lastN(results: Game[], side: (g: Game) => Game['home'], n: number) {
-  const recent = results.slice(-n);
-  const w = recent.filter((g) => side(g).winner).length;
-  return `${w}-${recent.length - w}`;
-}
-
-function Tile({ label, value }: { label: string; value: string }) {
+function TeamCharts({ id, results, onSelect }: { id: string; results: Game[]; onSelect: (g: Game) => void }) {
+  const race = raceSeries(results, id);
+  const label = (g: Game) => {
+    const [us, them] = sides(g, id);
+    return `${formatShortDate(g.date)} ${us.homeAway === 'home' ? 'vs' : '@'} ${them.team.abbr}`;
+  };
   return (
-    <div className="tile">
-      <div className="tile-value">{value}</div>
-      <div className="tile-label">{label}</div>
+    <div className="two-col charts">
+      <div className="card">
+        <h3>Winning margin by game</h3>
+        <ColumnChart
+          ariaLabel="Points margin in each game; positive is a win"
+          columns={results.map((g) => {
+            const [us, them] = sides(g, id);
+            return { value: (us.score ?? 0) - (them.score ?? 0), label: label(g), detail: `${won(g, id) ? 'W' : 'L'} ${us.score}-${them.score}` };
+          })}
+          yFormat={(v) => (v > 0 ? `+${v}` : String(v))}
+          onSelect={(i) => onSelect(results[i])}
+        />
+        <p className="muted small">Blue = win, red = loss. Click a bar to open that game.</p>
+      </div>
+      <div className="card">
+        <h3>Games above .500</h3>
+        <LineChart
+          ariaLabel="Wins minus losses after each game"
+          series={[{ id, label: 'Games above .500', values: race, color: 'var(--series-1)' }]}
+          xLabel={(i) => (results[i] ? `Game ${i + 1} · ${label(results[i])}` : '')}
+          xTick={(i) => `G${i + 1}`}
+          yFormat={(v) => (v > 0 ? `+${v}` : String(v))}
+          zeroLine
+        />
+        <p className="muted small">Wins minus losses after each game.</p>
+      </div>
     </div>
   );
 }
 
-function ScheduleTable({
-  games,
-  opp,
-  side,
-}: {
-  games: Game[];
-  opp: (g: Game) => Game['home'];
-  side: (g: Game) => Game['home'];
-}) {
+function ScheduleTable({ games, id }: { games: Game[]; id: string }) {
   return (
     <div className="table-wrap">
       <table>
         <tbody>
           {games.map((g) => {
-            const o = opp(g);
-            const us = side(g);
+            const [us, o] = sides(g, id);
             return (
               <tr key={g.id}>
                 <td className="left nowrap">{formatShortDate(g.date)}</td>
@@ -113,9 +162,9 @@ function ScheduleTable({
                   </Link>
                 </td>
                 <td className="left">
-                  {g.state === 'post' ? (
+                  {isFinal(g) ? (
                     <Link to={`/game/${g.id}`}>
-                      <b className={us.winner ? 'win' : 'loss'}>{us.winner ? 'W' : 'L'}</b> {us.score}-{o.score}
+                      <b className={won(g, id) ? 'win' : 'loss'}>{won(g, id) ? 'W' : 'L'}</b> {us.score}-{o.score}
                     </Link>
                   ) : g.state === 'in' ? (
                     <Link to={`/game/${g.id}`} className="live">{g.statusDetail} {us.score}-{o.score}</Link>
@@ -129,6 +178,56 @@ function ScheduleTable({
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function TeamCalendar({ id, games }: { id: string; games: Game[] }) {
+  const byDay = new Map<string, Game>();
+  for (const g of games) byDay.set(toISODate(new Date(g.date)), g);
+  const days = [...byDay.keys()].sort();
+  const first = parseISODate(days[0]);
+  const last = parseISODate(days[days.length - 1]);
+  const months: Date[] = [];
+  for (let d = new Date(first.getFullYear(), first.getMonth(), 1); d <= last; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) {
+    months.push(d);
+  }
+
+  return (
+    <div className="calendar-months">
+      {months.map((m) => {
+        const daysInMonth = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+        const cells: (string | null)[] = Array(m.getDay()).fill(null);
+        for (let d = 1; d <= daysInMonth; d++) cells.push(toISODate(new Date(m.getFullYear(), m.getMonth(), d)));
+        return (
+          <div key={m.toISOString()} className="card month">
+            <h3>{m.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</h3>
+            <div className="cal-grid">
+              {WEEKDAYS.map((w) => (
+                <div key={w} className="cal-head">{w}</div>
+              ))}
+              {cells.map((iso, i) => {
+                if (!iso) return <div key={`e${i}`} />;
+                const g = byDay.get(iso);
+                const day = Number(iso.slice(-2));
+                if (!g) return <div key={iso} className="cal-cell"><span className="cal-day">{day}</span></div>;
+                const [us, o] = sides(g, id);
+                const final = isFinal(g);
+                const w = final && won(g, id);
+                return (
+                  <Link key={iso} to={`/game/${g.id}`} className={`cal-cell game${final ? (w ? ' w' : ' l') : ''}`}>
+                    <span className="cal-day">{day}</span>
+                    <span className="cal-opp">{us.homeAway === 'home' ? 'vs' : '@'} {o.team.abbr}</span>
+                    <span className="cal-res">{final ? `${w ? 'W' : 'L'} ${us.score}-${o.score}` : formatTime(g.date)}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

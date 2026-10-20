@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchLeaders, type SeasonType } from '../api/espn';
+import { SeasonHighs } from '../components/SeasonHighs';
+import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { useAsync } from '../hooks/useAsync';
 import { useSeason } from '../SeasonContext';
@@ -15,9 +18,8 @@ const SORTS = [
 
 export function Leaders() {
   const { season } = useSeason();
-  const [sort, setSort] = useState(SORTS[0].key);
   const [type, setType] = useState<SeasonType>(2);
-  const { data, error, loading } = useAsync(() => fetchLeaders(season.year, type, sort), [season.year, type, sort]);
+  const [tab, setTab] = useState<'averages' | 'highs'>('averages');
 
   return (
     <section>
@@ -25,6 +27,21 @@ export function Leaders() {
         <h1>{season.label} player leaders</h1>
         <SeasonTypeToggle value={type} onChange={setType} />
       </div>
+      <div className="tabs">
+        <button className={tab === 'averages' ? 'active' : ''} onClick={() => setTab('averages')}>Season averages</button>
+        <button className={tab === 'highs' ? 'active' : ''} onClick={() => setTab('highs')}>Season highs</button>
+      </div>
+      {tab === 'averages' ? <Averages season={season.year} type={type} /> : <SeasonHighs season={season.year} seasonType={type} />}
+    </section>
+  );
+}
+
+function Averages({ season, type }: { season: number; type: SeasonType }) {
+  const [sort, setSort] = useState(SORTS[0].key);
+  const { data, error, loading } = useAsync(() => fetchLeaders(season, type, sort), [season, type, sort]);
+
+  return (
+    <>
       <div className="chips">
         {SORTS.map((s) => (
           <button key={s.key} className={s.key === sort ? 'chip active' : 'chip'} onClick={() => setSort(s.key)}>
@@ -52,7 +69,7 @@ export function Leaders() {
               {data.rows.map((r, i) => (
                 <tr key={r.athleteId || i}>
                   <td>{i + 1}</td>
-                  <td className="left">{r.athlete}</td>
+                  <td className="left">{r.athleteId ? <Link to={`/player/${r.athleteId}`}>{r.athlete}</Link> : r.athlete}</td>
                   <td className="left">{r.team}</td>
                   {data.columns.map((c) => (
                     <td key={c.key} className={c.key === sort ? 'sorted' : undefined}>{r.values[c.key]}</td>
@@ -64,15 +81,6 @@ export function Leaders() {
         </div>
       )}
       <p className="muted small">Per-game averages, qualified players only.</p>
-    </section>
-  );
-}
-
-export function SeasonTypeToggle({ value, onChange }: { value: SeasonType; onChange: (v: SeasonType) => void }) {
-  return (
-    <div className="segmented">
-      <button className={value === 2 ? 'active' : ''} onClick={() => onChange(2)}>Regular season</button>
-      <button className={value === 3 ? 'active' : ''} onClick={() => onChange(3)}>Playoffs</button>
-    </div>
+    </>
   );
 }

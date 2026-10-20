@@ -142,7 +142,8 @@ function BoxScore({ box }: { box: TeamBox }) {
             {played.map((p, i) => (
               <tr key={p.id || p.name} className={p.starter && !played[i + 1]?.starter ? 'cut' : undefined}>
                 <td className="left nowrap">
-                  {p.name} {p.position && <span className="muted small">{p.position}</span>}
+                  {p.id ? <Link to={`/player/${p.id}`}>{p.name}</Link> : p.name}{' '}
+                  {p.position && <span className="muted small">{p.position}</span>}
                 </td>
                 {p.stats.map((s, j) => (
                   <td key={j} className={box.labels[j] === 'PTS' ? 'sorted' : undefined}>{s}</td>

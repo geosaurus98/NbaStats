@@ -5,14 +5,18 @@ import type {
   Competitor,
   Conference,
   Game,
+  GameLog,
+  GameLogEntry,
   GameState,
   GameSummary,
   Leader,
   LeaderTable,
   PlayerLine,
+  PlayerProfile,
   StandingRow,
   TeamBox,
   TeamRef,
+  TeamStatTable,
 } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,12 +42,13 @@ export function normalizeTeam(t: Raw = {}): TeamRef {
 
 function gameLeaders(list: Raw[] = []): Leader[] {
   return list
-    .map((cat: Raw) => {
+    .map((cat: Raw): Leader | null => {
       const top = cat.leaders?.[0];
       if (!top) return null;
       return {
         category: cat.abbreviation ?? cat.shortDisplayName ?? cat.name ?? '',
         athlete: top.athlete?.shortName ?? top.athlete?.displayName ?? '',
+        athleteId: top.athlete?.id ? String(top.athlete.id) : undefined,
         value: top.displayValue ?? '',
       };
     })
@@ -209,6 +214,75 @@ export function normalizeLeaders(raw: Raw, wanted: { category: string; name: str
       team: a.athlete?.teamShortName ?? a.athlete?.team?.abbreviation ?? '',
       values,
     };
+  });
+  return { columns: columns.map((c) => ({ key: `${c.category}.${c.name}`, label: c.label })), rows };
+}
+
+export function normalizeAthlete(raw: Raw): PlayerProfile {
+  const a = raw?.athlete ?? raw ?? {};
+  return {
+    id: String(a.id ?? ''),
+    name: a.displayName ?? a.fullName ?? '',
+    headshot: a.headshot?.href,
+    position: a.position?.displayName ?? a.position?.abbreviation,
+    jersey: a.displayJersey ?? (a.jersey ? `#${a.jersey}` : undefined),
+    height: a.displayHeight,
+    weight: a.displayWeight,
+    age: num(a.age),
+    team: a.team ? normalizeTeam(a.team) : undefined,
+  };
+}
+
+/**
+ * Game log: `events` is a map of game metadata keyed by id, while the stat lines
+ * live under seasonTypes[].categories[].events[] in `labels` column order.
+ */
+export function normalizeGameLog(raw: Raw): GameLog {
+  const labels: string[] = raw?.labels ?? [];
+  const meta: Record<string, Raw> = raw?.events ?? {};
+  const games: GameLogEntry[] = [];
+  const seen = new Set<string>();
+  for (const st of raw?.seasonTypes ?? []) {
+    const name: string = st.displayName ?? '';
+    const seasonType = /regular/i.test(name) ? 'regular' : /post|playoff/i.test(name) ? 'playoffs' : null;
+    if (!seasonType) continue;
+    for (const cat of st.categories ?? []) {
+      for (const ev of cat.events ?? []) {
+        const id = String(ev.eventId ?? '');
+        if (!id || seen.has(id) || !ev.stats?.length) continue;
+        seen.add(id);
+        const m = meta[id] ?? {};
+        const stats: Record<string, string> = {};
+        labels.forEach((l, i) => (stats[l] = String(ev.stats[i] ?? '')));
+        games.push({
+          gameId: id,
+          date: m.gameDate ?? '',
+          opponent: normalizeTeam(m.opponent),
+          atVs: m.atVs ?? '',
+          result: m.gameResult ?? '',
+          score: m.score ?? '',
+          seasonType,
+          stats,
+        });
+      }
+    }
+  }
+  games.sort((a, b) => a.date.localeCompare(b.date));
+  return { labels, games };
+}
+
+/** ESPN "byteam" statistics endpoint → per-team numeric columns. */
+export function normalizeTeamStats(raw: Raw, wanted: { category: string; name: string; label: string }[]): TeamStatTable {
+  const catDefs: Raw[] = raw?.categories ?? [];
+  const columns = wanted.filter((w) => (catDefs.find((c) => c.name === w.category)?.names ?? []).includes(w.name));
+  const rows = (raw?.teams ?? []).map((t: Raw) => {
+    const values: Record<string, number | undefined> = {};
+    for (const col of columns) {
+      const idx = catDefs.find((c) => c.name === col.category).names.indexOf(col.name);
+      const cat = (t.categories ?? []).find((c: Raw) => c.name === col.category);
+      values[`${col.category}.${col.name}`] = num(cat?.values?.[idx] ?? cat?.totals?.[idx]);
+    }
+    return { teamId: String(t.team?.id ?? ''), values };
   });
   return { columns: columns.map((c) => ({ key: `${c.category}.${c.name}`, label: c.label })), rows };
 }

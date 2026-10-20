@@ -1,22 +1,27 @@
 // Thin client for ESPN's public (unauthenticated) NBA endpoints.
 import { espnDate } from '../lib/dates';
+import type { Game, TeamRef } from './types';
 import {
+  normalizeAthlete,
+  normalizeGameLog,
   normalizeLeaders,
   normalizeScoreboard,
   normalizeStandings,
   normalizeSummary,
   normalizeTeams,
   normalizeTeamSchedule,
+  normalizeTeamStats,
 } from './normalize';
 
 const SITE = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const STANDINGS = 'https://site.api.espn.com/apis/v2/sports/basketball/nba/standings';
-const STATS = 'https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/statistics/byathlete';
+const COMMON = 'https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba';
+const STATS = `${COMMON}/statistics/byathlete`;
 
 export type SeasonType = 2 | 3; // 2 = regular season, 3 = playoffs
 
 const cache = new Map<string, { at: number; data: unknown }>();
-const TTL_MS = 60_000;
+const TTL_MS = 5 * 60_000;
 
 async function getJSON(url: string, fresh = false): Promise<unknown> {
   const hit = cache.get(url);
@@ -66,4 +71,54 @@ export const LEADER_COLUMNS = [
 export async function fetchLeaders(season: number, seasonType: SeasonType, sort: string) {
   const url = `${STATS}?region=us&lang=en&contentorigin=espn&isqualified=true&limit=50&season=${season}&seasontype=${seasonType}&sort=${encodeURIComponent(`${sort}:desc`)}`;
   return normalizeLeaders(await getJSON(url), LEADER_COLUMNS);
+}
+
+export async function fetchAthlete(id: string) {
+  return normalizeAthlete(await getJSON(`${COMMON}/athletes/${id}`));
+}
+
+export async function fetchGameLog(id: string, season: number) {
+  return normalizeGameLog(await getJSON(`${COMMON}/athletes/${id}/gamelog?season=${season}`));
+}
+
+export const TEAM_STAT_COLUMNS = [
+  { category: 'offensive', name: 'fieldGoalPct', label: 'FG%' },
+  { category: 'offensive', name: 'threePointFieldGoalPct', label: '3P%' },
+  { category: 'offensive', name: 'avgThreePointFieldGoalsMade', label: '3PM' },
+  { category: 'offensive', name: 'freeThrowPct', label: 'FT%' },
+  { category: 'general', name: 'avgRebounds', label: 'REB' },
+  { category: 'offensive', name: 'avgAssists', label: 'AST' },
+  { category: 'offensive', name: 'avgTurnovers', label: 'TOV' },
+  { category: 'defensive', name: 'avgSteals', label: 'STL' },
+  { category: 'defensive', name: 'avgBlocks', label: 'BLK' },
+];
+
+export async function fetchTeamStats(season: number, seasonType: SeasonType) {
+  const url = `${COMMON}/statistics/byteam?region=us&lang=en&contentorigin=espn&season=${season}&seasontype=${seasonType}`;
+  return normalizeTeamStats(await getJSON(url), TEAM_STAT_COLUMNS);
+}
+
+/** Runs `fn` over `items` with at most `limit` requests in flight. */
+export async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
+
+/** Every team's schedule merged into one de-duplicated, date-ordered list. */
+export async function fetchLeagueGames(season: number, seasonType: SeasonType): Promise<{ teams: TeamRef[]; games: Game[] }> {
+  const teams = await fetchTeams();
+  const schedules = await mapLimit(teams, 6, (t) =>
+    fetchTeamSchedule(t.id, season, seasonType).catch(() => ({ games: [] as Game[] })),
+  );
+  const byId = new Map<string, Game>();
+  for (const s of schedules) for (const g of s.games) if (!byId.has(g.id)) byId.set(g.id, g);
+  return { teams, games: [...byId.values()].sort((a, b) => a.date.localeCompare(b.date)) };
 }
