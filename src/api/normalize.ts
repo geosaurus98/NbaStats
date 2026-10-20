@@ -143,11 +143,6 @@ export function normalizeStandings(raw: Raw): Conference[] {
     .filter((c) => c.rows.length > 0);
 }
 
-export function normalizeTeams(raw: Raw): TeamRef[] {
-  const teams: Raw[] = raw?.sports?.[0]?.leagues?.[0]?.teams ?? [];
-  return teams.map((t) => normalizeTeam(t.team)).sort((a, b) => a.name.localeCompare(b.name));
-}
-
 export function normalizeTeamSchedule(raw: Raw): { team?: TeamRef; games: Game[] } {
   return {
     team: raw?.team ? normalizeTeam(raw.team) : undefined,

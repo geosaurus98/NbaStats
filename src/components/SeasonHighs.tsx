@@ -1,26 +1,13 @@
 import { Link } from 'react-router-dom';
-import { fetchGameLog, fetchLeaders, mapLimit, type SeasonType } from '../api/espn';
+import { fetchSeasonHighs, type SeasonType } from '../api/espn';
 import { useAsync } from '../hooks/useAsync';
 import { formatShortDate } from '../lib/dates';
-import { HIGH_CATEGORIES, seasonHighs } from '../lib/playerStats';
+import { HIGH_CATEGORIES } from '../lib/playerStats';
 import { Empty, ErrorBox, Loading } from './Status';
 
-// Highs are drawn from these leaderboards' players (top 50 each), not every
-// player in the league: ESPN has no single "best games" endpoint.
-const POOLS = ['offensive.avgPoints', 'general.avgRebounds', 'offensive.avgAssists'];
-
 export function SeasonHighs({ season, seasonType }: { season: number; seasonType: SeasonType }) {
-  const { data, error, loading } = useAsync(async () => {
-    const boards = await Promise.all(POOLS.map((sort) => fetchLeaders(season, seasonType, sort)));
-    const players = new Map<string, { athleteId: string; athlete: string; team: string }>();
-    for (const b of boards) for (const r of b.rows) if (r.athleteId) players.set(r.athleteId, r);
-    const logs = await mapLimit([...players.values()], 6, async (p) => {
-      const log = await fetchGameLog(p.athleteId, season).catch(() => undefined);
-      const wanted = seasonType === 3 ? 'playoffs' : 'regular';
-      return { ...p, games: log?.games.filter((g) => g.seasonType === wanted) ?? [] };
-    });
-    return { highs: seasonHighs(logs), poolSize: players.size };
-  }, [season, seasonType]);
+  const { data: result, error, loading } = useAsync(() => fetchSeasonHighs(season, seasonType), [season, seasonType]);
+  const data = result && { highs: result, poolSize: result.poolSize };
 
   if (loading) return <Loading label="Loading game logs for the league's top players… (this takes a few seconds)" />;
   if (error) return <ErrorBox error={error} />;
@@ -74,8 +61,8 @@ export function SeasonHighs({ season, seasonType }: { season: number; seasonType
         </div>
       </div>
       <p className="muted small">
-        Best single games by the top 50 qualified players in points, rebounds and assists ({data.poolSize} players), so a
-        one-off big night from a bench player may be missing.
+        Best single games by the top {result!.poolDepth} qualified players in points, rebounds and assists ({data.poolSize}{' '}
+        players), so a one-off big night from a bench player may be missing.
       </p>
     </>
   );
