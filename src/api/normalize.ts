@@ -1,0 +1,214 @@
+// Converts raw ESPN API payloads into the app's own types. ESPN's shapes vary
+// between endpoints (e.g. scores are strings on the scoreboard but objects on
+// team schedules), so every accessor here is defensive.
+import type {
+  Competitor,
+  Conference,
+  Game,
+  GameState,
+  GameSummary,
+  Leader,
+  LeaderTable,
+  PlayerLine,
+  StandingRow,
+  TeamBox,
+  TeamRef,
+} from './types';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Raw = any;
+
+function num(v: Raw): number | undefined {
+  if (v == null) return undefined;
+  if (typeof v === 'object') return num(v.value ?? v.displayValue);
+  const n = typeof v === 'number' ? v : parseFloat(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+export function normalizeTeam(t: Raw = {}): TeamRef {
+  return {
+    id: String(t.id ?? ''),
+    name: t.displayName ?? t.name ?? 'TBD',
+    shortName: t.shortDisplayName ?? t.name ?? t.abbreviation ?? 'TBD',
+    abbr: t.abbreviation ?? '',
+    logo: t.logo ?? t.logos?.[0]?.href,
+    color: t.color ? `#${t.color}` : undefined,
+  };
+}
+
+function gameLeaders(list: Raw[] = []): Leader[] {
+  return list
+    .map((cat: Raw) => {
+      const top = cat.leaders?.[0];
+      if (!top) return null;
+      return {
+        category: cat.abbreviation ?? cat.shortDisplayName ?? cat.name ?? '',
+        athlete: top.athlete?.shortName ?? top.athlete?.displayName ?? '',
+        value: top.displayValue ?? '',
+      };
+    })
+    .filter((l): l is Leader => l !== null);
+}
+
+function normalizeCompetitor(c: Raw): Competitor {
+  const record =
+    c.records?.find((r: Raw) => r.type === 'total' || r.name === 'overall')?.summary ??
+    c.records?.[0]?.summary ??
+    c.record?.[0]?.displayValue;
+  return {
+    team: normalizeTeam(c.team),
+    homeAway: c.homeAway === 'away' ? 'away' : 'home',
+    score: num(c.score),
+    winner: typeof c.winner === 'boolean' ? c.winner : undefined,
+    record,
+    linescores: (c.linescores ?? []).map((l: Raw) => num(l) ?? 0),
+    leaders: gameLeaders(c.leaders),
+  };
+}
+
+function normalizeState(status: Raw = {}): GameState {
+  const s = status.type?.state;
+  return s === 'in' || s === 'post' ? s : 'pre';
+}
+
+/** Works for scoreboard events, team-schedule events and summary headers. */
+export function normalizeGame(e: Raw): Game {
+  const comp = e.competitions?.[0] ?? {};
+  const competitors: Competitor[] = (comp.competitors ?? []).map(normalizeCompetitor);
+  const home = competitors.find((c) => c.homeAway === 'home') ?? competitors[0];
+  const away = competitors.find((c) => c.homeAway === 'away') ?? competitors[1];
+  const status = comp.status ?? e.status ?? {};
+  const broadcasts: string[] = [];
+  for (const b of comp.broadcasts ?? []) broadcasts.push(...(b.names ?? []));
+  for (const b of comp.geoBroadcasts ?? []) {
+    const name = b.media?.shortName;
+    if (name && !broadcasts.includes(name)) broadcasts.push(name);
+  }
+  return {
+    id: String(e.id ?? comp.id ?? ''),
+    date: e.date ?? comp.date ?? '',
+    state: normalizeState(status),
+    statusDetail: status.type?.shortDetail ?? status.type?.detail ?? '',
+    home,
+    away,
+    venue: comp.venue?.fullName,
+    broadcasts,
+    note: comp.notes?.[0]?.headline,
+  };
+}
+
+export function normalizeScoreboard(raw: Raw): Game[] {
+  return (raw?.events ?? []).map(normalizeGame).filter((g: Game) => g.home && g.away);
+}
+
+function statLookup(stats: Raw[] = []) {
+  return (key: string): Raw | undefined => {
+    const k = key.toLowerCase();
+    return stats.find(
+      (s) => s.name?.toLowerCase() === k || s.type?.toLowerCase() === k || s.abbreviation?.toLowerCase() === k,
+    );
+  };
+}
+
+export function normalizeStandings(raw: Raw): Conference[] {
+  const groups: Raw[] = raw?.children?.length ? raw.children : [raw];
+  return groups
+    .map((g: Raw) => {
+      const rows: StandingRow[] = (g.standings?.entries ?? []).map((entry: Raw) => {
+        const s = statLookup(entry.stats);
+        const display = (k: string) => s(k)?.displayValue ?? s(k)?.summary ?? '-';
+        return {
+          team: normalizeTeam(entry.team),
+          wins: num(s('wins')) ?? 0,
+          losses: num(s('losses')) ?? 0,
+          pct: num(s('winPercent')) ?? 0,
+          gb: display('gamesBehind'),
+          streak: display('streak'),
+          seed: num(s('playoffSeed')),
+          home: display('home'),
+          road: display('road'),
+          last10: display('lasttengames'),
+          ppg: num(s('avgPointsFor')),
+          oppPpg: num(s('avgPointsAgainst')),
+        };
+      });
+      rows.sort((a, b) => (a.seed ?? 99) - (b.seed ?? 99) || b.pct - a.pct);
+      return { name: g.name ?? 'League', rows };
+    })
+    .filter((c) => c.rows.length > 0);
+}
+
+export function normalizeTeams(raw: Raw): TeamRef[] {
+  const teams: Raw[] = raw?.sports?.[0]?.leagues?.[0]?.teams ?? [];
+  return teams.map((t) => normalizeTeam(t.team)).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function normalizeTeamSchedule(raw: Raw): { team?: TeamRef; games: Game[] } {
+  return {
+    team: raw?.team ? normalizeTeam(raw.team) : undefined,
+    games: (raw?.events ?? []).map(normalizeGame).filter((g: Game) => g.home && g.away),
+  };
+}
+
+export function normalizeSummary(raw: Raw): GameSummary {
+  const header = raw?.header ?? {};
+  const game = normalizeGame({ ...header, competitions: header.competitions });
+  if (!game.venue && raw?.gameInfo?.venue?.fullName) game.venue = raw.gameInfo.venue.fullName;
+
+  const teamStats = new Map<string, { label: string; value: string }[]>();
+  for (const t of raw?.boxscore?.teams ?? []) {
+    teamStats.set(
+      String(t.team?.id),
+      (t.statistics ?? []).map((s: Raw) => ({ label: s.label ?? s.name, value: s.displayValue ?? '' })),
+    );
+  }
+
+  const teams: TeamBox[] = (raw?.boxscore?.players ?? []).map((p: Raw) => {
+    const block = p.statistics?.[0] ?? {};
+    const team = normalizeTeam(p.team);
+    const players: PlayerLine[] = (block.athletes ?? []).map((a: Raw) => ({
+      id: String(a.athlete?.id ?? ''),
+      name: a.athlete?.displayName ?? '',
+      position: a.athlete?.position?.abbreviation,
+      starter: !!a.starter,
+      dnp: !!a.didNotPlay || !a.stats?.length,
+      reason: a.reason,
+      stats: a.stats ?? [],
+    }));
+    return {
+      team,
+      labels: block.labels ?? block.names ?? [],
+      players,
+      totals: block.totals ?? [],
+      teamStats: teamStats.get(team.id) ?? [],
+    };
+  });
+
+  return { game, teams };
+}
+
+/** ESPN "byathlete" statistics endpoint → flat leaderboard table. */
+export function normalizeLeaders(raw: Raw, wanted: { category: string; name: string; label: string }[]): LeaderTable {
+  const catDefs: Raw[] = raw?.categories ?? [];
+  const columns = wanted.filter((w) => {
+    const def = catDefs.find((c) => c.name === w.category);
+    return !def || (def.names ?? []).includes(w.name);
+  });
+  const rows = (raw?.athletes ?? []).map((a: Raw) => {
+    const values: Record<string, string> = {};
+    for (const col of columns) {
+      const def = catDefs.find((c) => c.name === col.category);
+      const idx = (def?.names ?? []).indexOf(col.name);
+      const cat = (a.categories ?? []).find((c: Raw) => c.name === col.category);
+      const v = idx >= 0 ? (cat?.totals?.[idx] ?? cat?.values?.[idx]) : undefined;
+      values[`${col.category}.${col.name}`] = v == null ? '-' : String(v);
+    }
+    return {
+      athlete: a.athlete?.displayName ?? '',
+      athleteId: String(a.athlete?.id ?? ''),
+      team: a.athlete?.teamShortName ?? a.athlete?.team?.abbreviation ?? '',
+      values,
+    };
+  });
+  return { columns: columns.map((c) => ({ key: `${c.category}.${c.name}`, label: c.label })), rows };
+}
