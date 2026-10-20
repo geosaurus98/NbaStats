@@ -18,7 +18,15 @@ It opens on the **2025-26 season** because that season is complete. You can swit
 
 All data comes from ESPN's public NBA API. It needs no API key and is fetched straight from the browser, so there is no backend. These endpoints are unofficial and may change. All parsing is in `src/api/normalize.ts`, so if a payload's shape changes, that is the only file to fix.
 
+## Quick start (no install)
+
+Download `standalone/NBA-Stats-Hub.html` and double-click it. It opens in your browser and needs no Node.js or other install. An internet connection is required for the data.
+
+After changing the code, run `npm run build:standalone` to rebuild that file.
+
 ## Development
+
+Requires [Node.js](https://nodejs.org) (LTS).
 
 ```bash
 npm install
