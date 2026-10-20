@@ -20,6 +20,14 @@ It opens on the **2025-26 season** because that season is complete. You can swit
 
 Your favourite team and season choice are saved in your browser.
 
+## Data
+
+All data comes from ESPN's public NBA API (no key needed). Parsing is in `src/api/normalize.ts`.
+
+**Completed seasons are bundled with the app.** Loading a whole season live from a browser means about 45 MB of team schedules plus about 100 MB of player game logs for season highs. So the **Season snapshot** GitHub Action (`.github/workflows/snapshot.yml` → `scripts/snapshot.ts`) fetches 2025-26 and 2024-25 once and saves a compact copy in `src/data/season-*.json`. Standings, playoffs, rankings, leaders, season highs, team schedules and H2H for those seasons load instantly, even offline. Box scores, player pages and per-day top scorers are still fetched live. To refresh the copies, run the workflow from the **Actions** tab.
+
+The in-progress season is always fetched live.
+
 ## Quick start (no install)
 
 Download `standalone/NBA-Stats-Hub.html` and double-click it. It opens in your browser and needs no Node.js or other install. An internet connection is required for the data.
@@ -43,4 +51,4 @@ npm run build    # production build in dist/
 
 ## Adding a season
 
-Add an entry to `SEASONS` in `src/lib/seasons.ts`. ESPN numbers seasons by the year they end in, so 2027 means 2026-27.
+Add an entry to `SEASONS` in `src/lib/seasons.ts`. ESPN numbers seasons by the year they end in, so 2027 means 2026-27. Once a season finishes, add its year to the snapshot workflow's default `seasons` input and run it.
