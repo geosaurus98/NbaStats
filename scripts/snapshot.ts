@@ -7,6 +7,7 @@ import { aggregateAssists } from '../src/api/normalize';
 import { compactGame, type SeasonSnapshot } from '../src/api/snapshot';
 import type { AssistEvent } from '../src/api/types';
 import { BoxAccumulator, nameKey } from '../src/lib/boxTotals';
+import { countsInStandings } from '../src/lib/league';
 import { gameLineups, LineupAccumulator, type GameInput } from '../src/lib/lineups';
 import { BinCounter, gameDrama, type DramaRow, type ShotBins } from '../src/lib/pbpStats';
 
@@ -15,7 +16,7 @@ const PLAYER_BIN_FT = 3;
 const SHOT_MAP_PLAYERS = 75;
 
 /** One pass over every game's play-by-play: assists, drama and shot bins. */
-async function playByPlay(gameIds: string[]) {
+async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
   const events: AssistEvent[] = [];
   const names: Record<string, string> = {};
   const fullNames: Record<string, string> = {};
@@ -33,7 +34,7 @@ async function playByPlay(gameIds: string[]) {
       return;
     }
     Object.assign(names, s.pbp.names);
-    box.add(s.teams);
+    if (!notCounted.has(id)) box.add(s.teams); // the NBA Cup final isn't a regular-season game
     for (const t of s.teams) for (const p of t.players) if (p.id && p.name) fullNames[p.id] = p.name;
     const input: GameInput = {
       starters: Object.fromEntries(s.teams.map((t) => [t.team.id, t.players.filter((p) => p.starter).map((p) => p.id)])),
@@ -100,7 +101,7 @@ async function build(year: number): Promise<SeasonSnapshot> {
     const finals = games.filter((g) => g.state === 'post').map((g) => g.id);
     // An unplayed regular-season game means the season is still going.
     if (type === 2 && finals.length < games.length) snap.complete = false;
-    const pbp = await playByPlay(finals);
+    const pbp = await playByPlay(finals, new Set(games.filter((g) => !countsInStandings(g)).map((g) => g.id)));
     snap.assists![type] = pbp.assists;
     snap.drama![type] = pbp.drama;
     snap.shots![type] = pbp.shots;

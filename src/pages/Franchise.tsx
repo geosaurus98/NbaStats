@@ -175,7 +175,10 @@ export function Franchise() {
           <tbody>
             {[...seasons].reverse().map((s) => (
               <tr key={`${s[0]}-${s[2]}`}>
-                <td className="left nowrap">{seasonLabel(s[0])}{s[1] ? <span className="muted small"> {LEAGUE_NAMES[s[1]]}</span> : null}</td>
+                <td className="left nowrap">
+                  {s[1] === 1 ? seasonLabel(s[0]) : <Link to={`/history?tab=teams&a=${f.id}-${s[0]}`} title="Compare this season with any other">{seasonLabel(s[0])}</Link>}
+                  {s[1] ? <span className="muted small"> {LEAGUE_NAMES[s[1]]}</span> : null}
+                </td>
                 <td className="left nowrap">{s[3]}</td>
                 <td>{s[4]}-{s[5]}</td>
                 <td>{pct(s).toFixed(3).replace(/^0/, '')}</td>
@@ -190,7 +193,7 @@ export function Franchise() {
           </tbody>
         </table>
       </div>
-      <p className="muted small">Team records and ratings from Basketball-Reference. Titles are NBA/BAA championships (ABA titles aren't counted).</p>
+      <p className="muted small">Team records and ratings from Basketball-Reference. Titles are NBA/BAA championships (ABA titles aren't counted). Click a season to compare it with any other team's.</p>
     </section>
   );
 }
