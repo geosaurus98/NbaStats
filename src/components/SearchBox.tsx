@@ -124,7 +124,8 @@ export function SearchBox() {
   return (
     <>
       <button className="search-button" aria-label="Search (press /)" title="Search (press /)" onClick={() => setOpen(true)}>
-        🔍<span className="search-hint">Search</span>
+        🔍<span className="search-hint">Search players, teams, pages…</span>
+        <kbd className="search-key">/</kbd>
       </button>
       {open && (
         <div className="search-overlay" onClick={() => setOpen(false)}>
