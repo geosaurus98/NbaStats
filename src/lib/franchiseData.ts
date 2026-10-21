@@ -3,8 +3,8 @@
 
 export interface FranchiseData {
   source: string;
-  /** [season, league (0 NBA, 1 ABA, 2 BAA), code, name, w, l, madePlayoffs, srs, oRtg, dRtg, pace, attendancePerGame] (-1 = n/a) */
-  teamSeasons: [number, number, string, string, number, number, number, number, number, number, number, number][];
+  /** [season, league (0 NBA, 1 ABA, 2 BAA), code, name, w, l, madePlayoffs, srs, oRtg, dRtg, pace, attendancePerGame] (null = not recorded) */
+  teamSeasons: [number, number, string, string, number, number, number, number | null, number | null, number | null, number | null, number | null][];
   /** [season, league, overallPick, round, teamCode, playerIndex (-1 = never played), name, college] */
   draft: [number, number, number, number, string, number, string, string][];
 }

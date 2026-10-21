@@ -8,6 +8,7 @@ It opens on the **2025-26 season** because that season is complete. You can swit
 
 | Page | What it shows |
 | --- | --- |
+| **Home** | A dashboard: today's games (or the season's last day), your team's next game, the top six in each conference, title odds (or the champion once a season is over), the scoring race and today's puzzles with your progress. |
 | **Scores** | Any day's fixtures, live games and results, with your favourite team's game pinned first and a countdown to its next game. Live games refresh every 30s. |
 | **Game** | A live play-by-play feed and 30-second refresh during games (and a "Live now" bar on every page), scoreline, scores by quarter, team stat comparison, a game-flow (lead) chart, win probability, each team's assist network, a shot chart with paint / mid-range / 3PT splits, and full box scores. |
 | **Player** | Season averages, a per-game trend chart (points, rebounds, assists, threes, minutes) with a 10-game average, passing partners (who they assist and who assists them), a season shot map for high-volume shooters, and the full game log. |
@@ -16,17 +17,20 @@ It opens on the **2025-26 season** because that season is complete. You can swit
 | **Playoffs** | The full bracket with seeds and series scores; expand a series to see its games. |
 | **Leaders** | Top 50 per-game leaders, and a *Season highs* tab with the best single games and most triple-doubles. |
 | **Rankings** | Every team ranked by any column: record, PPG, points allowed, margin, home/road, close games, best winning run, strength of schedule (played and remaining), shooting %, rebounds, assists, turnovers. |
-| **Teams** | Record, margin-by-game and games-above-.500 charts, a season *who assists whom* network plus passer × scorer grid, a season shot map (frequency and FG% vs league by spot), schedule as a list or month calendar, a ☆ to make it your favourite, and an *Add to calendar* (.ics) download. |
+| **Teams** | Record, margin-by-game and games-above-.500 charts, a season *who assists whom* network plus passer × scorer grid, a season shot map (frequency and FG% vs league by spot), *lineups & on/off* (most-used five-man units with +/- per 48, and each player's on/off swing, inferred from play-by-play substitutions), schedule as a list or month calendar, a ☆ to make it your favourite, and an *Add to calendar* (.ics) download. |
 | **Compare** | Up to three players side by side: per-game averages (best highlighted), rolling-average trend lines and their season shot maps. |
 | **H2H** | Pick two teams to see their meetings, head-to-head wins and season numbers side by side. |
 | **Insights** | *Most exciting games*: every game ranked by win-probability swings, comebacks, lead changes and late drama, with a scatter of the whole season. *Passing duos*: the league's top passer → scorer pairs and a passing-style chart (ball movement vs one-man show). |
-| **History** | All-time rosters and stats: a chord diagram of players moving between teams (by era), career journeys with season-by-season stats, honours and career arcs, the journeymen leaderboard, a two-player compare, all-time leaders (totals, per game, best seasons), awards history (MVP voting by season, winners, All-Star selections) and a roster-continuity heatmap. |
+| **History** | All-time rosters and stats: a chord diagram of players moving between teams (by era), career journeys with season-by-season stats, honours and career arcs, the journeymen leaderboard, a two-player compare, all-time leaders (totals, per game, best seasons), awards history (MVP voting by season, winners, All-Star selections), *draft history* (every NBA/BAA draft class, the best player taken at each pick, late-pick steals and every No. 1 pick, filterable by team) and a roster-continuity heatmap. |
+| **Franchise** | Each franchise's whole history: names and eras, titles, all-time record, a win %-above-.500 bar for every season, franchise leaders (counting only seasons with that team, traded seasons split correctly), its best draft picks and a season-by-season table with SRS, offensive/defensive rating, pace and attendance. Open it from any team page. |
 | **Games** | *Played for both*: a daily 3×3 franchise grid puzzle. *Connect the players*: link two players teammate by teammate. *Guess the player*: name a player from their career path. *Higher or lower*: who had more of a career stat? |
 | **6 Degrees** | The Kevin Bacon game for the NBA: every player since 1946-47, linked by having been teammates. Pick a centre player to see all 5,400+ players arranged in rings by teammate distance (and around the circle by era), connect any two players by the shortest chain of teammates, and see history's best-connected players. |
 
 Search (🔍 in the header, or press `/`) finds any team, page or player from any era: current players open their player page, older ones their career timeline.
 
 Your favourite team and season choice are saved in your browser.
+
+The header has a 🔗 share button (copies a link to the page you're on, or opens your phone's share sheet) and a light/dark switch (auto follows your system; light and dark are remembered). The puzzle games also share a spoiler-free result, Wordle-style.
 
 ## Data
 
@@ -37,6 +41,10 @@ All data comes from ESPN's public NBA API (no key needed). Parsing is in `src/ap
 The season in progress is snapshotted too, and refreshed daily by a scheduled run of the workflow (GitHub only runs schedules on the default branch, so this starts once the code is on `main`). For that season, standings, single-team schedules and leaders are still fetched live; the snapshot only powers the heavy league-wide views.
 
 **Career stats and awards.** `scripts/careers.ts` builds `src/data/careers.json` (every player's season totals, award voting and All-Star selections, about 1.6 MB) from the same source. The hosted site loads it only on pages that need it.
+
+**Franchises and drafts.** `scripts/franchises.ts` builds `src/data/franchises.json` (every team-season's record, playoffs and ratings, plus every draft pick, about 570 KB). Titles are listed in `src/lib/franchiseData.ts`.
+
+**Loading.** The hosted site loads only what a page needs: the app itself is about 150 KB (gzipped), each season's snapshot about 250 KB, and the history files load only on the pages that use them. The standalone file still bundles everything.
 
 **Teammate graph.** `scripts/teammates.ts` builds `src/data/teammates.json` (every team-season roster since 1946-47, about 330 KB) from Basketball-Reference data via the open [bball-reference-datasets](https://github.com/sumitrodatta/bball-reference-datasets) project. ESPN has no historical rosters. The snapshot workflow refreshes it too.
 

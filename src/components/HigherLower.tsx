@@ -5,6 +5,7 @@ import { allStarCounts, perGame, totals, type CareerData } from '../lib/careers'
 import { careerSegments } from '../lib/history';
 import type { Graph } from '../lib/teammates';
 import { useCareers } from './CareerStats';
+import { ShareButton } from './ShareButton';
 import { ErrorBox, Loading } from './Status';
 
 const BEST_KEY = 'nba-hub-higher-lower-best';
@@ -123,7 +124,8 @@ export function HigherLower({ graph }: { graph: Graph }) {
       {picked != null && (
         <p>
           <b className={correct ? 'win' : 'loss'}>{correct ? '✓ Correct!' : `✗ It was ${players[answer][0]}.`}</b>{' '}
-          <button className="chip active" onClick={next}>{correct ? 'Next' : 'Start a new streak'}</button>
+          <button className="chip active" onClick={next}>{correct ? 'Next' : 'Start a new streak'}</button>{' '}
+          {!correct && streak > 0 && <ShareButton label="Share streak" text={`🏀 NBA Stats Hub · Higher or lower\n🔥 ${streak} in a row (best ${best})`} />}
         </p>
       )}
     </>
