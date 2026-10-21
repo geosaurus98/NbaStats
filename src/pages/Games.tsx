@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { GuessPlayer } from '../components/GuessPlayer';
+import { ShareButton } from '../components/ShareButton';
 import { HigherLower } from '../components/HigherLower';
 import { PlayerDatalist } from '../components/PlayerInput';
 import { TeamLogo } from '../components/TeamLogo';
 import { espnLogo, franchiseById } from '../lib/franchises';
 import { franchiseSets, hint, linkingRosters, makeConnect, makeGrid, obscurity, seededRandom, seedFromString, todayKey } from '../lib/games';
-import { getTeammateGraph } from '../lib/teammateStore';
+import { useTeammateGraph } from '../lib/teammateStore';
+import { Loading as GraphLoading } from '../components/Status';
 import { bfs, findPlayer, pathTo, seasonLabel, type Graph } from '../lib/teammates';
 
 function load<T>(key: string): T | undefined {
@@ -36,7 +38,12 @@ function FranchiseBadge({ id }: { id: string }) {
 }
 
 export function Games() {
-  const graph = getTeammateGraph();
+  const graph = useTeammateGraph();
+  if (!graph) return <GraphLoading label="Loading every roster since 1946-47…" />;
+  return <GamesPage graph={graph} />;
+}
+
+function GamesPage({ graph }: { graph: Graph }) {
   const [params, setParams] = useSearchParams();
   const tabs = [
     { id: 'grid', label: 'Played for both' },
@@ -197,7 +204,19 @@ function GridGame({ graph }: { graph: Graph }) {
         {!over && <button className="chip" onClick={() => setState((s) => ({ ...s, gaveUp: true }))}>Give up & show answers</button>}
         {over && <button className="chip" onClick={() => setState(fresh)}>Play this grid again</button>}
       </div>
-      {over && <p><b>{solved === 9 ? '🏆 Perfect grid!' : `Finished: ${solved}/9.`}</b> Obscurity score {total} (max 900).</p>}
+      {over && (
+        <p>
+          <b>{solved === 9 ? '🏆 Perfect grid!' : `Finished: ${solved}/9.`}</b> Obscurity score {total} (max 900).{' '}
+          <ShareButton
+            label="Share result"
+            text={[
+              `🏀 NBA Stats Hub · Played for both · ${daily ? todayKey() : 'random grid'}`,
+              ...[0, 1, 2].map((r) => [0, 1, 2].map((c) => (state.picks[r * 3 + c] != null ? '🟩' : '⬜')).join('')),
+              `${solved}/9 · obscurity ${total}`,
+            ].join('\n')}
+          />
+        </p>
+      )}
     </>
   );
 }
@@ -329,7 +348,11 @@ function ConnectGame({ graph }: { graph: Graph }) {
         {won && (
           <p>
             <b>{links === puzzle.optimal ? '🏆 Perfect, the shortest possible chain!' : `🎉 Connected in ${links} links`}</b>{' '}
-            (best: {puzzle.optimal}){state.hints ? `, with ${state.hints} hint${state.hints === 1 ? '' : 's'}` : ''}.
+            (best: {puzzle.optimal}){state.hints ? `, with ${state.hints} hint${state.hints === 1 ? '' : 's'}` : ''}.{' '}
+            <ShareButton
+              label="Share result"
+              text={`🏀 NBA Stats Hub · Connect ${daily ? todayKey() : ''}\n${players[puzzle.start][0]} → ${players[puzzle.target][0]}\n${'🔗'.repeat(links)} ${links} links (best ${puzzle.optimal})${state.hints ? ` · 💡×${state.hints}` : ''}`}
+            />
           </p>
         )}
         {over && (

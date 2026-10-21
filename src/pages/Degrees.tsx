@@ -4,7 +4,8 @@ import { ColumnChart } from '../components/Charts';
 import { PlayerDatalist, PlayerInput } from '../components/PlayerInput';
 import { TeammateGalaxy } from '../components/TeammateGalaxy';
 import { Tile } from '../components/Tile';
-import { getTeammateGraph } from '../lib/teammateStore';
+import { useTeammateGraph } from '../lib/teammateStore';
+import { Loading as GraphLoading } from '../components/Status';
 import { averageDistance, bfs, findPlayer, pathTo, seasonLabel, type Graph } from '../lib/teammates';
 
 const DEFAULT_CENTRE = 'LeBron James';
@@ -20,7 +21,12 @@ function years(graph: Graph, p: number) {
 }
 
 export function Degrees() {
-  const graph = getTeammateGraph();
+  const graph = useTeammateGraph();
+  if (!graph) return <GraphLoading label="Loading every roster since 1946-47…" />;
+  return <DegreesPage graph={graph} />;
+}
+
+function DegreesPage({ graph }: { graph: Graph }) {
   const players = graph.data.players;
   const [params, setParams] = useSearchParams();
   const centre = findPlayer(graph.data, params.get('c') ?? DEFAULT_CENTRE) ?? 0;

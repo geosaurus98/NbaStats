@@ -3,7 +3,7 @@ name: Season snapshot
 on:
   push:
     branches: [claude/youthful-heisenberg-ag3b0v]
-    paths: [scripts/snapshot.ts, scripts/teammates.ts, scripts/careers.ts, src/api/normalize.ts, src/lib/pbpStats.ts, .github/workflows/snapshot.yml]
+    paths: [scripts/snapshot.ts, scripts/teammates.ts, scripts/careers.ts, scripts/franchises.ts, src/lib/lineups.ts, src/api/normalize.ts, src/lib/pbpStats.ts, .github/workflows/snapshot.yml]
   workflow_dispatch:
     inputs:
       seasons:
@@ -28,7 +28,7 @@ jobs:
       - run: npm ci
       - run: npx --yes tsx scripts/snapshot.ts ${{ github.event_name == 'schedule' && '2027' || github.event.inputs.seasons || '2027 2026 2025' }}
       - if: github.event_name != 'schedule'
-        run: npx --yes tsx scripts/teammates.ts && npx --yes tsx scripts/careers.ts
+        run: npx --yes tsx scripts/teammates.ts && npx --yes tsx scripts/careers.ts && npx --yes tsx scripts/franchises.ts
       - name: Commit snapshot
         run: |
           git config user.name "github-actions[bot]"

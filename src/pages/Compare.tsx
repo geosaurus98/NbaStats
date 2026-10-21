@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { fetchAthlete, fetchGameLog, seasonShots, snapshotPlayers } from '../api/espn';
+import { allSnapshotPlayers, fetchAthlete, fetchGameLog, seasonShots } from '../api/espn';
 import type { GameLogEntry, LogSeasonType, PlayerProfile } from '../api/types';
 import { LineChart } from '../components/Charts';
 import { SeasonShotMap } from '../components/SeasonShotMap';
 import { ErrorBox, Loading } from '../components/Status';
 import { useAsync } from '../hooks/useAsync';
 import { averages, statValue, type Averages } from '../lib/playerStats';
-import { SEASONS } from '../lib/seasons';
 import { normName } from '../lib/teammates';
 import { useSeason } from '../SeasonContext';
 
@@ -35,15 +34,14 @@ const TRENDS = [
   { label: '3PM', title: 'Threes made' },
 ];
 
-/** Every ESPN player we know (from season snapshots), newest season first. */
+/** Every ESPN player we know (from season snapshots), by accent-free name. */
 function useDirectory() {
+  const { data } = useAsync(() => allSnapshotPlayers(), []);
   return useMemo(() => {
     const byName = new Map<string, { id: string; name: string }>();
-    for (const s of SEASONS) {
-      for (const [id, name] of Object.entries(snapshotPlayers(s.year))) if (!byName.has(normName(name))) byName.set(normName(name), { id, name });
-    }
+    for (const [id, name] of Object.entries(data ?? {})) byName.set(normName(name), { id, name });
     return byName;
-  }, []);
+  }, [data]);
 }
 
 interface Loaded {

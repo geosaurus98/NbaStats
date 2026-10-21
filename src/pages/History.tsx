@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AllTimeLeaders, Awards } from '../components/AllTime';
 import { CareerArc, CareerStatsTable } from '../components/CareerStats';
+import { DraftHistory } from '../components/DraftHistory';
 import { CareerTimeline } from '../components/CareerTimeline';
 import { ChordDiagram } from '../components/ChordDiagram';
 import { ContinuityHeatmap } from '../components/ContinuityHeatmap';
@@ -9,7 +10,8 @@ import { PlayerDatalist, PlayerInput } from '../components/PlayerInput';
 import { Tile } from '../components/Tile';
 import { franchiseById } from '../lib/franchises';
 import { allMoves, careerSegments, commonTeammates, continuity, journeymen, moveMatrix, sharedRosters } from '../lib/history';
-import { getTeammateGraph } from '../lib/teammateStore';
+import { useTeammateGraph } from '../lib/teammateStore';
+import { Loading as GraphLoading } from '../components/Status';
 import { bfs, findPlayer, seasonLabel, type Graph } from '../lib/teammates';
 
 const TABS = [
@@ -18,12 +20,18 @@ const TABS = [
   { id: 'compare', label: 'Compare two players' },
   { id: 'leaders', label: 'All-time leaders' },
   { id: 'awards', label: 'Awards' },
+  { id: 'draft', label: 'Draft' },
   { id: 'continuity', label: 'Roster continuity' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 
 export function History() {
-  const graph = getTeammateGraph();
+  const graph = useTeammateGraph();
+  if (!graph) return <GraphLoading label="Loading every roster since 1946-47…" />;
+  return <HistoryPage graph={graph} />;
+}
+
+function HistoryPage({ graph }: { graph: Graph }) {
   const [params, setParams] = useSearchParams();
   const tab = (TABS.find((t) => t.id === params.get('tab'))?.id ?? 'movement') as Tab;
   const setParam = (updates: Record<string, string | undefined>) => {
@@ -50,6 +58,7 @@ export function History() {
       {tab === 'compare' && <Compare graph={graph} params={params} setParam={setParam} />}
       {tab === 'leaders' && <AllTimeLeaders graph={graph} />}
       {tab === 'awards' && <Awards graph={graph} />}
+      {tab === 'draft' && <DraftHistory graph={graph} />}
       {tab === 'continuity' && <Continuity graph={graph} />}
       <p className="muted small">
         Rosters from Basketball-Reference via the open bball-reference-datasets project. The source doesn't say in which order a player

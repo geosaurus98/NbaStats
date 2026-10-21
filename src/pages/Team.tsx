@@ -8,11 +8,13 @@ import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { SeasonShotMap } from '../components/SeasonShotMap';
 import { TeamAssists } from '../components/TeamAssists';
+import { TeamLineups } from '../components/TeamLineups';
 import { Tile } from '../components/Tile';
 import { useAsync } from '../hooks/useAsync';
 import { formatShortDate, formatTime, parseISODate, toISODate } from '../lib/dates';
 import { downloadFile, gamesToICS } from '../lib/ics';
 import { countsInStandings, isFinal, raceSeries, sides, won } from '../lib/league';
+import { FRANCHISES } from '../lib/franchises';
 import { useSeason } from '../SeasonContext';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 
@@ -62,6 +64,9 @@ export function Team() {
           </button>
         )}
         <Link className="chip" to={`/h2h?a=${id}`}>Compare head-to-head</Link>
+        {FRANCHISES.find((f) => f.espnId === id) && (
+          <Link className="chip" to={`/franchise/${FRANCHISES.find((f) => f.espnId === id)!.id}`}>Franchise history →</Link>
+        )}
       </div>
       {loading && <Loading />}
       {error && <ErrorBox error={error} />}
@@ -80,6 +85,8 @@ export function Team() {
       {results.length > 1 && <TeamCharts id={id} results={results} onSelect={(g) => navigate(`/game/${g.id}`)} />}
 
       {results.length > 0 && <TeamAssists teamId={id} season={season.year} seasonType={type} />}
+
+      {results.length > 0 && <TeamLineups teamId={id} season={season.year} seasonType={type} />}
 
       {shots?.teams[id] && (
         <>
