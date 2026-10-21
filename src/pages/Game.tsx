@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fetchSummary } from '../api/espn';
 import { aggregateAssists } from '../api/normalize';
 import type { Competitor, TeamBox } from '../api/types';
 import { AssistNetwork } from '../components/AssistNetwork';
 import { GameFlow, ShotChart } from '../components/GameCharts';
+import { PlayFeed } from '../components/PlayFeed';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
@@ -16,6 +18,7 @@ export function Game() {
     [id],
     (s) => (s.game.state === 'in' ? 30_000 : undefined),
   );
+  const updated = useMemo(() => new Date(), [data]);
 
   if (loading && !data) return <Loading />;
   if (error && !data) return <ErrorBox error={error} />;
@@ -37,6 +40,9 @@ export function Game() {
         <BugTeam c={game.away} showScore={game.state !== 'pre'} />
         <div className={`bug-status${game.state === 'in' ? ' live' : ''}`}>
           {game.state === 'pre' ? formatTime(game.date) : game.statusDetail}
+          {game.state === 'in' && (
+            <div className="updated muted">● Live · refreshes every 30s · {updated.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' })}</div>
+          )}
         </div>
         <BugTeam c={game.home} showScore={game.state !== 'pre'} />
       </div>
@@ -88,6 +94,8 @@ export function Game() {
       )}
 
       <ShotChart game={game} pbp={pbp} />
+
+      <PlayFeed game={game} feed={pbp.feed} />
 
       {teams.map((t) => (
         <BoxScore key={t.team.id} box={t} />

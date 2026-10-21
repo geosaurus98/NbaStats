@@ -9,11 +9,13 @@ import { Insights } from './pages/Insights';
 import { Leaders } from './pages/Leaders';
 import { Player } from './pages/Player';
 import { Playoffs } from './pages/Playoffs';
+import { Projections } from './pages/Projections';
 import { Rankings } from './pages/Rankings';
 import { Scores } from './pages/Scores';
 import { Standings } from './pages/Standings';
 import { Team } from './pages/Team';
 import { Teams } from './pages/Teams';
+import { LiveBar } from './components/LiveBar';
 import { SearchBox } from './components/SearchBox';
 import { SEASONS } from './lib/seasons';
 import { useSeason } from './SeasonContext';
@@ -36,6 +38,7 @@ export function App() {
             <NavLink to="/" end>Scores</NavLink>
             <NavLink to="/standings">Standings</NavLink>
             <NavLink to="/playoffs">Playoffs</NavLink>
+            <NavLink to="/projections">Projections</NavLink>
             <NavLink to="/leaders">Leaders</NavLink>
             <NavLink to="/rankings">Rankings</NavLink>
             <NavLink to="/teams">Teams</NavLink>
@@ -57,11 +60,13 @@ export function App() {
           </label>
         </div>
       </header>
+      <LiveBar />
       <main key={season.year}>
         <Routes>
           <Route path="/" element={<Scores />} />
           <Route path="/standings" element={<Standings />} />
           <Route path="/playoffs" element={<Playoffs />} />
+          <Route path="/projections" element={<Projections />} />
           <Route path="/leaders" element={<Leaders />} />
           <Route path="/rankings" element={<Rankings />} />
           <Route path="/h2h" element={<HeadToHead />} />

@@ -21,7 +21,8 @@ export function snapshotGames(year: number, type: SeasonType): Game[] | undefine
   const key = `${year}:${type}`;
   if (!expanded.has(key)) {
     const teams = new Map(snap.teams.map((t) => [t.id, t]));
-    expanded.set(key, list.map((c) => expandGame(c, teams)));
+    // Older snapshots kept postponed games as 0-0 "finals".
+    expanded.set(key, list.filter((c) => !(c[4] === 0 && c[5] === 0)).map((c) => expandGame(c, teams)));
   }
   return expanded.get(key);
 }

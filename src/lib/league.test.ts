@@ -38,6 +38,15 @@ describe('teamRecords', () => {
   });
 });
 
+describe('countsInStandings', () => {
+  it('leaves the NBA Cup Championship out of records', () => {
+    const games = [game('A', 'B', 100, 90), game('A', 'B', 100, 90, 'NBA Cup Championship'), game('B', 'A', 100, 90, 'NBA Cup - Semifinals')];
+    const [a] = teamRecords([team('A')], games);
+    expect(a).toMatchObject({ wins: 1, losses: 1, gp: 2 });
+    expect(raceSeries(games, 'A')).toEqual([1, 0]);
+  });
+});
+
 describe('addStrengthOfSchedule', () => {
   it('averages opponent win % over played and remaining games', () => {
     const games = [game('A', 'B', 100, 90), game('C', 'A', 100, 90), game('B', 'C', 100, 90), game('A', 'C')];

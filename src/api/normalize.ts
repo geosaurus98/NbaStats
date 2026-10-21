@@ -3,6 +3,7 @@
 // team schedules), so every accessor here is defensive.
 import type {
   AssistEvent,
+  FeedItem,
   AssistPairs,
   Competitor,
   Conference,
@@ -107,8 +108,20 @@ export function normalizeGame(e: Raw): Game {
   };
 }
 
+/**
+ * Postponed/cancelled games stay in ESPN's lists (as 0-0 "finals") next to
+ * their make-up games; they never happened, so drop them.
+ */
+export function wasPostponed(e: Raw): boolean {
+  const comp = e?.competitions?.[0] ?? {};
+  const status = comp.status ?? e?.status ?? {};
+  if (/POSTPONED|CANCELED|CANCELLED|SUSPENDED/i.test(status.type?.name ?? '')) return true;
+  const scores = (comp.competitors ?? []).map((c: Raw) => num(c.score));
+  return status.type?.state === 'post' && scores.length === 2 && scores.every((v: number | undefined) => !v);
+}
+
 export function normalizeScoreboard(raw: Raw): Game[] {
-  return (raw?.events ?? []).map(normalizeGame).filter((g: Game) => g.home && g.away);
+  return (raw?.events ?? []).filter((e: Raw) => !wasPostponed(e)).map(normalizeGame).filter((g: Game) => g.home && g.away);
 }
 
 function statLookup(stats: Raw[] = []) {
@@ -151,7 +164,7 @@ export function normalizeStandings(raw: Raw): Conference[] {
 export function normalizeTeamSchedule(raw: Raw): { team?: TeamRef; games: Game[] } {
   return {
     team: raw?.team ? normalizeTeam(raw.team) : undefined,
-    games: (raw?.events ?? []).map(normalizeGame).filter((g: Game) => g.home && g.away),
+    games: (raw?.events ?? []).filter((e: Raw) => !wasPostponed(e)).map(normalizeGame).filter((g: Game) => g.home && g.away),
   };
 }
 
@@ -225,6 +238,7 @@ export function normalizePlays(raw: Raw, teams: TeamBox[] = []): PlayByPlay {
   for (const t of teams) for (const p of t.players) if (p.id) names[p.id] = p.shortName ?? p.name;
 
   const assists: AssistEvent[] = [];
+  const feed: FeedItem[] = [];
   const flow: FlowPoint[] = [];
   const shots: Shot[] = [];
   let last = '';
@@ -235,6 +249,7 @@ export function normalizePlays(raw: Raw, teams: TeamBox[] = []): PlayByPlay {
     const away = num(p.awayScore) ?? 0;
     const teamId = String(p.team?.id ?? '');
     const ids: string[] = (p.participants ?? []).map((x: Raw) => String(x.athlete?.id ?? ''));
+    if (p.text) feed.push({ id: String(p.id ?? feed.length), period, clock, text: p.text, teamId, home, away, scoring: !!p.scoringPlay });
 
     if (p.scoringPlay && ids.length >= 2 && /assist/i.test(p.text ?? '')) {
       assists.push({ teamId, scorerId: ids[0], passerId: ids[1], points: num(p.scoreValue) ?? 2 });
@@ -260,7 +275,7 @@ export function normalizePlays(raw: Raw, teams: TeamBox[] = []): PlayByPlay {
       last = key;
     }
   }
-  return { assists, flow, shots, names };
+  return { feed, assists, flow, shots, names };
 }
 
 /** Totals assist events into passer → scorer pairs per team. */

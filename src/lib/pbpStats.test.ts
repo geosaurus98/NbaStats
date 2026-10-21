@@ -3,6 +3,7 @@ import type { FlowPoint, PlayByPlay, Shot } from '../api/types';
 import { BinCounter, binIndex, gameDrama } from './pbpStats';
 
 const pbp = (flow: Partial<FlowPoint>[]): PlayByPlay => ({
+  feed: [],
   assists: [],
   shots: [],
   names: {},
