@@ -507,3 +507,16 @@ table.zones.wide { max-width: 440px; }
 .pbar.franchise { grid-template-columns: minmax(200px, 2fr) 3fr 4.2em 3.8em; }
 @media (max-width: 600px) { .pbar.franchise { grid-template-columns: minmax(140px, 2fr) 1fr 4.2em; } .pbar.franchise > :last-child { display: none; } }
 .degrees-main > .card { margin-top: 0; }
+
+/* History → Team vs team */
+.era-pickers, .era-heads { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: .8rem; }
+.era-pickers .actions { flex-wrap: wrap; }
+.era-pickers select { max-width: 100%; }
+.era-heads .card { margin-top: 0; }
+.era-head { display: flex; gap: .9rem; align-items: center; }
+.era-name { font-size: 1.15rem; font-weight: 700; }
+.era-matchup { margin: 1rem 0; }
+.era-tug { display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 2px; }
+.era-tug span { display: block; height: 100%; }
+.era-table td .small { font-weight: 400; }
+@media (max-width: 600px) { .era-pickers, .era-heads { grid-template-columns: 1fr; } .era-head .era-name { font-size: 1rem; } }

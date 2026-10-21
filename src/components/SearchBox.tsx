@@ -25,6 +25,7 @@ const PAGES = [
   { label: 'Power ratings', to: '/projections?tab=ratings', words: 'power ratings elo rankings upsets' },
   { label: 'All-time leaders', to: '/history?tab=leaders', words: 'all time leaders career records' },
   { label: 'Awards & MVP voting', to: '/history?tab=awards', words: 'awards mvp dpoy rookie all star voting' },
+  { label: 'Team vs team across eras', to: '/history?tab=teams', words: 'compare team seasons eras greatest bulls warriors matchup' },
   { label: 'Draft history', to: '/history?tab=draft', words: 'draft picks history steals busts number one' },
   { label: 'Guess the player game', to: '/games?tab=guess', words: 'games guess player wordle' },
   { label: 'Higher or lower game', to: '/games?tab=higher', words: 'games higher lower streak' },
