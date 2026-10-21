@@ -3,6 +3,7 @@
 // limits). A full season of games fits in ~100 KB instead of ~45 MB of raw
 // team schedules.
 import type { SeasonHighsResult } from './live';
+import type { DramaRow, ShotBins } from '../lib/pbpStats';
 import type { AssistPairs, Conference, Game, LeaderTable, TeamRef, TeamStatTable } from './types';
 
 /** [id, date, homeId, awayId, homeScore, awayScore, note, broadcasts] */
@@ -20,6 +21,10 @@ export interface SeasonSnapshot {
   highs: Record<string, SeasonHighsResult | null>;
   /** Keyed by season type, then team id. Optional: older snapshots lack it. */
   assists?: Record<string, Record<string, AssistPairs>>;
+  /** Per season type: one row per game. */
+  drama?: Record<string, DramaRow[]>;
+  /** Per season type. */
+  shots?: Record<string, ShotBins>;
 }
 
 export function compactGame(g: Game): CompactGame {
