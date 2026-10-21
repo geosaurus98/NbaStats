@@ -10,7 +10,7 @@ import { useAsync } from '../hooks/useAsync';
 import { L } from '../lib/boxTotals';
 import { C } from '../lib/clutch';
 import { formatDay, toISODate } from '../lib/dates';
-import { form, nightlyBest, type NightBest } from '../lib/gameLines';
+import { form, nightlyBest, usDay, type NightBest } from '../lib/gameLines';
 import { isFinal } from '../lib/league';
 import { scheduleAhead, type ScheduleAhead } from '../lib/scheduleAhead';
 import { Empty, ErrorBox, Loading } from './Status';
@@ -158,7 +158,7 @@ export function HotCold({ season }: { season: number }) {
     <>
       <p className="muted">
         Who's playing above or below their season so far, by Game Score per game over the last {n} games. Regulars only (20+ minutes a game).
-        {last ? ` Through ${formatDay(last.slice(0, 10))}.` : ''}
+        {last ? ` Through ${formatDay(usDay(last))}.` : ''}
       </p>
       <div className="chips tight">
         {[5, 10, 15].map((k) => (

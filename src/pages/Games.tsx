@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { StatLineGame } from '../components/StatLineGame';
 import { GuessPlayer } from '../components/GuessPlayer';
 import { ShareButton } from '../components/ShareButton';
 import { HigherLower } from '../components/HigherLower';
@@ -49,6 +50,7 @@ function GamesPage({ graph }: { graph: Graph }) {
     { id: 'grid', label: 'Played for both' },
     { id: 'connect', label: 'Connect the players' },
     { id: 'guess', label: 'Guess the player' },
+    { id: 'statline', label: 'Who am I?' },
     { id: 'higher', label: 'Higher or lower' },
   ];
   const tab = tabs.find((t) => t.id === params.get('tab'))?.id ?? 'grid';
@@ -64,6 +66,7 @@ function GamesPage({ graph }: { graph: Graph }) {
       {tab === 'grid' && <GridGame graph={graph} />}
       {tab === 'connect' && <ConnectGame graph={graph} />}
       {tab === 'guess' && <GuessPlayer graph={graph} />}
+      {tab === 'statline' && <StatLineGame graph={graph} />}
       {tab === 'higher' && <HigherLower graph={graph} />}
       <p className="muted small">Based on every BAA/NBA/ABA roster since 1946-47, grouped into today's franchises (e.g. Seattle counts as OKC).</p>
     </section>

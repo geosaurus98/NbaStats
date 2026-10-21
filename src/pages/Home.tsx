@@ -284,11 +284,13 @@ function Puzzles() {
   const grid = stored(`grid-${day}`) as { picks?: (number | null)[]; guessesLeft?: number; gaveUp?: boolean } | undefined;
   const connect = stored(`connect-${day}`) as { chain?: number[]; gaveUp?: boolean } | undefined;
   const guess = stored(`guess-${day}`) as { guesses?: number[]; done?: boolean } | undefined;
+  const statline = stored(`statline-${day}`) as { guesses?: number[]; done?: boolean } | undefined;
   const gridFilled = grid?.picks?.filter((p) => p != null).length ?? 0;
   const items = [
     { tab: 'grid', label: 'Played for both', status: grid?.gaveUp || grid?.guessesLeft === 0 || gridFilled === 9 ? `Done · ${gridFilled}/9` : gridFilled ? `${gridFilled}/9 so far` : 'Not started' },
     { tab: 'connect', label: 'Connect the players', status: connect?.gaveUp ? 'Gave up' : (connect?.chain?.length ?? 0) > 1 ? `${connect!.chain!.length - 1} links so far` : 'Not started' },
     { tab: 'guess', label: 'Guess the player', status: guess?.done ? 'Done' : guess?.guesses?.length ? `${guess.guesses.length}/6 guesses` : 'Not started' },
+    { tab: 'statline', label: 'Who am I?', status: statline?.done ? 'Done' : statline?.guesses?.length ? `${statline.guesses.length}/6 guesses` : 'Not started' },
   ];
   return (
     <div className="card">

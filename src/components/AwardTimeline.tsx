@@ -27,7 +27,8 @@ export function AwardTimeline({ snap, award }: { snap: SeasonSnapshot; award: Aw
     const weeks = cuts.map((cut) => {
       const s = snapshotBefore(snap, lines.data!, cut);
       const { list, leagueDrtg } = candidates(s);
-      return rankAward(award, list, leagueDrtg).filter((r) => r.eligible);
+      // Everyone, including players behind the 65-game pace at that point, so lines don't break.
+      return rankAward(award, list, leagueDrtg).sort((a, b) => b.score - a.score);
     });
     // Everyone who was top three at some point (up to five players).
     const best = new Map<string, number>();
@@ -59,13 +60,9 @@ export function AwardTimeline({ snap, award }: { snap: SeasonSnapshot; award: Aw
         xLabel={(i) => `Through ${formatShortDate(model.cuts[i])}`}
         xTick={(i) => formatShortDate(model.cuts[i])}
         yFormat={(v) => v.toFixed(0)}
+        contextLabel="Other contenders"
       />
-      <div className="chips tight">
-        {model.series.filter((s) => s.color).map((s) => (
-          <span key={s.id} className="chip static"><span className="legend-dot" style={{ background: s.color }} /> {s.label}</span>
-        ))}
-      </div>
-      <p className="muted small">{model.series.some((s) => !s.color) ? `Grey: ${model.series.filter((s) => !s.color).map((s) => s.label).join(', ')}. ` : ''}Model score each week, from games up to that date. The weekly scores leave out on/off splits (only kept for the whole season), so the last point can differ slightly from the table.</p>
+      <p className="muted small">{model.series.some((s) => !s.color) ? `Grey: ${model.series.filter((s) => !s.color).map((s) => s.label).join(', ')}. ` : ''}Model score each week, from games up to that date, including players who were behind the 65-game pace at the time. The weekly scores leave out on/off splits (only kept for the whole season), so the last point can differ slightly from the table.</p>
     </div>
   );
 }

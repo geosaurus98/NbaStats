@@ -73,7 +73,7 @@ export function DraftLottery({ model, season }: { model: Model; season: number }
     <>
       <p className="muted">
         The 14 teams that miss the playoffs share 1,000 lottery combinations, worst record first. Four picks are drawn, so the worst team can fall to 5th.
-        {remaining > 0 ? ` ${remaining} regular-season games still to play.` : ''}
+        {remaining > 0 ? ` ${remaining.toLocaleString()} regular-season games still to play.` : ''}
       </p>
       <div className="actions">
         {remaining > 0 && (

@@ -31,6 +31,7 @@ const PAGES = [
   { label: 'Draft lottery odds', to: '/projections?tab=lottery', words: 'draft lottery tankathon odds pick tank' },
   { label: 'Draft history', to: '/history?tab=draft', words: 'draft picks history steals busts number one' },
   { label: 'Guess the player game', to: '/games?tab=guess', words: 'games guess player wordle' },
+  { label: 'Who am I? stat-line game', to: '/games?tab=statline', words: 'games who am i stat line guess season puzzle' },
   { label: 'Higher or lower game', to: '/games?tab=higher', words: 'games higher lower streak' },
   { label: 'Awards race (MVP, DPOY, ROY)', to: '/awards', words: 'awards race mvp dpoy roy rookie defensive ladder model' },
   { label: 'Team rankings', to: '/rankings', words: 'rankings team stats strength schedule sos' },
