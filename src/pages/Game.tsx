@@ -32,7 +32,7 @@ export function Game() {
   return (
     <section>
       <p className="muted">
-        <Link to={day ? `/?date=${day}` : '/'}>← {day ? formatDay(day) : 'Scores'}</Link>
+        <Link to={day ? `/scores?date=${day}` : '/scores'}>← {day ? formatDay(day) : 'Scores'}</Link>
         {game.venue && ` · ${game.venue}`}
         {game.note && ` · ${game.note}`}
       </p>

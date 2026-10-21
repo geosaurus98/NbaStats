@@ -176,6 +176,11 @@ export interface FeedItem {
   id: string;
   period: number;
   clock: string;
+  /** Seconds since tip-off. */
+  t: number;
+  /** Athletes involved; for substitutions [entering, leaving]. */
+  ids: string[];
+  sub: boolean;
   text: string;
   teamId: string;
   home: number;

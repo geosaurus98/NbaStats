@@ -5,6 +5,9 @@ import { App } from './App';
 import { FavouriteProvider } from './FavouriteContext';
 import { SeasonProvider } from './SeasonContext';
 import './styles.css';
+import { applyTheme, storedTheme } from './components/ThemeToggle';
+
+applyTheme(storedTheme());
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

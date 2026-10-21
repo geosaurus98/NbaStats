@@ -2,10 +2,12 @@ import { Fragment, useEffect } from 'react';
 import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Compare } from './pages/Compare';
 import { Degrees } from './pages/Degrees';
+import { Franchise } from './pages/Franchise';
 import { Game } from './pages/Game';
 import { Games } from './pages/Games';
 import { HeadToHead } from './pages/HeadToHead';
 import { History } from './pages/History';
+import { Home } from './pages/Home';
 import { Insights } from './pages/Insights';
 import { Leaders } from './pages/Leaders';
 import { Player } from './pages/Player';
@@ -17,13 +19,16 @@ import { Standings } from './pages/Standings';
 import { Team } from './pages/Team';
 import { Teams } from './pages/Teams';
 import { LiveBar } from './components/LiveBar';
+import { ShareButton } from './components/ShareButton';
+import { SnapshotGate } from './components/SnapshotGate';
+import { ThemeToggle } from './components/ThemeToggle';
 import { SearchBox } from './components/SearchBox';
 import { SEASONS } from './lib/seasons';
 import { useSeason } from './SeasonContext';
 
 // Grouped: this season · stats · teams & players · history & fun.
 const NAV: [string, string][][] = [
-  [['/', 'Scores'], ['/standings', 'Standings'], ['/playoffs', 'Playoffs'], ['/projections', 'Projections']],
+  [['/', 'Home'], ['/scores', 'Scores'], ['/standings', 'Standings'], ['/playoffs', 'Playoffs'], ['/projections', 'Projections']],
   [['/leaders', 'Leaders'], ['/rankings', 'Rankings'], ['/insights', 'Insights']],
   [['/teams', 'Teams'], ['/h2h', 'H2H'], ['/compare', 'Compare']],
   [['/history', 'History'], ['/degrees', '6 Degrees'], ['/games', 'Games']],
@@ -40,7 +45,7 @@ export function App() {
   const changeSeason = (year: number) => {
     setSeasonYear(year);
     // A date picked for the old season makes no sense for the new one.
-    if (location.pathname === '/') navigate('/');
+    if (location.pathname === '/scores') navigate('/scores');
   };
   return (
     <>
@@ -48,6 +53,8 @@ export function App() {
         <div className="topbar-inner">
           <NavLink to="/" className="brand">🏀 NBA Stats Hub</NavLink>
           <SearchBox />
+          <ShareButton compact />
+          <ThemeToggle />
           <label className="season-select">
             <span className="muted">Season</span>
             <select value={season.year} onChange={(e) => changeSeason(Number(e.target.value))}>
@@ -70,8 +77,10 @@ export function App() {
       </header>
       <LiveBar />
       <main key={season.year}>
+        <SnapshotGate season={season.year}>
         <Routes>
-          <Route path="/" element={<Scores />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/scores" element={<Scores />} />
           <Route path="/standings" element={<Standings />} />
           <Route path="/playoffs" element={<Playoffs />} />
           <Route path="/projections" element={<Projections />} />
@@ -81,6 +90,7 @@ export function App() {
           <Route path="/compare" element={<Compare />} />
           <Route path="/degrees" element={<Degrees />} />
           <Route path="/history" element={<History />} />
+          <Route path="/franchise/:id" element={<Franchise />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/games" element={<Games />} />
           <Route path="/player/:id" element={<Player />} />
@@ -88,6 +98,7 @@ export function App() {
           <Route path="/team/:id" element={<Team />} />
           <Route path="/game/:id" element={<Game />} />
         </Routes>
+        </SnapshotGate>
       </main>
       <footer className="muted small">Data from ESPN's public API. Times shown in your local time zone.</footer>
     </>

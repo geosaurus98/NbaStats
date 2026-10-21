@@ -42,12 +42,16 @@ export function TeammateGalaxy({
   const players = graph.data.players;
   const maxD = Math.max(1, search.counts.length - 1);
 
-  // Re-read colours when the OS theme flips.
+  // Re-read colours when the OS theme or the in-app theme switch changes.
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const fn = () => setTheme((t) => t + 1);
     mq.addEventListener('change', fn);
-    return () => mq.removeEventListener('change', fn);
+    window.addEventListener('themechange', fn);
+    return () => {
+      mq.removeEventListener('change', fn);
+      window.removeEventListener('themechange', fn);
+    };
   }, []);
 
   const layout = useMemo(() => {
