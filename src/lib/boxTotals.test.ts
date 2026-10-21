@@ -40,3 +40,35 @@ describe('BoxAccumulator', () => {
     expect(nameKey("Kel'el Ware")).toBe('kelelware');
   });
 });
+
+import season2026 from '../data/season-2026.json';
+import type { SeasonSnapshot } from '../api/snapshot';
+import { leadersFromBox, teamStatsFromBox } from './boxTotals';
+
+describe('leaders from our own totals', () => {
+  const snap = season2026 as unknown as SeasonSnapshot;
+  const abbr = Object.fromEntries(snap.teams.map((t) => [t.id, t.abbr]));
+  for (const sort of ['offensive.avgPoints', 'general.avgRebounds', 'offensive.avgAssists']) {
+    it(`match ESPN's ${sort} leaders for 2025-26`, () => {
+      const ours = leadersFromBox(snap.box!['2'], snap.players ?? {}, abbr, sort, 5).rows;
+      const espn = snap.leaders[`2:${sort}`].rows.slice(0, 5);
+      // Same five players (ties can list in either order).
+      expect(ours.map((r) => r.athleteId).sort()).toEqual(espn.map((r) => r.athleteId).sort());
+      ours.forEach((r, i) => expect(Number(r.values[sort])).toBeCloseTo(Number(espn[i].values[sort]), 0));
+    });
+  }
+
+  it('team stats need the full team rows', () => {
+    const acc = new BoxAccumulator();
+    acc.add([
+      box('A', [['a1', true, ['36', '30', '10-20', '4-8', '6-6', '10', '5', '3', '2', '1', '2', '8', '2', '+12']]]),
+      box('B', [['b1', true, ['40', '20', '8-18', '0-2', '4-5', '5', '7', '2', '1', '0', '1', '4', '3', '-12']]]),
+    ]);
+    const t = teamStatsFromBox(acc.result())!;
+    const a = t.rows.find((r) => r.teamId === 'A')!.values;
+    expect(a['offensive.fieldGoalPct']).toBe(50);
+    expect(a['general.avgRebounds']).toBe(10);
+    expect(a['offensive.avgTurnovers']).toBe(3);
+    expect(teamStatsFromBox({ players: [], teams: [['A', 1, 100, 90, 95, 95]] })).toBeUndefined();
+  });
+});
