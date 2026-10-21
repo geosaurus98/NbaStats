@@ -12,7 +12,7 @@ import { Tile } from '../components/Tile';
 import { useAsync } from '../hooks/useAsync';
 import { formatShortDate, formatTime, parseISODate, toISODate } from '../lib/dates';
 import { downloadFile, gamesToICS } from '../lib/ics';
-import { isFinal, raceSeries, sides, won } from '../lib/league';
+import { countsInStandings, isFinal, raceSeries, sides, won } from '../lib/league';
 import { useSeason } from '../SeasonContext';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 
@@ -30,11 +30,12 @@ export function Team() {
   const games = data?.games ?? [];
   const results = games.filter(isFinal);
   const fixtures = games.filter((g) => !isFinal(g));
-  const wins = results.filter((g) => won(g, id)).length;
-  const pf = results.reduce((s, g) => s + (sides(g, id)[0].score ?? 0), 0);
-  const pa = results.reduce((s, g) => s + (sides(g, id)[1].score ?? 0), 0);
+  const counted = results.filter(countsInStandings);
+  const wins = counted.filter((g) => won(g, id)).length;
+  const pf = counted.reduce((s, g) => s + (sides(g, id)[0].score ?? 0), 0);
+  const pa = counted.reduce((s, g) => s + (sides(g, id)[1].score ?? 0), 0);
   const team = data?.team ?? (games[0] && sides(games[0], id)[0].team);
-  const recent = results.slice(-10);
+  const recent = counted.slice(-10);
   const shots = seasonShots(season.year, type);
   const recentWins = recent.filter((g) => won(g, id)).length;
 
@@ -68,10 +69,10 @@ export function Team() {
 
       {results.length > 0 && (
         <div className="stat-tiles">
-          <Tile label="Record" value={`${wins}-${results.length - wins}`} />
-          <Tile label="Points per game" value={(pf / results.length).toFixed(1)} />
-          <Tile label="Points allowed" value={(pa / results.length).toFixed(1)} />
-          <Tile label="Average margin" value={signed((pf - pa) / results.length)} />
+          <Tile label="Record" value={`${wins}-${counted.length - wins}`} />
+          <Tile label="Points per game" value={(pf / counted.length).toFixed(1)} />
+          <Tile label="Points allowed" value={(pa / counted.length).toFixed(1)} />
+          <Tile label="Average margin" value={signed((pf - pa) / counted.length)} />
           <Tile label="Last 10" value={`${recentWins}-${recent.length - recentWins}`} />
         </div>
       )}

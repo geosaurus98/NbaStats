@@ -81,6 +81,20 @@ describe('normalizeScoreboard', () => {
   });
 });
 
+describe('postponed games', () => {
+  it('drops postponed or 0-0 "final" games', () => {
+    const ev = (id: string, state: string, name: string, hs: string, as: string) => ({
+      id,
+      status: { type: { state, name } },
+      competitions: [{ competitors: [{ homeAway: 'home', score: hs, team: team('1', 'A', 'A A') }, { homeAway: 'away', score: as, team: team('2', 'B', 'B B') }] }],
+    });
+    const games = normalizeScoreboard({
+      events: [ev('1', 'post', 'STATUS_POSTPONED', '0', '0'), ev('2', 'post', 'STATUS_FINAL', '0', '0'), ev('3', 'post', 'STATUS_FINAL', '101', '99'), ev('4', 'pre', 'STATUS_SCHEDULED', '0', '0')],
+    });
+    expect(games.map((g) => g.id)).toEqual(['3', '4']);
+  });
+});
+
 describe('normalizeTeamSchedule', () => {
   it('reads object-shaped scores', () => {
     const { games, team: t } = normalizeTeamSchedule({

@@ -423,3 +423,27 @@ table.zones.wide { max-width: 440px; }
 .hl-card.right { border-color: var(--pos); background: color-mix(in srgb, var(--pos) 12%, var(--surface)); }
 .hl-card.wrong { border-color: var(--neg); background: color-mix(in srgb, var(--neg) 10%, var(--surface)); }
 .hl-value { font-size: 1.8rem; font-weight: 800; }
+
+/* Projections */
+.odds-table td { padding: .35rem .4rem; }
+.odds-cell { position: relative; display: block; min-width: 64px; height: 20px; }
+.odds-bar { position: absolute; left: 0; top: 3px; bottom: 3px; background: color-mix(in srgb, var(--series-1) 35%, transparent); border-radius: 0 3px 3px 0; }
+.odds-text { position: relative; font-variant-numeric: tabular-nums; font-size: .82rem; }
+
+/* Live */
+.live-bar { background: var(--surface); border-bottom: 1px solid var(--border); }
+.live-inner { max-width: 1200px; margin: 0 auto; padding: .35rem 16px; display: flex; gap: .4rem 1.2rem; align-items: center; overflow-x: auto; white-space: nowrap; font-size: .85rem; }
+.live-dot { color: #fff; background: var(--live); border-radius: 4px; padding: .05rem .4rem; font-size: .7rem; font-weight: 800; letter-spacing: .05em; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+.live-game { font-weight: 600; }
+.feed { list-style: none; margin: .4rem 0 0; padding: 0; max-height: 480px; overflow-y: auto; }
+.feed li { display: grid; grid-template-columns: 5.5rem 2.6rem 1fr auto; gap: .5rem; padding: .35rem .2rem; border-bottom: 1px solid var(--border); font-size: .85rem; align-items: baseline; }
+.feed li.scoring .feed-text { font-weight: 600; }
+.feed-team { font-weight: 700; color: var(--muted); }
+.feed-score { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+@media (max-width: 600px) { .feed li { grid-template-columns: 4.2rem 1fr; } .feed-team, .feed-score { display: none; } }
+.updated { font-size: .78rem; }
+.tabs { overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { white-space: nowrap; flex: none; }
