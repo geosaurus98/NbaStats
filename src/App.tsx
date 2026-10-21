@@ -1,5 +1,6 @@
 import { Fragment, useEffect } from 'react';
 import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Awards } from './pages/Awards';
 import { Compare } from './pages/Compare';
 import { Degrees } from './pages/Degrees';
 import { Franchise } from './pages/Franchise';
@@ -29,7 +30,7 @@ import { useSeason } from './SeasonContext';
 // Grouped: this season · stats · teams & players · history & fun.
 const NAV: [string, string][][] = [
   [['/', 'Home'], ['/scores', 'Scores'], ['/standings', 'Standings'], ['/playoffs', 'Playoffs'], ['/projections', 'Projections']],
-  [['/leaders', 'Leaders'], ['/rankings', 'Rankings'], ['/insights', 'Insights']],
+  [['/leaders', 'Leaders'], ['/awards', 'Awards'], ['/rankings', 'Rankings'], ['/insights', 'Insights']],
   [['/teams', 'Teams'], ['/h2h', 'H2H'], ['/compare', 'Compare']],
   [['/history', 'History'], ['/degrees', '6 Degrees'], ['/games', 'Games']],
 ];
@@ -85,6 +86,7 @@ export function App() {
           <Route path="/playoffs" element={<Playoffs />} />
           <Route path="/projections" element={<Projections />} />
           <Route path="/leaders" element={<Leaders />} />
+          <Route path="/awards" element={<Awards />} />
           <Route path="/rankings" element={<Rankings />} />
           <Route path="/h2h" element={<HeadToHead />} />
           <Route path="/compare" element={<Compare />} />

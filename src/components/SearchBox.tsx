@@ -29,6 +29,7 @@ const PAGES = [
   { label: 'Draft history', to: '/history?tab=draft', words: 'draft picks history steals busts number one' },
   { label: 'Guess the player game', to: '/games?tab=guess', words: 'games guess player wordle' },
   { label: 'Higher or lower game', to: '/games?tab=higher', words: 'games higher lower streak' },
+  { label: 'Awards race (MVP, DPOY, ROY)', to: '/awards', words: 'awards race mvp dpoy roy rookie defensive ladder model' },
   { label: 'Team rankings', to: '/rankings', words: 'rankings team stats strength schedule sos' },
   { label: 'Head-to-head', to: '/h2h', words: 'h2h head to head compare teams' },
   { label: 'Compare players', to: '/compare', words: 'compare players side by side' },

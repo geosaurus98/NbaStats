@@ -184,3 +184,8 @@ export function snapshotTeams(season: number): TeamRef[] | undefined {
 export function seasonLineups(season: number, seasonType: SeasonType, teamId: string) {
   return getSnapshot(season)?.lineups?.[String(seasonType)]?.[teamId];
 }
+
+/** The bundled snapshot itself, for models that read several parts of it (e.g. the awards race). */
+export function seasonSnapshot(season: number) {
+  return getSnapshot(season);
+}

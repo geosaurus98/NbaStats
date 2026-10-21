@@ -105,15 +105,15 @@ button.link { background: none; border: 0; padding: 0; color: var(--accent); }
 .season-select { flex: none; display: flex; align-items: center; gap: .5rem; }
 .mainnav { max-width: 1200px; margin: 0 auto; padding: 0 16px .35rem; display: flex; align-items: center; justify-content: space-between; gap: .15rem; overflow-x: auto; scrollbar-width: none; }
 .mainnav::-webkit-scrollbar { display: none; }
-.mainnav a { padding: .35rem .6rem; border-radius: 8px; color: var(--muted); font-weight: 500; white-space: nowrap; flex: none; }
+.mainnav a { padding: .35rem .5rem; border-radius: 8px; color: var(--muted); font-weight: 500; white-space: nowrap; flex: none; }
 .mainnav a:hover { color: var(--text); }
 .mainnav a.active { background: var(--accent-soft); color: var(--accent); }
 .nav-sep { flex: none; width: 1px; height: 1.1rem; background: var(--border); margin: 0 .25rem; }
-@media (max-width: 1100px) {
-  .mainnav a { padding: .35rem .42rem; font-size: .95rem; }
+@media (max-width: 1200px) {
+  .mainnav a { padding: .35rem .34rem; font-size: .9rem; }
   .nav-sep { margin: 0 .1rem; }
 }
-@media (max-width: 960px) {
+@media (max-width: 1040px) {
   .mainnav { justify-content: flex-start; mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); padding-right: 32px; }
 }
 @media (max-width: 600px) {
@@ -520,3 +520,10 @@ table.zones.wide { max-width: 440px; }
 .era-tug span { display: block; height: 100%; }
 .era-table td .small { font-weight: 400; }
 @media (max-width: 600px) { .era-pickers, .era-heads { grid-template-columns: 1fr; } .era-head .era-name { font-size: 1rem; } }
+
+/* Awards race */
+.award-score { display: grid; grid-template-columns: minmax(60px, 140px) 2.6em; align-items: center; gap: .5rem; }
+.award-score b { text-align: right; font-variant-numeric: tabular-nums; }
+.home-award { display: grid; grid-template-columns: 3.4rem 1fr; align-items: baseline; gap: .5rem; padding: .3rem 0; border-bottom: 1px solid var(--border); }
+.home-award ol { margin: 0; padding-left: 1.1rem; display: flex; flex-wrap: wrap; gap: .1rem 1.4rem; }
+.home-award li { white-space: nowrap; }
