@@ -1,7 +1,8 @@
 // Home dashboard: today's games, the favourite team, a standings snapshot,
 // the title race (or champion), the scoring race and today's puzzles.
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchLeaders, fetchScoreboard, fetchStandings } from '../api/espn';
+import { fetchLeaders, fetchScoreboard, fetchStandings, seasonSnapshot } from '../api/espn';
 import type { Game } from '../api/types';
 import { MyTeamCard } from '../components/MyTeamCard';
 import { Empty, ErrorBox, Loading } from '../components/Status';
@@ -11,6 +12,7 @@ import { useAsync } from '../hooks/useAsync';
 import { formatDay, formatTime } from '../lib/dates';
 import { CHAMPIONS } from '../lib/franchiseData';
 import { espnLogo, franchiseOf, FRANCHISES } from '../lib/franchises';
+import { AWARDS, candidates, rankAward } from '../lib/awards';
 import { todayKey } from '../lib/games';
 import { defaultDate, type Season } from '../lib/seasons';
 import { useSeason } from '../SeasonContext';
@@ -55,9 +57,11 @@ export function Home() {
       </div>
       <div className="two-col home-row">
         <ScoringRace season={season.year} />
-        <Puzzles />
+        <AwardRace season={season.year} />
       </div>
-      <div className="card home-row">
+      <div className="two-col home-row">
+        <Puzzles />
+      <div className="card">
         <h3>Explore</h3>
         <div className="chips tight">
           {fav && <Link className="chip" to={`/franchise/${fav.id}`}>{fav.name} history</Link>}
@@ -67,7 +71,9 @@ export function Home() {
           <Link className="chip" to="/history?tab=leaders">All-time leaders</Link>
           <Link className="chip" to="/history?tab=draft">Draft history</Link>
           <Link className="chip" to="/franchise/LAL">Franchise histories</Link>
+          <Link className="chip" to="/history?tab=teams">Team vs team across eras</Link>
         </div>
+      </div>
       </div>
     </section>
   );
@@ -191,6 +197,34 @@ function ScoringRace({ season }: { season: number }) {
         </tbody>
       </table>
       <p className="small"><Link to="/leaders">All leaders →</Link></p>
+    </div>
+  );
+}
+
+function AwardRace({ season }: { season: number }) {
+  const snap = seasonSnapshot(season);
+  const races = useMemo(() => {
+    if (!snap) return [];
+    const { list, leagueDrtg } = candidates(snap);
+    return AWARDS.map((a) => ({ ...a, top: rankAward(a.id, list, leagueDrtg).filter((r) => r.eligible).slice(0, 3) }));
+  }, [snap]);
+  return (
+    <div className="card">
+      <h3>Awards race</h3>
+      {races.every((r) => !r.top.length) && <p className="muted small">No games played yet.</p>}
+      {races.map((r) =>
+        r.top.length ? (
+          <div key={r.id} className="home-award">
+            <Link to={`/awards?award=${r.id}`} className="muted small">{r.short}</Link>
+            <ol>
+              {r.top.map((x) => (
+                <li key={x.c.id}><Link to={`/player/${x.c.id}`}>{x.c.name}</Link></li>
+              ))}
+            </ol>
+          </div>
+        ) : null,
+      )}
+      <p className="small"><Link to="/awards">Full ladders →</Link></p>
     </div>
   );
 }
