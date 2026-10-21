@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  # The snapshot job commits data with GITHUB_TOKEN, which doesn't trigger
+  # push workflows, so redeploy when it finishes instead.
+  workflow_run:
+    workflows: [Season snapshot]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
@@ -17,9 +23,13 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
+      # After a snapshot run, build the commit it just pushed (latest main).
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || '' }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -28,12 +38,12 @@ jobs:
       - run: npm test
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_run'
         with:
           path: dist
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_run'
     needs: build
     runs-on: ubuntu-latest
     environment:
