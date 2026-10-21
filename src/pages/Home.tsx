@@ -13,6 +13,7 @@ import { formatDay, formatTime } from '../lib/dates';
 import { CHAMPIONS } from '../lib/franchiseData';
 import { espnLogo, franchiseOf, FRANCHISES } from '../lib/franchises';
 import { AWARDS, candidates, rankAward } from '../lib/awards';
+import { L } from '../lib/boxTotals';
 import { todayKey } from '../lib/games';
 import { defaultDate, type Season } from '../lib/seasons';
 import { useSeason } from '../SeasonContext';
@@ -39,6 +40,7 @@ export function Home() {
       <TodayGames date={date} />
       <div className="two-col home-row">
         <StandingsSnapshot season={season.year} />
+        <div className="home-stack">
         {champ ? (
           <div className="card">
             <h3>Champions</h3>
@@ -54,6 +56,8 @@ export function Home() {
         ) : (
           <TitleOdds season={season} />
         )}
+        <NightCard season={season.year} />
+        </div>
       </div>
       <div className="two-col home-row">
         <ScoringRace season={season.year} />
@@ -72,6 +76,11 @@ export function Home() {
           <Link className="chip" to="/history?tab=draft">Draft history</Link>
           <Link className="chip" to="/franchise/LAL">Franchise histories</Link>
           <Link className="chip" to="/history?tab=teams">Team vs team across eras</Link>
+          <Link className="chip" to="/projections?tab=lottery">Draft lottery</Link>
+          <Link className="chip" to="/insights?tab=hot">Hot &amp; cold</Link>
+          <Link className="chip" to="/insights?tab=clutch">Clutch</Link>
+          <Link className="chip" to="/history?tab=greatest">Greatest teams</Link>
+          <Link className="chip" to="/history?tab=similar">Similar players</Link>
         </div>
       </div>
       </div>
@@ -201,6 +210,37 @@ function ScoringRace({ season }: { season: number }) {
   );
 }
 
+function NightCard({ season }: { season: number }) {
+  const snap = seasonSnapshot(season);
+  const night = snap?.nightly?.[0];
+  if (!night) return null;
+  const teams = new Map(snap.teams.map((t) => [t.id, t]));
+  const name = (id: string) => snap.players?.[id] ?? id;
+  const b = night.best[0];
+  const l = b.line;
+  return (
+    <div className="card">
+      <h3>Player of the night</h3>
+      <div className="muted small">{formatDay(night.day)}</div>
+      <div className="home-night">
+        <div>
+          <Link to={`/player/${b.playerId}`}><b>{name(b.playerId)}</b></Link> <span className="muted small">{teams.get(b.teamId)?.abbr} vs {teams.get(b.oppId)?.abbr} · {b.won ? 'W' : 'L'}</span>
+          <div>
+            <b>{l[L.pts]}</b> pts · <b>{l[L.oreb] + l[L.dreb]}</b> reb · <b>{l[L.ast]}</b> ast <span className="muted small">· {l[L.fgm]}/{l[L.fga]} FG</span>
+          </div>
+        </div>
+        <span className="night-score" title="Game Score">{b.gmsc.toFixed(1)}</span>
+      </div>
+      {night.best.slice(1).map((x) => (
+        <div key={x.playerId} className="muted small">
+          also: <Link to={`/player/${x.playerId}`}>{name(x.playerId)}</Link> {x.line[L.pts]} pts, {x.line[L.oreb] + x.line[L.dreb]} reb, {x.line[L.ast]} ast
+        </div>
+      ))}
+      <p className="small"><Link to="/insights?tab=night">Every night →</Link></p>
+    </div>
+  );
+}
+
 function AwardRace({ season }: { season: number }) {
   const snap = seasonSnapshot(season);
   const races = useMemo(() => {
@@ -244,11 +284,13 @@ function Puzzles() {
   const grid = stored(`grid-${day}`) as { picks?: (number | null)[]; guessesLeft?: number; gaveUp?: boolean } | undefined;
   const connect = stored(`connect-${day}`) as { chain?: number[]; gaveUp?: boolean } | undefined;
   const guess = stored(`guess-${day}`) as { guesses?: number[]; done?: boolean } | undefined;
+  const statline = stored(`statline-${day}`) as { guesses?: number[]; done?: boolean } | undefined;
   const gridFilled = grid?.picks?.filter((p) => p != null).length ?? 0;
   const items = [
     { tab: 'grid', label: 'Played for both', status: grid?.gaveUp || grid?.guessesLeft === 0 || gridFilled === 9 ? `Done · ${gridFilled}/9` : gridFilled ? `${gridFilled}/9 so far` : 'Not started' },
     { tab: 'connect', label: 'Connect the players', status: connect?.gaveUp ? 'Gave up' : (connect?.chain?.length ?? 0) > 1 ? `${connect!.chain!.length - 1} links so far` : 'Not started' },
     { tab: 'guess', label: 'Guess the player', status: guess?.done ? 'Done' : guess?.guesses?.length ? `${guess.guesses.length}/6 guesses` : 'Not started' },
+    { tab: 'statline', label: 'Who am I?', status: statline?.done ? 'Done' : statline?.guesses?.length ? `${statline.guesses.length}/6 guesses` : 'Not started' },
   ];
   return (
     <div className="card">

@@ -6,7 +6,9 @@ import * as live from '../src/api/live';
 import { aggregateAssists } from '../src/api/normalize';
 import { compactGame, type SeasonSnapshot } from '../src/api/snapshot';
 import type { AssistEvent } from '../src/api/types';
-import { BoxAccumulator, nameKey } from '../src/lib/boxTotals';
+import { BoxAccumulator, lineValues, nameKey, type GameLines, type SeasonLines } from '../src/lib/boxTotals';
+import { ClutchAccumulator } from '../src/lib/clutch';
+import { nightlyBest } from '../src/lib/gameLines';
 import { countsInStandings } from '../src/lib/league';
 import { gameLineups, LineupAccumulator, type GameInput } from '../src/lib/lineups';
 import { BinCounter, gameDrama, type DramaRow, type ShotBins } from '../src/lib/pbpStats';
@@ -26,6 +28,8 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
   const players = new Map<string, { team: string; bins: BinCounter }>();
   const lineups = new LineupAccumulator();
   const box = new BoxAccumulator();
+  const clutch = new ClutchAccumulator();
+  const lines = new Map<string, { home: boolean; starter: boolean; id: string; v: number[] }[]>();
   let failed = 0;
   await live.mapLimit(gameIds, 8, async (id) => {
     const s = await live.fetchSummary(id, false, false).catch(() => undefined);
@@ -35,6 +39,23 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     }
     Object.assign(names, s.pbp.names);
     if (!notCounted.has(id)) box.add(s.teams); // the NBA Cup final isn't a regular-season game
+    lines.set(
+      id,
+      s.teams.flatMap((t) =>
+        t.players.flatMap((p) => {
+          const v = !p.dnp && p.id ? lineValues(t.labels, p.stats) : undefined;
+          return v ? [{ id: p.id, home: t.team.id === s.game.home.team.id, starter: p.starter, v }] : [];
+        }),
+      ),
+    );
+    clutch.add({
+      feed: s.pbp.feed,
+      homeId: s.game.home.team.id,
+      awayId: s.game.away.team.id,
+      teamOf: Object.fromEntries(s.teams.flatMap((t) => t.players.map((p) => [p.id, t.team.id]))),
+      homeScore: s.game.home.score ?? 0,
+      awayScore: s.game.away.score ?? 0,
+    });
     for (const t of s.teams) for (const p of t.players) if (p.id && p.name) fullNames[p.id] = p.name;
     const input: GameInput = {
       starters: Object.fromEntries(s.teams.map((t) => [t.team.id, t.players.filter((p) => p.starter).map((p) => p.id)])),
@@ -67,7 +88,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     players: Object.fromEntries(top.map(([id, p]) => [id, { name: names[id] ?? id, team: p.team, attempts: p.bins.attempts, bins: p.bins.rows() }])),
   };
   console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
-  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result() };
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines };
 }
 
 const SORTS = [
@@ -88,6 +109,8 @@ async function build(year: number): Promise<SeasonSnapshot> {
   console.log(`teams: ${teams.length}`);
 
   const snap: SeasonSnapshot = { year, generatedAt: new Date().toISOString(), teams, standings, games: {}, leaders: {}, teamStats: {}, highs: {}, assists: {}, drama: {}, shots: {}, players: {}, lineups: {}, complete: true };
+  const playerIndex = new Map<string, number>();
+  const seasonLines: GameLines[] = [];
   for (const type of TYPES) {
     const { games } = await live.fetchLeagueGames(year, type);
     snap.games[type] = games.map(compactGame);
@@ -107,10 +130,27 @@ async function build(year: number): Promise<SeasonSnapshot> {
     snap.shots![type] = pbp.shots;
     snap.lineups![type] = pbp.lineups;
     Object.assign(snap.players!, pbp.fullNames);
+    snap.clutch ??= {};
+    snap.clutch[type] = pbp.clutch;
+    for (const g of games) {
+      const ls = pbp.lines.get(g.id);
+      if (!ls) continue;
+      const line = (l: { id: string; home: boolean; starter: boolean; v: number[] }) => {
+        let i = playerIndex.get(l.id);
+        if (i == null) playerIndex.set(l.id, (i = playerIndex.size));
+        return [i, l.home ? 1 : 0, l.starter ? 1 : 0, ...l.v.map((x) => Math.round(x))];
+      };
+      seasonLines.push([g.id, g.date, type, g.home.team.id, g.away.team.id, countsInStandings(g) ? 1 : 0, ls.map(line)]);
+    }
     if (type === 2) snap.box = { 2: { ...pbp.box, rookies: rookies(year, pbp.box.players.map((r) => r[0]), pbp.fullNames) } };
     const pairCount = Object.values(snap.assists![type]).reduce((n, t) => n + t.pairs.length, 0);
     console.log(`type ${type}: assist pairs ${pairCount} across ${Object.keys(snap.assists![type]).length} teams`);
   }
+  const out: SeasonLines = { year, ids: [...playerIndex.keys()], games: seasonLines };
+  // The last two weeks of nightly bests, small enough for the home page.
+  snap.nightly = nightlyBest(out, 2, 3).slice(0, 14);
+  writeFileSync(`src/data/lines-${year}.json`, JSON.stringify(out));
+  console.log(`  lines: ${seasonLines.length} games, ${playerIndex.size} players`);
   return snap;
 }
 
