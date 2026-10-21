@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Degrees } from './pages/Degrees';
 import { Game } from './pages/Game';
+import { Games } from './pages/Games';
 import { HeadToHead } from './pages/HeadToHead';
 import { History } from './pages/History';
 import { Insights } from './pages/Insights';
@@ -40,6 +41,7 @@ export function App() {
             <NavLink to="/degrees">6 Degrees</NavLink>
             <NavLink to="/insights">Insights</NavLink>
             <NavLink to="/history">History</NavLink>
+            <NavLink to="/games">Games</NavLink>
           </nav>
           <label className="season-select">
             <span className="muted">Season</span>
@@ -62,6 +64,7 @@ export function App() {
           <Route path="/degrees" element={<Degrees />} />
           <Route path="/history" element={<History />} />
           <Route path="/insights" element={<Insights />} />
+          <Route path="/games" element={<Games />} />
           <Route path="/player/:id" element={<Player />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/team/:id" element={<Team />} />

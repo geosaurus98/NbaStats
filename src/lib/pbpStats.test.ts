@@ -35,6 +35,13 @@ describe('gameDrama', () => {
 
 describe('BinCounter', () => {
   const shot = (x: number, y: number, made: boolean): Shot => ({ teamId: 't', athleteId: 'a', x, y, made, value: 2, text: '', period: 1, clock: '' });
+  it('keeps 2s and 3s in the same bin apart', () => {
+    const b = new BinCounter(2);
+    b.add({ ...shot(48, 6, true), value: 3 });
+    b.add(shot(48.5, 6.5, false));
+    expect(b.rows().map((r) => r[3])).toEqual([2, 3]);
+  });
+
   it('counts attempts and makes per court bin, ignoring heaves', () => {
     const b = new BinCounter(2);
     b.add(shot(25, 5, true));
@@ -43,8 +50,8 @@ describe('BinCounter', () => {
     b.add(shot(25, 80, false)); // back court
     expect(b.attempts).toBe(3);
     expect(b.rows()).toEqual([
-      [binIndex({ x: 1, y: 1 }, 2), 1, 1],
-      [binIndex({ x: 25, y: 5 }, 2), 2, 1],
+      [binIndex({ x: 1, y: 1 }, 2), 1, 1, 2],
+      [binIndex({ x: 25, y: 5 }, 2), 2, 1, 2],
     ]);
   });
 });
