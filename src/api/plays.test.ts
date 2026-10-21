@@ -56,6 +56,14 @@ describe('normalizePlays', () => {
     expect(pbp.shots[0]).toMatchObject({ x: 3, y: 16.25 });
   });
 
+  it('keeps every play with text for the feed', () => {
+    expect(pbp.feed.map((f) => [f.id, f.scoring])).toEqual([
+      ['2', true],
+      ['3', false],
+      ['4', true],
+    ]);
+  });
+
   it('tracks score changes and win probability', () => {
     expect(pbp.flow.map((f) => [f.home, f.away])).toEqual([[0, 0], [3, 0], [4, 0]]);
     expect(pbp.flow[1].homeWin).toBe(0.6);

@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { AllTimeLeaders, Awards } from '../components/AllTime';
+import { CareerArc, CareerStatsTable } from '../components/CareerStats';
 import { CareerTimeline } from '../components/CareerTimeline';
 import { ChordDiagram } from '../components/ChordDiagram';
 import { ContinuityHeatmap } from '../components/ContinuityHeatmap';
@@ -14,6 +16,8 @@ const TABS = [
   { id: 'movement', label: 'Player movement' },
   { id: 'careers', label: 'Career journeys' },
   { id: 'compare', label: 'Compare two players' },
+  { id: 'leaders', label: 'All-time leaders' },
+  { id: 'awards', label: 'Awards' },
   { id: 'continuity', label: 'Roster continuity' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
@@ -44,6 +48,8 @@ export function History() {
       {tab === 'movement' && <Movement graph={graph} />}
       {tab === 'careers' && <Careers graph={graph} params={params} setParam={setParam} />}
       {tab === 'compare' && <Compare graph={graph} params={params} setParam={setParam} />}
+      {tab === 'leaders' && <AllTimeLeaders graph={graph} />}
+      {tab === 'awards' && <Awards graph={graph} />}
       {tab === 'continuity' && <Continuity graph={graph} />}
       <p className="muted small">
         Rosters from Basketball-Reference via the open bball-reference-datasets project. The source doesn't say in which order a player
@@ -206,6 +212,9 @@ function Careers({ graph, params, setParam }: ParamProps) {
               ))}
             </ol>
           </div>
+          <h3>Career stats</h3>
+          <CareerStatsTable graph={graph} player={p} />
+          <CareerArc graph={graph} players={[p]} />
         </>
       )}
       <h2>The journeymen: most franchises played for</h2>
@@ -273,6 +282,7 @@ function Compare({ graph, params, setParam }: ParamProps) {
               <Link to={`/degrees?c=${encodeURIComponent(players[a][0])}&t=${encodeURIComponent(players[b][0])}`}>See the teammate chain →</Link>
             </p>
           </div>
+          <CareerArc graph={graph} players={[a, b]} />
           <h3>Teammates of both ({result.common.length})</h3>
           {result.common.length === 0 ? (
             <p className="muted small">No one played with both.</p>

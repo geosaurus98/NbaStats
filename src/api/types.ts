@@ -172,7 +172,20 @@ export interface Shot {
   clock: string;
 }
 
+export interface FeedItem {
+  id: string;
+  period: number;
+  clock: string;
+  text: string;
+  teamId: string;
+  home: number;
+  away: number;
+  scoring: boolean;
+}
+
 export interface PlayByPlay {
+  /** Every play, in game order. */
+  feed: FeedItem[];
   assists: AssistEvent[];
   flow: FlowPoint[];
   shots: Shot[];

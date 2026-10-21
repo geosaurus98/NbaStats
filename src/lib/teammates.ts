@@ -14,6 +14,8 @@ export interface TeammateData {
   central: [number, number][];
   /** Each player's rosters in career order (within a season: order played). */
   stints: number[][];
+  /** Basketball-Reference player ids, by player index. */
+  ids?: string[];
 }
 
 export interface Graph {

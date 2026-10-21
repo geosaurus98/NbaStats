@@ -3,40 +3,11 @@
 // Source: sumitrodatta/bball-reference-datasets (Basketball-Reference data).
 //   npx tsx scripts/teammates.ts
 import { writeFileSync } from 'node:fs';
+import { parseCSV } from './csv';
 import { franchiseOf } from '../src/lib/franchises';
 import { buildGraph, centrality, type TeammateData } from '../src/lib/teammates';
 
 const SOURCE = 'https://raw.githubusercontent.com/sumitrodatta/bball-reference-datasets/master/Data/Player%20Season%20Info.csv';
-
-/** Minimal RFC 4180 parser (handles quoted fields and escaped quotes). */
-function parseCSV(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = '';
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') {
-        field += '"';
-        i++;
-      } else if (c === '"') quoted = false;
-      else field += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ',') {
-      row.push(field);
-      field = '';
-    } else if (c === '\n' || c === '\r') {
-      if (c === '\r' && text[i + 1] === '\n') i++;
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = '';
-    } else field += c;
-  }
-  if (field || row.length) rows.push([...row, field]);
-  return rows.filter((r) => r.length > 1);
-}
 
 const res = await fetch(SOURCE);
 if (!res.ok) throw new Error(`Download failed: ${res.status}`);
@@ -113,6 +84,7 @@ const data: TeammateData = {
   rosters: sortedRosters.map(([, r]) => [r.season, r.lg, r.team, [...r.ids]]),
   central: [],
   stints: stintKeys.map((keys) => orderStints(keys.map((k) => rosterIndex.get(k)!))),
+  ids: [...index.keys()],
 };
 
 // The most connected players in history: lowest average distance to everyone.
