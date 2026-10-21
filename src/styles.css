@@ -527,3 +527,25 @@ table.zones.wide { max-width: 440px; }
 .home-award { display: grid; grid-template-columns: 3.4rem 1fr; align-items: baseline; gap: .5rem; padding: .3rem 0; border-bottom: 1px solid var(--border); }
 .home-award ol { margin: 0; padding-left: 1.1rem; display: flex; flex-wrap: wrap; gap: .1rem 1.4rem; }
 .home-award li { white-space: nowrap; }
+
+/* Projections → Draft lottery */
+.lottery-table .lot-pick { min-width: 2.1rem; padding-left: .25rem; padding-right: .25rem; font-variant-numeric: tabular-nums; font-size: .82rem; }
+.lottery-result ol { columns: 2; column-gap: 2rem; margin: 0; padding-left: 1.5rem; }
+.lottery-result li { padding: .2rem 0; break-inside: avoid; }
+.lottery-rest { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; }
+@media (max-width: 600px) { .lottery-result ol { columns: 1; } }
+
+/* History → Similar players */
+.sim-cell { display: inline-grid; grid-template-columns: 60px 2em; gap: .4rem; align-items: center; }
+.similar-target td { background: color-mix(in srgb, var(--series-1) 10%, transparent); font-weight: 600; }
+
+/* Insights → Player of the night */
+.night { padding: .5rem 0; border-bottom: 1px solid var(--border); }
+.night-row { display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center; }
+.night-score { font-weight: 800; font-size: 1.1rem; font-variant-numeric: tabular-nums; color: var(--series-1); }
+.night-runner { margin-top: .15rem; }
+.night-date { margin: -.1rem 0 .4rem; }
+.legend-dot { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; vertical-align: -1px; }
+.home-stack { display: flex; flex-direction: column; gap: 1rem; }
+.home-stack > .card { margin-top: 0; }
+.home-night { display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center; margin: .3rem 0 .4rem; }

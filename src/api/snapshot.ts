@@ -5,6 +5,7 @@
 import type { SeasonHighsResult } from './live';
 import type { BoxTotals } from '../lib/boxTotals';
 import type { ClutchTotals } from '../lib/clutch';
+import type { NightBest } from '../lib/gameLines';
 import type { TeamLineupSeason } from '../lib/lineups';
 import type { DramaRow, ShotBins } from '../lib/pbpStats';
 import type { AssistPairs, Conference, Game, LeaderTable, TeamRef, TeamStatTable } from './types';
@@ -38,6 +39,8 @@ export interface SeasonSnapshot {
   box?: Record<string, BoxTotals>;
   /** Per season type: clutch-time player and team totals. */
   clutch?: Record<string, ClutchTotals>;
+  /** Regular season: the best three lines of each of the last 14 nights, newest first. */
+  nightly?: { day: string; best: NightBest[] }[];
 }
 
 export function compactGame(g: Game): CompactGame {

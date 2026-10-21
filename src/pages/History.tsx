@@ -7,6 +7,8 @@ import { CareerTimeline } from '../components/CareerTimeline';
 import { ChordDiagram } from '../components/ChordDiagram';
 import { ContinuityHeatmap } from '../components/ContinuityHeatmap';
 import { PlayerDatalist, PlayerInput } from '../components/PlayerInput';
+import { GreatestTeams } from '../components/GreatestTeams';
+import { SimilarPlayers } from '../components/SimilarPlayers';
 import { TeamSeasonCompare } from '../components/TeamSeasonCompare';
 import { Tile } from '../components/Tile';
 import { franchiseById } from '../lib/franchises';
@@ -19,10 +21,12 @@ const TABS = [
   { id: 'movement', label: 'Player movement' },
   { id: 'careers', label: 'Career journeys' },
   { id: 'compare', label: 'Compare two players' },
+  { id: 'similar', label: 'Similar players' },
   { id: 'leaders', label: 'All-time leaders' },
   { id: 'awards', label: 'Awards' },
   { id: 'draft', label: 'Draft' },
   { id: 'teams', label: 'Team vs team' },
+  { id: 'greatest', label: 'Greatest teams' },
   { id: 'continuity', label: 'Roster continuity' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
@@ -62,6 +66,8 @@ function HistoryPage({ graph }: { graph: Graph }) {
       {tab === 'awards' && <Awards graph={graph} />}
       {tab === 'draft' && <DraftHistory graph={graph} />}
       {tab === 'teams' && <TeamSeasonCompare graph={graph} />}
+      {tab === 'greatest' && <GreatestTeams graph={graph} />}
+      {tab === 'similar' && <SimilarPlayers graph={graph} params={params} setParam={setParam} />}
       {tab === 'continuity' && <Continuity graph={graph} />}
       <p className="muted small">
         Rosters from Basketball-Reference via the open bball-reference-datasets project. The source doesn't say in which order a player
