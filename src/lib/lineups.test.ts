@@ -58,3 +58,22 @@ describe('gameLineups', () => {
     expect(h6).toEqual(['h6', 720, 0, 0, 2880, 24, 8]);
   });
 });
+
+import { combos } from './lineups';
+
+describe('combos', () => {
+  it('sums lineups into pairs and trios', () => {
+    const m = new Map([
+      ['a,b,c,d,e', { sec: 600, pf: 20, pa: 10 }],
+      ['a,b,c,d,f', { sec: 300, pf: 5, pa: 8 }],
+    ]);
+    const pairs = combos(m, 2, 0, 100);
+    const ab = pairs.find((p) => p[0].join() === 'a,b')!;
+    expect(ab.slice(1)).toEqual([900, 25, 18]);
+    expect(pairs.find((p) => p[0].join() === 'e,f')).toBeUndefined();
+    expect(pairs.length).toBe(10 + 4); // 10 from the first, plus the 4 new pairs with f
+    const trios = combos(m, 3, 700, 100);
+    expect(trios.every((t) => t[1] === 900)).toBe(true);
+    expect(trios.length).toBe(4); // abc, abd, acd, bcd
+  });
+});

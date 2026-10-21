@@ -63,6 +63,16 @@ for (const r of totals) {
   if (p != null) splits.push([p, Number(r.season), LEAGUES.indexOf(r.lg), r.team, num(r.g), num(r.pts), num(r.trb), num(r.ast), num(r.stl), num(r.blk), num(r.mp)]);
 }
 
+// Main position: the one listed for most of a player's games (first of "SG-SF").
+const posGames: Map<string, number>[] = teammates.players.map(() => new Map());
+for (const r of totals) {
+  const p = indexOf.get(r.player_id);
+  const pos = (r.pos ?? '').split('-')[0];
+  if (p == null || !/^(PG|SG|SF|PF|C|G|F)$/.test(pos) || /^\dTM$/.test(r.team)) continue;
+  posGames[p].set(pos, (posGames[p].get(pos) ?? 0) + (Number(r.g) || 0));
+}
+const pos = posGames.map((m) => [...m].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '');
+
 const awards: CareerData['awards'] = {};
 for (const r of await table('Player Award Shares.csv')) {
   const p = indexOf.get(r.player_id);
@@ -82,6 +92,7 @@ const data: CareerData = {
   awards,
   allStars,
   splits,
+  pos,
 };
 const json = JSON.stringify(data);
 writeFileSync('src/data/careers.json', json);
