@@ -1,4 +1,5 @@
 import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Compare } from './pages/Compare';
 import { Degrees } from './pages/Degrees';
 import { Game } from './pages/Game';
 import { Games } from './pages/Games';
@@ -13,6 +14,7 @@ import { Scores } from './pages/Scores';
 import { Standings } from './pages/Standings';
 import { Team } from './pages/Team';
 import { Teams } from './pages/Teams';
+import { SearchBox } from './components/SearchBox';
 import { SEASONS } from './lib/seasons';
 import { useSeason } from './SeasonContext';
 
@@ -38,11 +40,13 @@ export function App() {
             <NavLink to="/rankings">Rankings</NavLink>
             <NavLink to="/teams">Teams</NavLink>
             <NavLink to="/h2h">H2H</NavLink>
+            <NavLink to="/compare">Compare</NavLink>
             <NavLink to="/degrees">6 Degrees</NavLink>
             <NavLink to="/insights">Insights</NavLink>
             <NavLink to="/history">History</NavLink>
             <NavLink to="/games">Games</NavLink>
           </nav>
+          <SearchBox />
           <label className="season-select">
             <span className="muted">Season</span>
             <select value={season.year} onChange={(e) => changeSeason(Number(e.target.value))}>
@@ -61,6 +65,7 @@ export function App() {
           <Route path="/leaders" element={<Leaders />} />
           <Route path="/rankings" element={<Rankings />} />
           <Route path="/h2h" element={<HeadToHead />} />
+          <Route path="/compare" element={<Compare />} />
           <Route path="/degrees" element={<Degrees />} />
           <Route path="/history" element={<History />} />
           <Route path="/insights" element={<Insights />} />
