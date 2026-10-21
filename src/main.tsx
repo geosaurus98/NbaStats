@@ -17,3 +17,9 @@ createRoot(document.getElementById('root')!).render(
     </HashRouter>
   </StrictMode>,
 );
+
+// Installable/offline support when hosted (service workers need https; the
+// double-click standalone file runs from file:// and skips this).
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => undefined));
+}
