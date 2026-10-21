@@ -13,6 +13,8 @@ html = html.replace(/<script type="module" crossorigin src="\.\/([^"]+)"><\/scri
 html = html.replace(/<link rel="stylesheet" crossorigin href="\.\/([^"]+)">/g, (_, href) => {
   return `<style>${readFileSync(join(dist, href), 'utf8')}</style>`;
 });
+// The web-app manifest and icons only apply to the hosted site.
+html = html.replace(/\s*<link rel="(manifest|apple-touch-icon)"[^>]*>/g, '');
 if (/src="\.\/assets|href="\.\/assets/.test(html)) throw new Error('Unhandled asset reference in dist/index.html');
 
 mkdirSync('standalone', { recursive: true });
