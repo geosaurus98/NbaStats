@@ -8,6 +8,7 @@ import { compactGame, type SeasonSnapshot } from '../src/api/snapshot';
 import type { AssistEvent } from '../src/api/types';
 import { BoxAccumulator, lineValues, nameKey, type GameLines, type SeasonLines } from '../src/lib/boxTotals';
 import { ClutchAccumulator } from '../src/lib/clutch';
+import { nightlyBest } from '../src/lib/gameLines';
 import { countsInStandings } from '../src/lib/league';
 import { gameLineups, LineupAccumulator, type GameInput } from '../src/lib/lineups';
 import { BinCounter, gameDrama, type DramaRow, type ShotBins } from '../src/lib/pbpStats';
@@ -146,6 +147,8 @@ async function build(year: number): Promise<SeasonSnapshot> {
     console.log(`type ${type}: assist pairs ${pairCount} across ${Object.keys(snap.assists![type]).length} teams`);
   }
   const out: SeasonLines = { year, ids: [...playerIndex.keys()], games: seasonLines };
+  // The last two weeks of nightly bests, small enough for the home page.
+  snap.nightly = nightlyBest(out, 2, 3).slice(0, 14);
   writeFileSync(`src/data/lines-${year}.json`, JSON.stringify(out));
   console.log(`  lines: ${seasonLines.length} games, ${playerIndex.size} players`);
   return snap;
