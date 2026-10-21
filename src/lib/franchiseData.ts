@@ -7,7 +7,16 @@ export interface FranchiseData {
   teamSeasons: [number, number, string, string, number, number, number, number | null, number | null, number | null, number | null, number | null][];
   /** [season, league, overallPick, round, teamCode, playerIndex (-1 = never played), name, college] */
   draft: [number, number, number, number, string, number, string, string][];
+  /** Parallel to teamSeasons: [age, mov, netRtg, threePARate, ts%, eFG%, tov%, orb%, oppEFG%, ftRate]. */
+  detail: (number | null)[][];
+  /** Parallel to teamSeasons: top five scorers, flattened [playerIndex, g, ppg×10, rpg×10, apg×10] × 5. */
+  top: number[][];
+  /** League averages: [season, league, oRtg, pace, threePARate, ts%, eFG%, tov%, orb%, ftRate]. */
+  league: (number | null)[][];
 }
+
+export const DETAIL = { age: 0, mov: 1, nrtg: 2, par3: 3, ts: 4, efg: 5, tov: 6, orb: 7, oppEfg: 8, ftr: 9 } as const;
+export const LEAGUE = { ortg: 2, pace: 3, par3: 4, ts: 5, efg: 6, tov: 7, orb: 8, ftr: 9 } as const;
 
 let pending: Promise<FranchiseData> | undefined;
 

@@ -3,6 +3,7 @@
 // limits). A full season of games fits in ~100 KB instead of ~45 MB of raw
 // team schedules.
 import type { SeasonHighsResult } from './live';
+import type { BoxTotals } from '../lib/boxTotals';
 import type { TeamLineupSeason } from '../lib/lineups';
 import type { DramaRow, ShotBins } from '../lib/pbpStats';
 import type { AssistPairs, Conference, Game, LeaderTable, TeamRef, TeamStatTable } from './types';
@@ -32,6 +33,8 @@ export interface SeasonSnapshot {
   complete?: boolean;
   /** Per season type, then team id: most-used lineups and on/off splits. */
   lineups?: Record<string, Record<string, TeamLineupSeason>>;
+  /** Regular season ('2') only: every player's and team's summed box scores. */
+  box?: Record<string, BoxTotals>;
 }
 
 export function compactGame(g: Game): CompactGame {
