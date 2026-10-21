@@ -1,6 +1,9 @@
 import { Link, useParams } from 'react-router-dom';
 import { fetchSummary } from '../api/espn';
+import { aggregateAssists } from '../api/normalize';
 import type { Competitor, TeamBox } from '../api/types';
+import { AssistNetwork } from '../components/AssistNetwork';
+import { GameFlow, ShotChart } from '../components/GameCharts';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
@@ -18,7 +21,8 @@ export function Game() {
   if (error && !data) return <ErrorBox error={error} />;
   if (!data) return null;
 
-  const { game, teams } = data;
+  const { game, teams, pbp } = data;
+  const assists = aggregateAssists(pbp.assists, pbp.names);
   const periods = Math.max(game.home.linescores.length, game.away.linescores.length);
   const day = game.date ? toISODate(new Date(game.date)) : '';
 
@@ -65,6 +69,25 @@ export function Game() {
       )}
 
       {teams.length === 2 && teams[0].teamStats.length > 0 && <TeamComparison a={teams[0]} b={teams[1]} />}
+
+      <GameFlow game={game} pbp={pbp} />
+
+      {Object.keys(assists).length > 0 && (
+        <>
+          <h2>Who assisted whom</h2>
+          <div className="two-col">
+            {[game.away.team, game.home.team].map((t) =>
+              assists[t.id] ? (
+                <div key={t.id} className="card">
+                  <AssistNetwork data={assists[t.id]} title={t.name} />
+                </div>
+              ) : null,
+            )}
+          </div>
+        </>
+      )}
+
+      <ShotChart game={game} pbp={pbp} />
 
       {teams.map((t) => (
         <BoxScore key={t.team.id} box={t} />

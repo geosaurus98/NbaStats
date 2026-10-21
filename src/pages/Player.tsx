@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { fetchAthlete, fetchGameLog } from '../api/espn';
+import { fetchAthlete, fetchGameLog, playerAssistPartners } from '../api/espn';
 import type { LogSeasonType } from '../api/types';
 import { LineChart } from '../components/Charts';
+import { PassingPartners } from '../components/PassingPartners';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { Tile } from '../components/Tile';
@@ -35,6 +36,7 @@ export function Player() {
   const hasPlayoffs = log.data?.games.some((g) => g.seasonType === 'playoffs');
   const avg = averages(games);
   const p = profile.data;
+  const partners = playerAssistPartners(id, season.year, type === 'playoffs' ? 3 : 2);
 
   const values = games.map((g) => statValue(g, trend));
   const rolling = values.map((_, i) => {
@@ -114,6 +116,8 @@ export function Player() {
               yFormat={(v) => (Number.isInteger(v) ? String(v) : v.toFixed(1))}
             />
           </div>
+
+          {partners && <PassingPartners to={partners.to} from={partners.from} />}
 
           <h2>Game log</h2>
           <div className="table-wrap">
