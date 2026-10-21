@@ -22,7 +22,7 @@ async function build(year: number): Promise<SeasonSnapshot> {
   const teams = standings.flatMap((c) => c.rows.map((r) => r.team)).sort((a, b) => a.name.localeCompare(b.name));
   console.log(`teams: ${teams.length}`);
 
-  const snap: SeasonSnapshot = { year, generatedAt: new Date().toISOString(), teams, standings, games: {}, leaders: {}, teamStats: {}, highs: {} };
+  const snap: SeasonSnapshot = { year, generatedAt: new Date().toISOString(), teams, standings, games: {}, leaders: {}, teamStats: {}, highs: {}, assists: {} };
   for (const type of TYPES) {
     const { games } = await live.fetchLeagueGames(year, type);
     snap.games[type] = games.map(compactGame);
@@ -33,6 +33,10 @@ async function build(year: number): Promise<SeasonSnapshot> {
     snap.teamStats[type] = await live.fetchTeamStats(year, type).catch(() => null);
     snap.highs[type] = games.length ? await live.fetchSeasonHighs(year, type, HIGH_POOL).catch(() => null) : null;
     console.log(`type ${type}: highs pool ${snap.highs[type]?.poolSize ?? 0}`);
+    const finals = games.filter((g) => g.state === 'post').map((g) => g.id);
+    snap.assists![type] = await live.fetchAssistPairs(finals, undefined, 8);
+    const pairCount = Object.values(snap.assists![type]).reduce((n, t) => n + t.pairs.length, 0);
+    console.log(`type ${type}: assist pairs ${pairCount} across ${Object.keys(snap.assists![type]).length} teams`);
   }
   return snap;
 }
@@ -43,6 +47,7 @@ for (const year of years) {
   const snap = await build(year);
   // Guard against writing a broken snapshot over a good one.
   if (snap.teams.length < 30 || (snap.games['2']?.length ?? 0) < 1000) throw new Error(`Snapshot ${year} looks incomplete`);
+  if (Object.keys(snap.assists?.['2'] ?? {}).length < 30) throw new Error(`Snapshot ${year} is missing assist data`);
   const json = JSON.stringify(snap);
   writeFileSync(`src/data/season-${year}.json`, json);
   console.log(`wrote src/data/season-${year}.json (${(json.length / 1024).toFixed(0)} KB)`);

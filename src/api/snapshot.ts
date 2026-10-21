@@ -3,7 +3,7 @@
 // limits). A full season of games fits in ~100 KB instead of ~45 MB of raw
 // team schedules.
 import type { SeasonHighsResult } from './live';
-import type { Conference, Game, LeaderTable, TeamRef, TeamStatTable } from './types';
+import type { AssistPairs, Conference, Game, LeaderTable, TeamRef, TeamStatTable } from './types';
 
 /** [id, date, homeId, awayId, homeScore, awayScore, note, broadcasts] */
 export type CompactGame = [string, string, string, string, number | null, number | null, string | null, string | null];
@@ -18,6 +18,8 @@ export interface SeasonSnapshot {
   leaders: Record<string, LeaderTable>;
   teamStats: Record<string, TeamStatTable | null>;
   highs: Record<string, SeasonHighsResult | null>;
+  /** Keyed by season type, then team id. Optional: older snapshots lack it. */
+  assists?: Record<string, Record<string, AssistPairs>>;
 }
 
 export function compactGame(g: Game): CompactGame {

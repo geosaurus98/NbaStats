@@ -2,8 +2,11 @@
 // between endpoints (e.g. scores are strings on the scoreboard but objects on
 // team schedules), so every accessor here is defensive.
 import type {
+  AssistEvent,
+  AssistPairs,
   Competitor,
   Conference,
+  FlowPoint,
   Game,
   GameLog,
   GameLogEntry,
@@ -11,8 +14,10 @@ import type {
   GameSummary,
   Leader,
   LeaderTable,
+  PlayByPlay,
   PlayerLine,
   PlayerProfile,
+  Shot,
   StandingRow,
   TeamBox,
   TeamRef,
@@ -169,6 +174,7 @@ export function normalizeSummary(raw: Raw): GameSummary {
     const players: PlayerLine[] = (block.athletes ?? []).map((a: Raw) => ({
       id: String(a.athlete?.id ?? ''),
       name: a.athlete?.displayName ?? '',
+      shortName: a.athlete?.shortName,
       position: a.athlete?.position?.abbreviation,
       starter: !!a.starter,
       dnp: !!a.didNotPlay || !a.stats?.length,
@@ -184,7 +190,96 @@ export function normalizeSummary(raw: Raw): GameSummary {
     };
   });
 
-  return { game, teams };
+  return { game, teams, pbp: normalizePlays(raw, teams) };
+}
+
+const QUARTER_S = 12 * 60;
+const OT_S = 5 * 60;
+
+function clockSeconds(clock: string): number {
+  const [m, sec] = clock.includes(':') ? clock.split(':') : ['0', clock];
+  return Number(m) * 60 + parseFloat(sec || '0');
+}
+
+/** Seconds since tip-off at a given period and game clock. */
+export function elapsedSeconds(period: number, clock: string): number {
+  const left = clockSeconds(clock);
+  if (period <= 4) return (period - 1) * QUARTER_S + (QUARTER_S - left);
+  return 4 * QUARTER_S + (period - 5) * OT_S + (OT_S - left);
+}
+
+// ESPN fills non-shot plays with a sentinel coordinate around -2^31.
+const validCoord = (c: Raw) => c && Number.isFinite(c.x) && Number.isFinite(c.y) && c.x >= 0 && c.x <= 50 && c.y >= 0 && c.y <= 94;
+
+/** Assists, score flow and shots from the summary's play-by-play. */
+export function normalizePlays(raw: Raw, teams: TeamBox[] = []): PlayByPlay {
+  const plays: Raw[] = raw?.plays ?? [];
+  const winById = new Map<string, number>();
+  for (const w of raw?.winprobability ?? []) {
+    if (w.playId != null && Number.isFinite(w.homeWinPercentage)) winById.set(String(w.playId), w.homeWinPercentage);
+  }
+  const names: Record<string, string> = {};
+  for (const t of teams) for (const p of t.players) if (p.id) names[p.id] = p.shortName ?? p.name;
+
+  const assists: AssistEvent[] = [];
+  const flow: FlowPoint[] = [];
+  const shots: Shot[] = [];
+  let last = '';
+  for (const p of plays) {
+    const period = num(p.period?.number) ?? 1;
+    const clock = p.clock?.displayValue ?? '0:00';
+    const home = num(p.homeScore) ?? 0;
+    const away = num(p.awayScore) ?? 0;
+    const teamId = String(p.team?.id ?? '');
+    const ids: string[] = (p.participants ?? []).map((x: Raw) => String(x.athlete?.id ?? ''));
+
+    if (p.scoringPlay && ids.length >= 2 && /assist/i.test(p.text ?? '')) {
+      assists.push({ teamId, scorerId: ids[0], passerId: ids[1], points: num(p.scoreValue) ?? 2 });
+    }
+    // Field-goal attempts only (free throws have no meaningful location).
+    if (p.shootingPlay && validCoord(p.coordinate) && !/free throw/i.test(p.type?.text ?? '')) {
+      shots.push({
+        teamId,
+        athleteId: ids[0] ?? '',
+        x: p.coordinate.x,
+        y: p.coordinate.y,
+        made: !!p.scoringPlay,
+        value: num(p.pointsAttempted) ?? 2,
+        text: p.text ?? '',
+        period,
+        clock,
+      });
+    }
+    const key = `${home}-${away}`;
+    const homeWin = winById.get(String(p.id));
+    if (key !== last || homeWin != null || flow.length === 0) {
+      flow.push({ t: elapsedSeconds(period, clock), period, clock, home, away, homeWin });
+      last = key;
+    }
+  }
+  return { assists, flow, shots, names };
+}
+
+/** Totals assist events into passer → scorer pairs per team. */
+export function aggregateAssists(events: AssistEvent[], names: Record<string, string>): Record<string, AssistPairs> {
+  const byTeam = new Map<string, Map<string, [string, string, number, number]>>();
+  for (const e of events) {
+    if (!e.passerId || !e.scorerId) continue;
+    const team = byTeam.get(e.teamId) ?? new Map();
+    byTeam.set(e.teamId, team);
+    const key = `${e.passerId}>${e.scorerId}`;
+    const pair = team.get(key) ?? [e.passerId, e.scorerId, 0, 0];
+    pair[2] += 1;
+    pair[3] += e.points;
+    team.set(key, pair);
+  }
+  const out: Record<string, AssistPairs> = {};
+  for (const [teamId, pairs] of byTeam) {
+    const list = [...pairs.values()].sort((a, b) => b[2] - a[2]);
+    const ids = new Set(list.flatMap((p) => [p[0], p[1]]));
+    out[teamId] = { players: [...ids].map((id) => [id, names[id] ?? id]), pairs: list };
+  }
+  return out;
 }
 
 /** ESPN "byathlete" statistics endpoint → flat leaderboard table. */
