@@ -12,6 +12,8 @@ export interface TeammateData {
   rosters: [number, string, string, number[]][];
   /** [playerIndex, averageDistance] for the most connected players. */
   central: [number, number][];
+  /** Each player's rosters in career order (within a season: order played). */
+  stints: number[][];
 }
 
 export interface Graph {

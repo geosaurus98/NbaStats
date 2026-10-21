@@ -3,6 +3,7 @@
 // Source: sumitrodatta/bball-reference-datasets (Basketball-Reference data).
 //   npx tsx scripts/teammates.ts
 import { writeFileSync } from 'node:fs';
+import { franchiseOf } from '../src/lib/franchises';
 import { buildGraph, centrality, type TeammateData } from '../src/lib/teammates';
 
 const SOURCE = 'https://raw.githubusercontent.com/sumitrodatta/bball-reference-datasets/master/Data/Player%20Season%20Info.csv';
@@ -50,6 +51,8 @@ const [SEASON, LG, PLAYER, ID, TEAM] = ['season', 'lg', 'player', 'player_id', '
 const players: TeammateData['players'] = [];
 const index = new Map<string, number>();
 const rosters = new Map<string, { season: number; lg: string; team: string; ids: Set<number> }>();
+// Each player's roster keys in the order Basketball-Reference lists them.
+const stintKeys: string[][] = [];
 
 for (const r of rows) {
   const team = r[TEAM];
@@ -61,6 +64,7 @@ for (const r of rows) {
     p = players.length;
     index.set(r[ID], p);
     players.push([r[PLAYER], season, season]);
+    stintKeys.push([]);
   }
   players[p][1] = Math.min(players[p][1], season);
   players[p][2] = Math.max(players[p][2], season);
@@ -68,16 +72,47 @@ for (const r of rows) {
   const roster = rosters.get(key) ?? { season, lg: r[LG], team, ids: new Set() };
   roster.ids.add(p);
   rosters.set(key, roster);
+  if (!stintKeys[p].includes(key)) stintKeys[p].push(key);
 }
+
+/**
+ * Career order. The source lists a traded player's teams alphabetically
+ * within a season, so order each season's teams by continuity: the one that
+ * matches last season's franchise first, the one that matches next season's
+ * last. (Three-team seasons may leave the middle team approximate.)
+ */
+function orderStints(rs: number[]): number[] {
+  const season = (r: number) => sortedRosters[r][1].season;
+  const fr = (r: number) => franchiseOf(sortedRosters[r][1].team)?.id ?? sortedRosters[r][1].team;
+  const bySeason = new Map<number, number[]>();
+  for (const r of rs) bySeason.set(season(r), [...(bySeason.get(season(r)) ?? []), r]);
+  const seasons = [...bySeason.keys()].sort((a, b) => a - b);
+  const out: number[] = [];
+  seasons.forEach((y, k) => {
+    let group = bySeason.get(y)!;
+    if (group.length > 1) {
+      const prev = out.length ? fr(out[out.length - 1]) : undefined;
+      const nextGroup = bySeason.get(seasons[k + 1]);
+      const next = nextGroup && seasons[k + 1] === y + 1 ? new Set(nextGroup.map(fr)) : undefined;
+      const first = group.find((r) => fr(r) === prev);
+      const last = group.find((r) => r !== first && next?.has(fr(r)));
+      group = [...(first != null ? [first] : []), ...group.filter((r) => r !== first && r !== last), ...(last != null ? [last] : [])];
+    }
+    out.push(...group);
+  });
+  return out;
+}
+
+const sortedRosters = [...rosters.entries()].sort(([, a], [, b]) => a.season - b.season || a.team.localeCompare(b.team));
+const rosterIndex = new Map(sortedRosters.map(([key], i) => [key, i]));
 
 const data: TeammateData = {
   source: 'Basketball-Reference via github.com/sumitrodatta/bball-reference-datasets',
   generatedAt: new Date().toISOString(),
   players,
-  rosters: [...rosters.values()]
-    .sort((a, b) => a.season - b.season || a.team.localeCompare(b.team))
-    .map((r) => [r.season, r.lg, r.team, [...r.ids]]),
+  rosters: sortedRosters.map(([, r]) => [r.season, r.lg, r.team, [...r.ids]]),
   central: [],
+  stints: stintKeys.map((keys) => orderStints(keys.map((k) => rosterIndex.get(k)!))),
 };
 
 // The most connected players in history: lowest average distance to everyone.
