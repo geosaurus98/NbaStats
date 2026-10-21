@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { seasonSnapshot } from '../api/espn';
+import { AwardTimeline } from '../components/AwardTimeline';
 import { Empty } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { ACTUAL, actualVotes, AWARDS, candidates, MIN_GAMES_SHARE, rankAward, type AwardId, type Ranked } from '../lib/awards';
@@ -97,6 +98,7 @@ export function Awards() {
             </p>
           )}
           {actual && <Missed season={season.year} award={award} shown={new Set(eligible.map((r) => nameKey(r.c.name)))} />}
+          {snap && <AwardTimeline snap={snap} award={award} />}
           <div className="card">
             <h3>How the model works</h3>
             <p className="small">{METHOD[award]}</p>

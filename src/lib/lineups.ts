@@ -115,6 +115,33 @@ export interface TeamLineupSeason {
   lineups: [string[], number, number, number][];
   /** [id, onSec, onPF, onPA, gameSec, gamePF, gamePA] over games the player played. */
   onOff: [string, number, number, number, number, number, number][];
+  /** Two- and three-man combinations, same shape as lineups (most-used first, 100+ / 60+ minutes). */
+  pairs?: [string[], number, number, number][];
+  trios?: [string[], number, number, number][];
+}
+
+/** Every k-player subset of a sorted five-man lineup. */
+function subsets(ids: string[], k: number): string[][] {
+  if (k === 0) return [[]];
+  if (ids.length < k) return [];
+  const [first, ...rest] = ids;
+  return [...subsets(rest, k - 1).map((s) => [first, ...s]), ...subsets(rest, k)];
+}
+
+/** Sums lineup tallies into every pair or trio they contain. */
+export function combos(lineups: Map<string, Tally>, k: number, minSec: number, top: number): [string[], number, number, number][] {
+  const m = new Map<string, Tally>();
+  for (const [key, t] of lineups) {
+    for (const sub of subsets(key.split(',').sort(), k)) {
+      const ck = sub.join(',');
+      add(m.get(ck) ?? (m.set(ck, tally()), m.get(ck)!), t.sec, t.pf, t.pa);
+    }
+  }
+  return [...m]
+    .filter(([, t]) => t.sec >= minSec)
+    .sort((a, b) => b[1].sec - a[1].sec)
+    .slice(0, top)
+    .map(([key, t]) => [key.split(','), Math.round(t.sec), t.pf, t.pa]);
 }
 
 export class LineupAccumulator {
@@ -150,7 +177,8 @@ export class LineupAccumulator {
       const onOff = [...(this.on.get(team) ?? new Map())]
         .map(([id, { on, game }]) => [id, Math.round(on.sec), on.pf, on.pa, Math.round(game.sec), game.pf, game.pa] as TeamLineupSeason['onOff'][number])
         .sort((a, b) => b[1] - a[1]);
-      out[team] = { lineups: lus, onOff };
+      const all = this.lineups.get(team) ?? new Map<string, Tally>();
+      out[team] = { lineups: lus, onOff, pairs: combos(all, 2, 6000, 40), trios: combos(all, 3, 3600, 40) };
     }
     return out;
   }

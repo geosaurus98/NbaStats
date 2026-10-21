@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { seasonAssists, seasonDrama, seasonShots, snapshotGameMap, snapshotTeams, type SeasonType } from '../api/espn';
 import type { Game } from '../api/types';
 import { useWidth } from '../components/Charts';
+import { Clutch, Combos, HotCold, PlayerOfTheNight, ScheduleAheadTab } from '../components/InsightsMore';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 import { Empty } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
@@ -12,13 +13,21 @@ import { useSeason } from '../SeasonContext';
 
 const TABS = [
   { id: 'drama', label: 'Most exciting games' },
+  { id: 'night', label: 'Player of the night' },
+  { id: 'hot', label: 'Hot & cold' },
+  { id: 'clutch', label: 'Clutch' },
+  { id: 'combos', label: 'Duos & trios' },
   { id: 'duos', label: 'Passing duos' },
+  { id: 'schedule', label: 'Schedule ahead' },
 ] as const;
+type Tab = (typeof TABS)[number]['id'];
+/** Tabs that only cover the regular season. */
+const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'schedule']);
 
 export function Insights() {
   const { season } = useSeason();
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'duos' ? 'duos' : 'drama';
+  const tab: Tab = TABS.find((t) => t.id === params.get('tab'))?.id ?? 'drama';
   const [type, setType] = useState<SeasonType>(2);
   const hasData = !!seasonDrama(season.year, 2);
 
@@ -26,16 +35,21 @@ export function Insights() {
     <section>
       <div className="page-head">
         <h1>{season.label} insights</h1>
-        <SeasonTypeToggle value={type} onChange={setType} />
+        {!REGULAR_ONLY.has(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
       <div className="tabs">
         {TABS.map((t) => (
           <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParams({ tab: t.id }, { replace: true })}>{t.label}</button>
         ))}
       </div>
-      {!hasData && <Empty>These are built from every game's play-by-play once a season is finished. Pick 2025-26 or 2024-25.</Empty>}
+      {!hasData && tab !== 'schedule' && <Empty>These are built from every game's play-by-play once a season is finished. Pick 2025-26 or 2024-25.</Empty>}
       {hasData && tab === 'drama' && <Drama season={season.year} type={type} />}
       {hasData && tab === 'duos' && <Duos season={season.year} type={type} />}
+      {hasData && tab === 'night' && <PlayerOfTheNight season={season.year} />}
+      {hasData && tab === 'hot' && <HotCold season={season.year} />}
+      {hasData && tab === 'clutch' && <Clutch season={season.year} type={type} />}
+      {hasData && tab === 'combos' && <Combos season={season.year} type={type} />}
+      {tab === 'schedule' && <ScheduleAheadTab season={season.year} start={season.start} end={season.regularEnd} />}
     </section>
   );
 }

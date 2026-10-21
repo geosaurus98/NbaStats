@@ -10,6 +10,26 @@ export type TeamTotalsRow = [string, ...number[]];
 const TEAM_SUMS = ['fgm', 'fga', 'tpm', 'tpa', 'ftm', 'fta', 'oreb', 'dreb', 'ast', 'stl', 'blk', 'tov'] as const;
 export const T = { gp: 1, pts: 2, opp: 3, poss: 4, oppPoss: 5, fgm: 6, fga: 7, tpm: 8, tpa: 9, ftm: 10, fta: 11, oreb: 12, dreb: 13, ast: 14, stl: 15, blk: 16, tov: 17 } as const;
 
+/** One game's player lines (lines-<year>.json): [gameId, date, seasonType, homeId, awayId, countsInStandings, lines] */
+export type GameLines = [string, string, number, string, string, number, number[][]];
+/**
+ * A player's line: [playerIndex, isHome, starter, min, pts, fgm, fga, tpm, tpa,
+ * ftm, fta, oreb, dreb, ast, stl, blk, tov, pf, pm] (playerIndex into ids).
+ */
+export const L = { p: 0, home: 1, starter: 2, min: 3, pts: 4, fgm: 5, fga: 6, tpm: 7, tpa: 8, ftm: 9, fta: 10, oreb: 11, dreb: 12, ast: 13, stl: 14, blk: 15, tov: 16, pf: 17, pm: 18 } as const;
+
+export interface SeasonLines {
+  year: number;
+  /** ESPN athlete ids, indexed by a line's playerIndex. */
+  ids: string[];
+  games: GameLines[];
+}
+
+/** Hollinger's Game Score for one line. */
+export function gameScore(l: number[]): number {
+  return l[L.pts] + 0.4 * l[L.fgm] - 0.7 * l[L.fga] - 0.4 * (l[L.fta] - l[L.ftm]) + 0.7 * l[L.oreb] + 0.3 * l[L.dreb] + l[L.stl] + 0.7 * l[L.ast] + 0.7 * l[L.blk] - 0.4 * l[L.pf] - l[L.tov];
+}
+
 export interface BoxTotals {
   players: PlayerTotalsRow[];
   teams: TeamTotalsRow[];
@@ -20,7 +40,7 @@ export interface BoxTotals {
 export const P = { gp: 2, gs: 3, min: 4, pts: 5, fgm: 6, fga: 7, tpm: 8, tpa: 9, ftm: 10, fta: 11, oreb: 12, dreb: 13, ast: 14, stl: 15, blk: 16, tov: 17, pf: 18, pm: 19 } as const;
 const COUNT = 18; // numeric columns after id and team
 
-function lineValues(labels: string[], stats: string[]): number[] | undefined {
+export function lineValues(labels: string[], stats: string[]): number[] | undefined {
   const get = (l: string) => stats[labels.indexOf(l)];
   const num = (l: string) => {
     const v = parseFloat(get(l) ?? '');

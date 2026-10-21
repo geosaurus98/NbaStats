@@ -49,6 +49,7 @@ export function LineChart({
   xTickValues,
   yDomain,
   step = false,
+  contextLabel = 'Other teams',
 }: {
   series: LineSeries[];
   height?: number;
@@ -67,6 +68,8 @@ export function LineChart({
   yDomain?: [number, number];
   /** Draw as steps (values that change in jumps, like a score). */
   step?: boolean;
+  /** Legend label for the muted context lines. */
+  contextLabel?: string;
 }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
@@ -151,7 +154,7 @@ export function LineChart({
           {context.length > 0 && (
             <span>
               <i className="key-line context" />
-              Other teams
+              {contextLabel}
             </span>
           )}
         </div>

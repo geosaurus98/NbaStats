@@ -27,7 +27,16 @@ function finished(season: number) {
 
 export async function fetchStandings(season: number) {
   await loadSnapshot(season);
-  return finished(season)?.standings ?? live.fetchStandings(season);
+  const done = finished(season);
+  if (done) return done.standings;
+  try {
+    return await live.fetchStandings(season);
+  } catch (e) {
+    // Season in progress and ESPN unreachable: last night's snapshot is close enough.
+    const saved = getSnapshot(season)?.standings;
+    if (saved?.length) return saved;
+    throw e;
+  }
 }
 
 export async function fetchTeams(season: number) {

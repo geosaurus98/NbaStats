@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { fetchLeagueGames, fetchStandings } from '../api/espn';
 import type { Conference, Game, TeamRef } from '../api/types';
 import { LineChart } from '../components/Charts';
+import { DraftLottery } from '../components/DraftLottery';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
@@ -18,7 +19,7 @@ const HISTORY_SIMS = 300;
 const SLOT_COLORS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)'];
 const WEEK = 7 * 864e5;
 
-interface Model {
+export interface Model {
   teams: TeamRef[];
   standings: Conference[];
   conferences: Map<string, string>;
@@ -45,7 +46,7 @@ export async function buildModel(season: number, sims = SIMS): Promise<Model> {
 export function Projections() {
   const { season } = useSeason();
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'ratings' ? 'ratings' : 'odds';
+  const tab = (['ratings', 'lottery'] as const).find((t) => t === params.get('tab')) ?? 'odds';
   const { data, error, loading } = useAsync(() => buildModel(season.year), [season.year]);
 
   return (
@@ -54,11 +55,13 @@ export function Projections() {
       <div className="tabs">
         <button className={tab === 'odds' ? 'active' : ''} onClick={() => setParams({ tab: 'odds' }, { replace: true })}>Playoff odds</button>
         <button className={tab === 'ratings' ? 'active' : ''} onClick={() => setParams({ tab: 'ratings' }, { replace: true })}>Power ratings</button>
+        <button className={tab === 'lottery' ? 'active' : ''} onClick={() => setParams({ tab: 'lottery' }, { replace: true })}>Draft lottery</button>
       </div>
       {loading && <Loading label="Rating every team and simulating the season…" />}
       {error && <ErrorBox error={error} />}
       {data && tab === 'odds' && <Odds model={data} season={season.year} />}
       {data && tab === 'ratings' && <Ratings model={data} />}
+      {data && tab === 'lottery' && <DraftLottery model={data} season={season.year} />}
       <p className="muted small">
         Elo ratings (FiveThirtyEight-style: margin of victory, 100-point home edge, last season carried over at 75%). Odds come from
         simulating the remaining regular season, the play-in and every playoff series {SIMS.toLocaleString()} times. Ties in the

@@ -8,7 +8,7 @@ import { Tile } from '../components/Tile';
 import { useAsync } from '../hooks/useAsync';
 import { LEAGUE_NAMES, STAT_LABELS, totals, type StatKey } from '../lib/careers';
 import { loadFranchiseData } from '../lib/franchiseData';
-import { eras, franchiseDraft, franchiseLeaders, franchiseSeasons, franchiseTotals, titlesOf } from '../lib/franchiseHistory';
+import { allTimeFive, eras, franchiseDraft, franchiseLeaders, franchiseSeasons, franchiseTotals, titlesOf } from '../lib/franchiseHistory';
 import { espnLogo, franchiseById, FRANCHISES } from '../lib/franchises';
 import { useTeammateGraph } from '../lib/teammateStore';
 import { seasonLabel } from '../lib/teammates';
@@ -26,12 +26,14 @@ export function Franchise() {
   const model = useMemo(() => {
     if (!f || !graph || !careers.data || !fd.data) return undefined;
     const seasons = franchiseSeasons(fd.data, f.id);
+    const totals = franchiseTotals(graph, careers.data, f.id);
     return {
       seasons,
       eras: eras(seasons),
       titles: titlesOf(f.id),
-      totals: franchiseTotals(graph, careers.data, f.id),
+      totals,
       draft: franchiseDraft(fd.data, f.id),
+      five: allTimeFive(totals, careers.data.pos ?? []),
     };
   }, [f, graph, careers.data, fd.data]);
 
@@ -111,6 +113,30 @@ export function Franchise() {
           yFormat={(v) => (v > 0 ? `+${v}` : String(v))}
         />
         <p className="muted small">Blue = winning season, red = losing. Hover a bar for the record (🏆 = title).</p>
+      </div>
+
+      <div className="card">
+        <h3>All-time starting five</h3>
+        <div className="five">
+          {model.five.starters.map(({ slot, player }) => {
+            const t = model.totals.get(player)!;
+            return (
+              <div key={slot} className="five-player">
+                <span className="five-slot">{slot}</span>
+                <Link to={careerLink(player)}><b>{graph.data.players[player][0]}</b></Link>
+                <span className="muted small">{t.from - 1}–{t.to} · {t.g} g</span>
+                <span className="small">{(t.pts / t.g).toFixed(1)} pts · {(t.trb / t.g).toFixed(1)} reb · {(t.ast / t.g).toFixed(1)} ast</span>
+              </div>
+            );
+          })}
+        </div>
+        <p className="small">
+          <span className="muted">Bench: </span>
+          {model.five.bench.map((p, i) => (
+            <span key={p}>{i > 0 && ', '}<Link to={careerLink(p)}>{graph.data.players[p][0]}</Link></span>
+          ))}
+        </p>
+        <p className="muted small">Chosen by production while with this franchise (points, rebounds, 1.5× assists, 2× steals and blocks) and each player's main position. Per-game numbers are with this team.</p>
       </div>
 
       <div className="degrees-main">

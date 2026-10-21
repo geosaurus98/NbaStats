@@ -85,3 +85,26 @@ export function franchiseLeaders(totals: ReturnType<typeof franchiseTotals>, k: 
 export function franchiseDraft(data: FranchiseData, id: string) {
   return data.draft.filter((d) => fr(d[4]) === id);
 }
+
+export const SLOTS = ['PG', 'SG', 'SF', 'PF', 'C'] as const;
+const FITS: Record<(typeof SLOTS)[number], string[]> = { PG: ['PG', 'G'], SG: ['SG', 'G'], SF: ['SF', 'F'], PF: ['PF', 'F'], C: ['C'] };
+// If nobody fits a slot, the nearest positions can cover it.
+const NEAR: Record<(typeof SLOTS)[number], string[]> = { PG: ['SG'], SG: ['PG', 'SF'], SF: ['SG', 'PF', 'G'], PF: ['SF', 'C', 'F'], C: ['PF', 'F'] };
+
+/** A franchise career's value: production while with the team (steals and blocks count from 1973-74, when they were first recorded). */
+export const franchiseValue = (t: Record<StatKey, number>) => t.pts + t.trb + 1.5 * t.ast + 2 * (t.stl + t.blk);
+
+/** The franchise's best starting five, one per position, plus a three-man bench. */
+export function allTimeFive(totals: ReturnType<typeof franchiseTotals>, positions: string[]): { starters: { slot: string; player: number }[]; bench: number[] } {
+  const ranked = [...totals].map(([player, t]) => ({ player, value: franchiseValue(t), pos: positions[player] ?? '' })).sort((a, b) => b.value - a.value);
+  const used = new Set<number>();
+  const starters: { slot: string; player: number }[] = [];
+  for (const slot of SLOTS) {
+    const pick = ranked.slice(0, 60).find((r) => !used.has(r.player) && FITS[slot].includes(r.pos)) ?? ranked.slice(0, 60).find((r) => !used.has(r.player) && NEAR[slot].includes(r.pos));
+    if (!pick) continue;
+    used.add(pick.player);
+    starters.push({ slot, player: pick.player });
+  }
+  const bench = ranked.filter((r) => !used.has(r.player)).slice(0, 3).map((r) => r.player);
+  return { starters, bench };
+}
