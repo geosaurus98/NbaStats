@@ -2,8 +2,9 @@
 // ./espn, which serves bundled season snapshots first and falls back to these.
 import { espnDate } from '../lib/dates';
 import { seasonHighs } from '../lib/playerStats';
-import type { Game, TeamRef } from './types';
+import type { AssistEvent, Game, TeamRef } from './types';
 import {
+  aggregateAssists,
   normalizeAthlete,
   normalizeGameLog,
   normalizeLeaders,
@@ -57,13 +58,13 @@ async function fetchOnce(url: string): Promise<unknown> {
   return res.json();
 }
 
-async function getJSON(url: string, fresh = false): Promise<unknown> {
+async function getJSON(url: string, fresh = false, store = true): Promise<unknown> {
   const hit = cache.get(url);
   if (!fresh && hit && Date.now() - hit.at < TTL_MS) return hit.data;
   for (let attempt = 0; ; attempt++) {
     try {
       const data = await fetchOnce(url);
-      cache.set(url, { at: Date.now(), data });
+      if (store) cache.set(url, { at: Date.now(), data });
       return data;
     } catch (e) {
       const retryable = e instanceof ApiError && e.kind !== 'not-found';
@@ -96,8 +97,22 @@ export async function fetchTeamSchedule(teamId: string, season: number, seasonTy
   );
 }
 
-export async function fetchSummary(gameId: string, fresh = false) {
-  return normalizeSummary(await getJSON(`${SITE}/summary?event=${gameId}`, fresh));
+/** `store = false` skips the in-memory cache (bulk jobs fetch thousands). */
+export async function fetchSummary(gameId: string, fresh = false, store = true) {
+  return normalizeSummary(await getJSON(`${SITE}/summary?event=${gameId}`, fresh, store));
+}
+
+/** Passer → scorer pairs for a team, totalled over the given games' play-by-play. */
+export async function fetchAssistPairs(gameIds: string[], teamId?: string, concurrency = 4) {
+  const events: AssistEvent[] = [];
+  const names: Record<string, string> = {};
+  await mapLimit(gameIds, concurrency, async (id) => {
+    const s = await fetchSummary(id, false, false).catch(() => undefined);
+    if (!s) return;
+    Object.assign(names, s.pbp.names);
+    events.push(...s.pbp.assists.filter((a) => !teamId || a.teamId === teamId));
+  });
+  return aggregateAssists(events, names);
 }
 
 export const LEADER_COLUMNS = [

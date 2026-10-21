@@ -4,7 +4,7 @@ import { toISODate } from '../lib/dates';
 import { involves } from '../lib/league';
 import * as live from './live';
 import { getSnapshot, snapshotGames } from './snapshotStore';
-import type { Game, TeamRef } from './types';
+import type { AssistPairs, Game, TeamRef } from './types';
 
 export type { SeasonType, SeasonHighsResult } from './live';
 export { ApiError, fetchAthlete, fetchGameLog, fetchSummary, mapLimit } from './live';
@@ -70,4 +70,25 @@ export async function fetchScoreboard(isoDate: string, fresh = false): Promise<G
     if (getSnapshot(year)) return day;
     throw e;
   }
+}
+
+/** How many recent games the live (non-snapshot) assist network looks at. */
+export const LIVE_ASSIST_GAMES = 15;
+
+/**
+ * A team's season passer → scorer pairs. Snapshotted seasons cover every
+ * game; otherwise the last LIVE_ASSIST_GAMES finished games are fetched.
+ */
+export async function fetchTeamAssists(
+  teamId: string,
+  season: number,
+  seasonType: SeasonType,
+): Promise<{ pairs: AssistPairs | undefined; games: number; partial: boolean }> {
+  const snap = getSnapshot(season);
+  const fromSnap = snap?.assists?.[String(seasonType)];
+  const finals = (await fetchTeamSchedule(teamId, season, seasonType)).games.filter((g) => g.state === 'post');
+  if (fromSnap) return { pairs: fromSnap[teamId], games: finals.length, partial: false };
+  const recent = finals.slice(-LIVE_ASSIST_GAMES).map((g) => g.id);
+  const pairs = (await live.fetchAssistPairs(recent, teamId))[teamId];
+  return { pairs, games: recent.length, partial: recent.length < finals.length };
 }

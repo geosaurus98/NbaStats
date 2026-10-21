@@ -61,6 +61,7 @@ export interface Conference {
 export interface PlayerLine {
   id: string;
   name: string;
+  shortName?: string;
   position?: string;
   starter: boolean;
   dnp: boolean;
@@ -79,6 +80,7 @@ export interface TeamBox {
 export interface GameSummary {
   game: Game;
   teams: TeamBox[];
+  pbp: PlayByPlay;
 }
 
 export interface LeaderRow {
@@ -127,4 +129,52 @@ export interface GameLog {
 export interface TeamStatTable {
   columns: { key: string; label: string }[];
   rows: { teamId: string; values: Record<string, number | undefined> }[];
+}
+
+/** One assisted basket: `passerId` assisted `scorerId`. */
+export interface AssistEvent {
+  teamId: string;
+  passerId: string;
+  scorerId: string;
+  points: number;
+}
+
+/** Aggregated passer → scorer pairs for one team. */
+export interface AssistPairs {
+  /** [athleteId, short name] */
+  players: [string, string][];
+  /** [passerId, scorerId, assists, points] */
+  pairs: [string, string, number, number][];
+}
+
+export interface FlowPoint {
+  /** Seconds since tip-off. */
+  t: number;
+  period: number;
+  clock: string;
+  home: number;
+  away: number;
+  /** Home win probability 0-1, when ESPN provides it. */
+  homeWin?: number;
+}
+
+export interface Shot {
+  teamId: string;
+  athleteId: string;
+  /** Feet across the court, 0-50. */
+  x: number;
+  /** Feet from the baseline, 0-47. */
+  y: number;
+  made: boolean;
+  value: number;
+  text: string;
+  period: number;
+  clock: string;
+}
+
+export interface PlayByPlay {
+  assists: AssistEvent[];
+  flow: FlowPoint[];
+  shots: Shot[];
+  names: Record<string, string>;
 }
