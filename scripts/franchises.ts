@@ -18,7 +18,7 @@ async function table(file: string) {
 
 const teammates = JSON.parse(readFileSync('src/data/teammates.json', 'utf8'));
 const indexOf = new Map<string, number>((teammates.ids as string[]).map((id, i) => [id, i]));
-const n = (v: string | undefined, dp = 1) => (v == null || v === 'NA' || v === '' ? -1 : Math.round(Number(v) * 10 ** dp) / 10 ** dp);
+const n = (v: string | undefined, dp = 1) => (v == null || v === 'NA' || v === '' ? null : Math.round(Number(v) * 10 ** dp) / 10 ** dp);
 
 const teamSeasons: FranchiseData['teamSeasons'] = [];
 for (const r of await table('Team Summaries.csv')) {
@@ -28,8 +28,8 @@ for (const r of await table('Team Summaries.csv')) {
     LEAGUES.indexOf(r.lg),
     r.abbreviation,
     r.team.replace(/\*$/, ''),
-    n(r.w, 0),
-    n(r.l, 0),
+    n(r.w, 0) ?? 0,
+    n(r.l, 0) ?? 0,
     r.playoffs === 'TRUE' ? 1 : 0,
     n(r.srs, 2),
     n(r.o_rtg),
@@ -41,7 +41,7 @@ for (const r of await table('Team Summaries.csv')) {
 
 const draft: FranchiseData['draft'] = [];
 for (const r of await table('Draft Pick History.csv')) {
-  draft.push([Number(r.season), LEAGUES.indexOf(r.lg), n(r.overall_pick, 0), n(r.round, 0), r.tm, indexOf.get(r.player_id) ?? -1, r.player, r.college === 'NA' ? '' : r.college]);
+  draft.push([Number(r.season), LEAGUES.indexOf(r.lg), n(r.overall_pick, 0) ?? 0, n(r.round, 0) ?? 0, r.tm, indexOf.get(r.player_id) ?? -1, r.player, r.college === 'NA' ? '' : r.college]);
 }
 
 const data: FranchiseData = { source: 'Basketball-Reference via github.com/sumitrodatta/bball-reference-datasets', teamSeasons, draft };

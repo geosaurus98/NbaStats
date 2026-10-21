@@ -16,7 +16,8 @@ interface Result {
 }
 
 const PAGES = [
-  { label: 'Scores & fixtures', to: '/', words: 'scores fixtures results today games schedule' },
+  { label: 'Home dashboard', to: '/', words: 'home dashboard today overview' },
+  { label: 'Scores & fixtures', to: '/scores', words: 'scores fixtures results today games schedule' },
   { label: 'Standings', to: '/standings', words: 'standings table conference race' },
   { label: 'Playoffs bracket', to: '/playoffs', words: 'playoffs bracket finals champion' },
   { label: 'Player leaders & season highs', to: '/leaders', words: 'leaders stats points rebounds assists highs' },
@@ -24,6 +25,7 @@ const PAGES = [
   { label: 'Power ratings', to: '/projections?tab=ratings', words: 'power ratings elo rankings upsets' },
   { label: 'All-time leaders', to: '/history?tab=leaders', words: 'all time leaders career records' },
   { label: 'Awards & MVP voting', to: '/history?tab=awards', words: 'awards mvp dpoy rookie all star voting' },
+  { label: 'Draft history', to: '/history?tab=draft', words: 'draft picks history steals busts number one' },
   { label: 'Guess the player game', to: '/games?tab=guess', words: 'games guess player wordle' },
   { label: 'Higher or lower game', to: '/games?tab=higher', words: 'games higher lower streak' },
   { label: 'Team rankings', to: '/rankings', words: 'rankings team stats strength schedule sos' },
@@ -70,7 +72,10 @@ function search(index: Index | undefined, query: string): Result[] {
   for (const f of FRANCHISES) {
     const byId = rank(f.id);
     const s = Math.max(rank(f.name), byId ? byId + 5 : 0);
-    if (s) out.push({ kind: 'Team', label: f.name, detail: f.id, to: `/team/${f.espnId}`, score: s + 15 });
+    if (s) {
+      out.push({ kind: 'Team', label: f.name, detail: f.id, to: `/team/${f.espnId}`, score: s + 15 });
+      out.push({ kind: 'Page', label: `${f.name} history`, detail: 'Franchise', to: `/franchise/${f.id}`, score: s + 14 });
+    }
   }
   for (const p of index?.players ?? []) {
     const s = rank(p.name);

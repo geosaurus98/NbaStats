@@ -25,8 +25,10 @@
   font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
 }
+/* Dark theme: follows the device unless the viewer picked one (data-theme on <html>). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg: #0f1115;
     --surface: #181b21;
     --border: #2a2f38;
@@ -49,6 +51,30 @@
     --neutral: #4a4a46;
   }
 }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1115;
+  --surface: #181b21;
+  --border: #2a2f38;
+  --text: #e8eaee;
+  --muted: #8d95a3;
+  --accent: #ff4d5e;
+  --accent-soft: #3a1a20;
+  --win: #4ade80;
+  --loss: #f87171;
+  --live: #ff6b5e;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --pos: #3987e5;
+  --neg: #e66767;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --context: rgba(137, 135, 129, 0.3);
+  --star: #f5c542;
+  --neutral: #4a4a46;
+}
+:root[data-theme="light"] { color-scheme: light; }
 
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); }
@@ -448,3 +474,36 @@ table.zones.wide { max-width: 440px; }
 .tabs::-webkit-scrollbar { display: none; }
 .tabs button { white-space: nowrap; flex: none; }
 @media (max-width: 600px) { .search-key { display: none; } }
+
+.net-cell { width: 90px; }
+.net-bar { position: relative; display: block; height: 10px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+.net-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--axis); }
+.net-fill { position: absolute; top: 0; bottom: 0; }
+@media (max-width: 600px) { .net-cell { display: none; } }
+
+.theme-toggle { flex: none; background: none; border: 1px solid var(--border); border-radius: 999px; padding: .3rem .65rem; font-size: .82rem; color: var(--muted); white-space: nowrap; }
+.theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+@media (max-width: 600px) { .theme-word { display: none; } }
+.share-button.compact { flex: none; background: none; border: 1px solid var(--border); border-radius: 999px; padding: .3rem .6rem; font-size: .82rem; color: var(--muted); white-space: nowrap; }
+.share-button.compact:hover { border-color: var(--accent); }
+
+/* Home dashboard */
+.home-row { margin-top: 1rem; }
+.home-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: .3rem .9rem; }
+.home-game { display: grid; grid-template-columns: 1fr auto 1fr auto; align-items: center; gap: .5rem; padding: .35rem .5rem; border-radius: 8px; color: inherit; text-decoration: none; }
+.home-game:hover { background: var(--surface-2, var(--border)); }
+.home-side { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
+.home-score { margin-left: auto; font-variant-numeric: tabular-nums; }
+.home-status { text-align: right; white-space: nowrap; min-width: 4.5rem; }
+.home-conf { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.home-conf table { width: 100%; }
+.home-champ { display: flex; align-items: center; gap: 1rem; color: inherit; text-decoration: none; padding: .5rem 0; }
+.home-puzzles { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.home-puzzle { display: flex; flex-direction: column; gap: .2rem; padding: .6rem .7rem; border: 1px solid var(--border); border-radius: 10px; color: inherit; text-decoration: none; }
+.home-puzzle:hover { border-color: var(--accent, var(--series-1)); }
+.card + .home-row, .my-team + .home-row { margin-top: 1rem; }
+.two-col.home-row { align-items: start; }
+.two-col.home-row > .card { margin-top: 0; }
+.pbar.franchise { grid-template-columns: minmax(200px, 2fr) 3fr 4.2em 3.8em; }
+@media (max-width: 600px) { .pbar.franchise { grid-template-columns: minmax(140px, 2fr) 1fr 4.2em; } .pbar.franchise > :last-child { display: none; } }
+.degrees-main > .card { margin-top: 0; }

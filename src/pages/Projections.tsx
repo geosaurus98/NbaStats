@@ -28,7 +28,7 @@ interface Model {
 }
 
 /** Elo for a season, seeded from the previous season's final ratings when we have it. */
-async function buildModel(season: number): Promise<Model> {
+export async function buildModel(season: number, sims = SIMS): Promise<Model> {
   const [league, standings] = await Promise.all([fetchLeagueGames(season, 2), fetchStandings(season)]);
   let start = new Map<string, number>();
   if (SEASONS.some((s) => s.year === season - 1)) {
@@ -38,7 +38,7 @@ async function buildModel(season: number): Promise<Model> {
   const elo = runElo(league.games, start);
   const conferences = new Map<string, string>();
   for (const c of standings) for (const r of c.rows) conferences.set(r.team.id, c.name);
-  const odds = simulate(league.games, conferences, elo.ratings, SIMS, seededRandom(season));
+  const odds = simulate(league.games, conferences, elo.ratings, sims, seededRandom(season));
   return { teams: league.teams, standings, conferences, games: league.games, elo, odds };
 }
 

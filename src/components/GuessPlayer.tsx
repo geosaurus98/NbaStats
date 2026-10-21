@@ -8,6 +8,7 @@ import { careerSegments } from '../lib/history';
 import { seededRandom, seedFromString, todayKey } from '../lib/games';
 import { findPlayer, type Graph } from '../lib/teammates';
 import { useCareers } from './CareerStats';
+import { ShareButton } from './ShareButton';
 import { ErrorBox, Loading } from './Status';
 
 const GUESSES = 6;
@@ -157,7 +158,11 @@ export function GuessPlayer({ graph }: { graph: Graph }) {
           <p>
             <b>{won ? `🎉 Got it in ${state.guesses.length}!` : 'Out of guesses.'}</b> It was{' '}
             <Link to={`/history?tab=careers&p=${encodeURIComponent(name)}`}>{name}</Link>.{' '}
-            <button className="link" onClick={() => setState({ guesses: [], done: false })}>Play again</button>
+            <button className="link" onClick={() => setState({ guesses: [], done: false })}>Play again</button>{' '}
+            <ShareButton
+              label="Share result"
+              text={`🏀 NBA Stats Hub · Guess the player ${daily ? todayKey() : ''}\n${state.guesses.map((g) => (g === target ? '🟩' : '🟥')).join('')} ${won ? `${state.guesses.length}/${GUESSES}` : `X/${GUESSES}`}`}
+            />
           </p>
         )}
       </div>

@@ -179,3 +179,8 @@ export function snapshotGameMap(season: number, seasonType: SeasonType): Map<str
 export function snapshotTeams(season: number): TeamRef[] | undefined {
   return getSnapshot(season)?.teams;
 }
+
+/** Most-used lineups and on/off splits for a team (loaded snapshot seasons only). */
+export function seasonLineups(season: number, seasonType: SeasonType, teamId: string) {
+  return getSnapshot(season)?.lineups?.[String(seasonType)]?.[teamId];
+}
