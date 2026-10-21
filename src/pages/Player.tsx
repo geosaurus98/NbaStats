@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { fetchAthlete, fetchGameLog, playerAssistPartners } from '../api/espn';
+import { fetchAthlete, fetchGameLog, playerAssistPartners, seasonShots } from '../api/espn';
 import type { LogSeasonType } from '../api/types';
 import { LineChart } from '../components/Charts';
 import { PassingPartners } from '../components/PassingPartners';
+import { SeasonShotMap } from '../components/SeasonShotMap';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { Tile } from '../components/Tile';
@@ -37,6 +38,8 @@ export function Player() {
   const avg = averages(games);
   const p = profile.data;
   const partners = playerAssistPartners(id, season.year, type === 'playoffs' ? 3 : 2);
+  const shots = seasonShots(season.year, type === 'playoffs' ? 3 : 2);
+  const shotMap = shots?.players[id];
 
   const values = games.map((g) => statValue(g, trend));
   const rolling = values.map((_, i) => {
@@ -123,6 +126,13 @@ export function Player() {
           </div>
 
           {partners && <PassingPartners to={partners.to} from={partners.from} />}
+
+          {shots && shotMap && (
+            <>
+              <h2>Shot map</h2>
+              <SeasonShotMap bins={shotMap.bins} size={shots.playerSize} league={shots.league} leagueSize={shots.teamSize} minShare={0.008} />
+            </>
+          )}
 
           <h2>Game log</h2>
           <div className="table-wrap">

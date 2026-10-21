@@ -88,3 +88,54 @@ export interface ShotBins {
   /** Highest-volume shooters only, to keep the bundle small. */
   players: Record<string, { name: string; team: string; attempts: number; bins: BinRow[] }>;
 }
+
+const HOOP = { x: 25, y: 5.25 };
+const THREE_R = 23.75;
+
+/** Bin centre in feet. */
+export function binCentre(bin: number, size: number): { x: number; y: number } {
+  const cols = Math.ceil(COURT_W / size);
+  return { x: (bin % cols) * size + size / 2, y: Math.floor(bin / cols) * size + size / 2 };
+}
+
+export function isThree(p: { x: number; y: number }): boolean {
+  const corner = (p.x < 3 || p.x > 47) && p.y < 14;
+  return corner || Math.hypot(p.x - HOOP.x, p.y - HOOP.y) > THREE_R;
+}
+
+/** Key for comparing like with like: shot value + distance to the hoop in feet. */
+function distanceKey(p: { x: number; y: number }): string {
+  return `${isThree(p) ? 3 : 2}:${Math.round(Math.hypot(p.x - HOOP.x, p.y - HOOP.y))}`;
+}
+
+/** League FG% by shot value and distance, from the league bins. */
+export function leagueByDistance(bins: BinRow[], size: number): Map<string, number> {
+  const acc = new Map<string, [number, number]>();
+  for (const [b, att, made] of bins) {
+    const k = distanceKey(binCentre(b, size));
+    const v = acc.get(k) ?? [0, 0];
+    v[0] += att;
+    v[1] += made;
+    acc.set(k, v);
+  }
+  return new Map([...acc].map(([k, [att, made]]) => [k, att ? made / att : 0]));
+}
+
+export interface ShotCell {
+  x: number;
+  y: number;
+  size: number;
+  att: number;
+  made: number;
+  pct: number;
+  /** FG% minus the league's from the same distance and shot value. */
+  diff: number;
+}
+
+export function shotCells(bins: BinRow[], size: number, league: Map<string, number>): ShotCell[] {
+  return bins.map(([b, att, made]) => {
+    const c = binCentre(b, size);
+    const pct = made / att;
+    return { ...c, size, att, made, pct, diff: pct - (league.get(distanceKey(c)) ?? pct) };
+  });
+}

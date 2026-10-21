@@ -52,6 +52,8 @@ describe('normalizePlays', () => {
       ['bam', true, 3],
       ['sarr', false, 2],
     ]);
+    // ESPN's y is measured from the hoop; ours from the baseline (hoop at 5.25 ft).
+    expect(pbp.shots[0]).toMatchObject({ x: 3, y: 16.25 });
   });
 
   it('tracks score changes and win probability', () => {

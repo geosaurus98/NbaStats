@@ -209,7 +209,10 @@ export function elapsedSeconds(period: number, clock: string): number {
 }
 
 // ESPN fills non-shot plays with a sentinel coordinate around -2^31.
-const validCoord = (c: Raw) => c && Number.isFinite(c.x) && Number.isFinite(c.y) && c.x >= 0 && c.x <= 50 && c.y >= 0 && c.y <= 94;
+const validCoord = (c: Raw) => c && Number.isFinite(c.x) && Number.isFinite(c.y) && c.x >= 0 && c.x <= 50 && c.y >= -6 && c.y <= 94;
+
+/** ESPN measures y from the hoop; the app measures from the baseline. */
+export const HOOP_FROM_BASELINE = 5.25;
 
 /** Assists, score flow and shots from the summary's play-by-play. */
 export function normalizePlays(raw: Raw, teams: TeamBox[] = []): PlayByPlay {
@@ -242,7 +245,7 @@ export function normalizePlays(raw: Raw, teams: TeamBox[] = []): PlayByPlay {
         teamId,
         athleteId: ids[0] ?? '',
         x: p.coordinate.x,
-        y: p.coordinate.y,
+        y: Math.max(0, p.coordinate.y + HOOP_FROM_BASELINE),
         made: !!p.scoringPlay,
         value: num(p.pointsAttempted) ?? 2,
         text: p.text ?? '',

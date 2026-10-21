@@ -85,6 +85,23 @@ function zone(s: Shot): 'Paint' | 'Mid-range' | '3PT' {
   return 'Mid-range';
 }
 
+/** Half-court markings at `scale` px per foot (baseline at the top). */
+export function CourtLines({ scale }: { scale: number }) {
+  const X = (ft: number) => ft * scale;
+  const arc = `M${X(CORNER_X)},0 V${X(cornerY)} A${X(THREE_R)},${X(THREE_R)} 0 0 0 ${X(COURT_W - CORNER_X)},${X(cornerY)} V0`;
+  return (
+    <g>
+      <rect x={0} y={0} width={X(COURT_W)} height={X(COURT_H)} className="court-line" />
+      <rect x={X(17)} y={0} width={X(16)} height={X(19)} className="court-line" />
+      <circle cx={X(25)} cy={X(19)} r={X(6)} className="court-line" />
+      <path d={`M${X(21)},${X(HOOP.y)} A${X(4)},${X(4)} 0 0 0 ${X(29)},${X(HOOP.y)}`} className="court-line" />
+      <path d={arc} className="court-line" />
+      <line x1={X(22)} x2={X(28)} y1={X(4)} y2={X(4)} className="court-line" />
+      <circle cx={X(HOOP.x)} cy={X(HOOP.y)} r={X(0.75)} className="court-line" />
+    </g>
+  );
+}
+
 export function ShotChart({ game, pbp }: { game: Game; pbp: PlayByPlay }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [teamId, setTeamId] = useState(game.away.team.id);
@@ -101,8 +118,6 @@ export function ShotChart({ game, pbp }: { game: Game; pbp: PlayByPlay }) {
     const made = list.filter((s) => s.made).length;
     return { z, made, att: list.length };
   });
-  const arc = `M${X(CORNER_X)},0 V${X(cornerY)} A${X(THREE_R)},${X(THREE_R)} 0 0 0 ${X(COURT_W - CORNER_X)},${X(cornerY)} V0`;
-
   return (
     <div className="card" ref={ref}>
       <div className="page-head">
@@ -119,13 +134,7 @@ export function ShotChart({ game, pbp }: { game: Game; pbp: PlayByPlay }) {
       </div>
       <div className="shot-wrap" style={{ width: w }}>
         <svg width={w} height={h} role="img" aria-label="Shot locations on a half court" className="court">
-          <rect x={0} y={0} width={w} height={h} className="court-line" />
-          <rect x={X(17)} y={0} width={X(16)} height={X(19)} className="court-line" />
-          <circle cx={X(25)} cy={X(19)} r={X(6)} className="court-line" />
-          <path d={`M${X(21)},${X(HOOP.y)} A${X(4)},${X(4)} 0 0 0 ${X(29)},${X(HOOP.y)}`} className="court-line" />
-          <path d={arc} className="court-line" />
-          <line x1={X(22)} x2={X(28)} y1={X(4)} y2={X(4)} className="court-line" />
-          <circle cx={X(HOOP.x)} cy={X(HOOP.y)} r={X(0.75)} className="court-line" />
+          <CourtLines scale={scale} />
           {shots
             .slice()
             .sort((a, b) => Number(a.made) - Number(b.made))
