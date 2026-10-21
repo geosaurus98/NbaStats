@@ -66,6 +66,11 @@ export function Player() {
               .join('')}
           </p>
         </div>
+        {p?.name && (
+          <Link className="chip" to={`/degrees?c=${encodeURIComponent(p.name)}`}>
+            6 degrees: teammate graph
+          </Link>
+        )}
         {hasPlayoffs && (
           <div className="segmented push-right">
             <button className={type === 'regular' ? 'active' : ''} onClick={() => setType('regular')}>Regular season</button>

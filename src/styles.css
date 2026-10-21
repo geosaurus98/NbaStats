@@ -281,3 +281,24 @@ table.matrix td.diag { background: var(--bg); }
 .shot-key.made { background: var(--series-1); }
 .shot-key.missed { border: 2px solid var(--series-2); }
 table.zones { max-width: 320px; margin: .4rem auto 0; }
+
+/* Six degrees */
+.degrees-controls { display: flex; flex-wrap: wrap; gap: .8rem; align-items: flex-end; margin: 1rem 0; }
+.player-input { display: flex; flex-direction: column; gap: .2rem; }
+.player-input input { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .45rem .6rem; min-width: 240px; }
+.degrees-controls .actions { margin: 0; }
+.degrees-main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1rem; align-items: start; margin-bottom: 1rem; }
+@media (max-width: 1000px) { .degrees-main { grid-template-columns: 1fr; } }
+.galaxy-stage { position: relative; margin: 0 auto; }
+.galaxy-stage canvas { position: absolute; inset: 0; }
+.galaxy-stage canvas:last-of-type { cursor: crosshair; touch-action: manipulation; }
+.chain { list-style: none; padding: 0; margin: .5rem 0; }
+.chain li { position: relative; }
+.chain-via { font-size: .75rem; color: var(--muted); margin: .1rem 0 .1rem 2.2rem; border-left: 2px solid var(--series-2); padding: .25rem 0 .25rem .6rem; }
+.chain-player { display: flex; align-items: center; gap: .5rem; }
+.chain-player .link { font-weight: 700; color: var(--text); }
+.chain-step { width: 1.6rem; height: 1.6rem; border-radius: 50%; display: inline-grid; place-items: center; background: var(--series-2); color: #fff; font-size: .75rem; font-weight: 700; flex: none; }
+.chain li:first-child .chain-step { background: var(--text); color: var(--surface); }
+.degree-badge { display: inline-grid; place-items: center; min-width: 1.6em; padding: 0 .3em; border-radius: 999px; background: var(--series-2); color: #fff; }
+.roster-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: .6rem; }
+.roster-list summary { cursor: pointer; }
