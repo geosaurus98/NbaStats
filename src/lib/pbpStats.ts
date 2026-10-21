@@ -47,8 +47,8 @@ export function gameDrama(gameId: string, pbp: PlayByPlay): DramaRow | undefined
   return [gameId, round(swing), comeback, leadChanges, round(lateSwing), last.period];
 }
 
-/** Sparse shot bins: [binIndex, attempts, makes]. */
-export type BinRow = [number, number, number];
+/** Sparse shot bins: [binIndex, attempts, makes, shotValue (2 or 3)]. */
+export type BinRow = [number, number, number, number];
 
 export const COURT_W = 50;
 export const COURT_H = 47;
@@ -60,23 +60,26 @@ export function binIndex(s: Pick<Shot, 'x' | 'y'>, size: number): number {
   return cy * cols + cx;
 }
 
+/** Counts shots per court bin, keeping 2s and 3s apart (bins straddle the arc). */
 export class BinCounter {
-  private bins = new Map<number, [number, number]>();
+  private bins = new Map<string, BinRow>();
   attempts = 0;
   constructor(readonly size: number) {}
 
   add(s: Shot) {
     if (s.y > COURT_H) return; // heaves from the back court
     const k = binIndex(s, this.size);
-    const b = this.bins.get(k) ?? [0, 0];
-    b[0]++;
-    if (s.made) b[1]++;
-    this.bins.set(k, b);
+    const value = s.value === 3 ? 3 : 2;
+    const key = `${k}:${value}`;
+    const b = this.bins.get(key) ?? [k, 0, 0, value];
+    b[1]++;
+    if (s.made) b[2]++;
+    this.bins.set(key, b);
     this.attempts++;
   }
 
   rows(): BinRow[] {
-    return [...this.bins.entries()].sort((a, b) => a[0] - b[0]).map(([k, [att, made]]) => [k, att, made]);
+    return [...this.bins.values()].sort((a, b) => a[0] - b[0] || a[3] - b[3]);
   }
 }
 
@@ -90,7 +93,6 @@ export interface ShotBins {
 }
 
 const HOOP = { x: 25, y: 5.25 };
-const THREE_R = 23.75;
 
 /** Bin centre in feet. */
 export function binCentre(bin: number, size: number): { x: number; y: number } {
@@ -98,21 +100,17 @@ export function binCentre(bin: number, size: number): { x: number; y: number } {
   return { x: (bin % cols) * size + size / 2, y: Math.floor(bin / cols) * size + size / 2 };
 }
 
-export function isThree(p: { x: number; y: number }): boolean {
-  const corner = (p.x < 3 || p.x > 47) && p.y < 14;
-  return corner || Math.hypot(p.x - HOOP.x, p.y - HOOP.y) > THREE_R;
-}
 
 /** Key for comparing like with like: shot value + distance to the hoop in feet. */
-function distanceKey(p: { x: number; y: number }): string {
-  return `${isThree(p) ? 3 : 2}:${Math.round(Math.hypot(p.x - HOOP.x, p.y - HOOP.y))}`;
+function distanceKey(p: { x: number; y: number }, value: number): string {
+  return `${value}:${Math.round(Math.hypot(p.x - HOOP.x, p.y - HOOP.y))}`;
 }
 
 /** League FG% by shot value and distance, from the league bins. */
 export function leagueByDistance(bins: BinRow[], size: number): Map<string, number> {
   const acc = new Map<string, [number, number]>();
-  for (const [b, att, made] of bins) {
-    const k = distanceKey(binCentre(b, size));
+  for (const [b, att, made, value] of bins) {
+    const k = distanceKey(binCentre(b, size), value);
     const v = acc.get(k) ?? [0, 0];
     v[0] += att;
     v[1] += made;
@@ -125,6 +123,7 @@ export interface ShotCell {
   x: number;
   y: number;
   size: number;
+  value: number;
   att: number;
   made: number;
   pct: number;
@@ -133,9 +132,9 @@ export interface ShotCell {
 }
 
 export function shotCells(bins: BinRow[], size: number, league: Map<string, number>): ShotCell[] {
-  return bins.map(([b, att, made]) => {
+  return bins.map(([b, att, made, value]) => {
     const c = binCentre(b, size);
     const pct = made / att;
-    return { ...c, size, att, made, pct, diff: pct - (league.get(distanceKey(c)) ?? pct) };
+    return { ...c, size, value, att, made, pct, diff: pct - (league.get(distanceKey(c, value)) ?? pct) };
   });
 }

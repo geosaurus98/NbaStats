@@ -2,16 +2,16 @@
 // from there and coloured by FG% against the league from the same distance
 // (blue = better, red = worse, grey = about average).
 import { useState } from 'react';
-import { type BinRow, COURT_H, COURT_W, isThree, leagueByDistance, shotCells, type ShotCell } from '../lib/pbpStats';
+import { type BinRow, COURT_H, COURT_W, leagueByDistance, shotCells, type ShotCell } from '../lib/pbpStats';
 import { useWidth } from './Charts';
 import { CourtLines } from './GameCharts';
 
 /** FG% difference that gets the full colour. */
 const FULL_DIFF = 0.12;
 
-function zoneOf(c: { x: number; y: number }): string {
+function zoneOf(c: { x: number; y: number; value: number }): string {
   const d = Math.hypot(c.x - 25, c.y - 5.25);
-  if (isThree(c)) return (c.x < 3 || c.x > 47) && c.y < 14 ? 'Corner 3' : 'Above-the-break 3';
+  if (c.value === 3) return (c.x < 4 || c.x > 46) && c.y < 15 ? 'Corner 3' : 'Above-the-break 3';
   if (d < 4) return 'At the rim';
   if (d < 14) return 'Short range';
   return 'Mid-range';
@@ -109,7 +109,7 @@ export function SeasonShotMap({
               </span>
             </div>
             <div className="tt-title">
-              {Math.round(Math.hypot(tip.x - 25, tip.y - 5.25))} ft · {isThree(tip) ? '3-pointer' : '2-pointer'}
+              {Math.round(Math.hypot(tip.x - 25, tip.y - 5.25))} ft · {tip.value === 3 ? '3-pointers' : '2-pointers'}
             </div>
           </div>
         )}
