@@ -1,0 +1,115 @@
+// Builds src/data/season-<year>.json for completed seasons. Run in GitHub
+// Actions (ESPN isn't reachable from every environment):
+//   npx tsx scripts/snapshot.ts 2026 2025
+import { mkdirSync, writeFileSync } from 'node:fs';
+import * as live from '../src/api/live';
+import { aggregateAssists } from '../src/api/normalize';
+import { compactGame, type SeasonSnapshot } from '../src/api/snapshot';
+import type { AssistEvent } from '../src/api/types';
+import { BinCounter, gameDrama, type DramaRow, type ShotBins } from '../src/lib/pbpStats';
+
+const TEAM_BIN_FT = 2;
+const PLAYER_BIN_FT = 3;
+const SHOT_MAP_PLAYERS = 75;
+
+/** One pass over every game's play-by-play: assists, drama and shot bins. */
+async function playByPlay(gameIds: string[]) {
+  const events: AssistEvent[] = [];
+  const names: Record<string, string> = {};
+  const fullNames: Record<string, string> = {};
+  const drama: DramaRow[] = [];
+  const league = new BinCounter(TEAM_BIN_FT);
+  const teams = new Map<string, BinCounter>();
+  const players = new Map<string, { team: string; bins: BinCounter }>();
+  let failed = 0;
+  await live.mapLimit(gameIds, 8, async (id) => {
+    const s = await live.fetchSummary(id, false, false).catch(() => undefined);
+    if (!s) {
+      failed++;
+      return;
+    }
+    Object.assign(names, s.pbp.names);
+    for (const t of s.teams) for (const p of t.players) if (p.id && p.name) fullNames[p.id] = p.name;
+    events.push(...s.pbp.assists);
+    const d = gameDrama(id, s.pbp);
+    if (d) drama.push(d);
+    for (const shot of s.pbp.shots) {
+      league.add(shot);
+      if (!teams.has(shot.teamId)) teams.set(shot.teamId, new BinCounter(TEAM_BIN_FT));
+      teams.get(shot.teamId)!.add(shot);
+      if (!shot.athleteId) continue;
+      const p = players.get(shot.athleteId) ?? { team: shot.teamId, bins: new BinCounter(PLAYER_BIN_FT) };
+      p.team = shot.teamId; // latest team for traded players
+      p.bins.add(shot);
+      players.set(shot.athleteId, p);
+    }
+  });
+  const top = [...players.entries()].sort((a, b) => b[1].bins.attempts - a[1].bins.attempts).slice(0, SHOT_MAP_PLAYERS);
+  const shots: ShotBins = {
+    teamSize: TEAM_BIN_FT,
+    playerSize: PLAYER_BIN_FT,
+    league: league.rows(),
+    teams: Object.fromEntries([...teams].map(([id, b]) => [id, b.rows()])),
+    players: Object.fromEntries(top.map(([id, p]) => [id, { name: names[id] ?? id, team: p.team, attempts: p.bins.attempts, bins: p.bins.rows() }])),
+  };
+  console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames };
+}
+
+const SORTS = [
+  'offensive.avgPoints',
+  'general.avgRebounds',
+  'offensive.avgAssists',
+  'defensive.avgSteals',
+  'defensive.avgBlocks',
+  'offensive.threePointFieldGoalPct',
+];
+const TYPES = [2, 3] as const;
+const HIGH_POOL = 100;
+
+async function build(year: number): Promise<SeasonSnapshot> {
+  console.log(`\n== ${year} ==`);
+  const standings = await live.fetchStandings(year);
+  const teams = standings.flatMap((c) => c.rows.map((r) => r.team)).sort((a, b) => a.name.localeCompare(b.name));
+  console.log(`teams: ${teams.length}`);
+
+  const snap: SeasonSnapshot = { year, generatedAt: new Date().toISOString(), teams, standings, games: {}, leaders: {}, teamStats: {}, highs: {}, assists: {}, drama: {}, shots: {}, players: {}, complete: true };
+  for (const type of TYPES) {
+    const { games } = await live.fetchLeagueGames(year, type);
+    snap.games[type] = games.map(compactGame);
+    console.log(`type ${type}: ${games.length} games`);
+    for (const sort of SORTS) {
+      snap.leaders[`${type}:${sort}`] = await live.fetchLeaders(year, type, sort).catch(() => ({ columns: [], rows: [] }));
+    }
+    snap.teamStats[type] = await live.fetchTeamStats(year, type).catch(() => null);
+    snap.highs[type] = games.length ? await live.fetchSeasonHighs(year, type, HIGH_POOL).catch(() => null) : null;
+    console.log(`type ${type}: highs pool ${snap.highs[type]?.poolSize ?? 0}`);
+    const finals = games.filter((g) => g.state === 'post').map((g) => g.id);
+    // An unplayed regular-season game means the season is still going.
+    if (type === 2 && finals.length < games.length) snap.complete = false;
+    const pbp = await playByPlay(finals);
+    snap.assists![type] = pbp.assists;
+    snap.drama![type] = pbp.drama;
+    snap.shots![type] = pbp.shots;
+    Object.assign(snap.players!, pbp.fullNames);
+    const pairCount = Object.values(snap.assists![type]).reduce((n, t) => n + t.pairs.length, 0);
+    console.log(`type ${type}: assist pairs ${pairCount} across ${Object.keys(snap.assists![type]).length} teams`);
+  }
+  return snap;
+}
+
+const years = process.argv.slice(2).map(Number).filter(Boolean);
+mkdirSync('src/data', { recursive: true });
+for (const year of years) {
+  const snap = await build(year);
+  // Guard against writing a broken snapshot over a good one.
+  // Guards against writing a broken snapshot over a good one.
+  if (snap.teams.length < 30 || (snap.games['2']?.length ?? 0) < 1000) throw new Error(`Snapshot ${year} looks incomplete`);
+  if (snap.complete) {
+    if (Object.keys(snap.assists?.['2'] ?? {}).length < 30) throw new Error(`Snapshot ${year} is missing assist data`);
+    if ((snap.drama?.['2']?.length ?? 0) < 1000) throw new Error(`Snapshot ${year} is missing game drama data`);
+  }
+  const json = JSON.stringify(snap);
+  writeFileSync(`src/data/season-${year}.json`, json);
+  console.log(`wrote src/data/season-${year}.json (${(json.length / 1024).toFixed(0)} KB, ${snap.complete ? 'complete' : 'in progress'}, ${Object.keys(snap.players!).length} players)`);
+}
