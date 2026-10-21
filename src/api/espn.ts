@@ -3,7 +3,7 @@
 import { toISODate } from '../lib/dates';
 import { involves } from '../lib/league';
 import * as live from './live';
-import { getSnapshot, snapshotGames } from './snapshotStore';
+import { getSnapshot, loadSnapshot, snapshotGames, snapshotYears } from './snapshotStore';
 import type { AssistPairs, Game, TeamRef } from './types';
 
 export type { SeasonType, SeasonHighsResult } from './live';
@@ -24,10 +24,12 @@ function finished(season: number) {
 }
 
 export async function fetchStandings(season: number) {
+  await loadSnapshot(season);
   return finished(season)?.standings ?? live.fetchStandings(season);
 }
 
 export async function fetchTeams(season: number) {
+  await loadSnapshot(season);
   return getSnapshot(season)?.teams ?? live.fetchTeams(season);
 }
 
@@ -36,13 +38,23 @@ export function snapshotPlayers(season: number): Record<string, string> {
   return getSnapshot(season)?.players ?? {};
 }
 
+/** ESPN id → full name across every bundled season (newest name wins). */
+export async function allSnapshotPlayers(): Promise<Record<string, string>> {
+  const snaps = await Promise.all(snapshotYears().map(loadSnapshot));
+  return Object.assign({}, ...snaps.reverse().map((s) => s?.players ?? {}));
+}
+
+export { loadSnapshot };
+
 export async function fetchLeagueGames(season: number, seasonType: SeasonType): Promise<{ teams: TeamRef[]; games: Game[] }> {
+  await loadSnapshot(season);
   const games = snapshotGames(season, seasonType);
   if (games) return { teams: getSnapshot(season)!.teams, games };
   return live.fetchLeagueGames(season, seasonType);
 }
 
 export async function fetchTeamSchedule(teamId: string, season: number, seasonType: SeasonType) {
+  await loadSnapshot(season);
   const games = finished(season) && snapshotGames(season, seasonType);
   if (games) {
     return { team: getSnapshot(season)!.teams.find((t) => t.id === teamId), games: games.filter((g) => involves(g, teamId)) };
@@ -51,10 +63,12 @@ export async function fetchTeamSchedule(teamId: string, season: number, seasonTy
 }
 
 export async function fetchLeaders(season: number, seasonType: SeasonType, sort: string) {
+  await loadSnapshot(season);
   return finished(season)?.leaders[`${seasonType}:${sort}`] ?? live.fetchLeaders(season, seasonType, sort);
 }
 
 export async function fetchTeamStats(season: number, seasonType: SeasonType) {
+  await loadSnapshot(season);
   const snap = finished(season);
   if (snap && String(seasonType) in snap.teamStats) {
     const t = snap.teamStats[String(seasonType)];
@@ -65,6 +79,7 @@ export async function fetchTeamStats(season: number, seasonType: SeasonType) {
 }
 
 export async function fetchSeasonHighs(season: number, seasonType: SeasonType) {
+  await loadSnapshot(season);
   const snap = getSnapshot(season);
   if (snap && String(seasonType) in snap.highs) return snap.highs[String(seasonType)];
   return live.fetchSeasonHighs(season, seasonType);
@@ -80,6 +95,7 @@ export async function fetchScoreboard(isoDate: string, fresh = false): Promise<G
     return await live.fetchScoreboard(isoDate, fresh);
   } catch (e) {
     const year = Number(isoDate.slice(0, 4)) + (Number(isoDate.slice(5, 7)) >= 8 ? 1 : 0);
+    await loadSnapshot(year);
     const day = [2, 3].flatMap((t) => snapshotGames(year, t as SeasonType) ?? []).filter((g) => toISODate(new Date(g.date)) === isoDate);
     if (getSnapshot(year)) return day;
     throw e;
@@ -98,6 +114,7 @@ export async function fetchTeamAssists(
   season: number,
   seasonType: SeasonType,
 ): Promise<{ pairs: AssistPairs | undefined; games: number; partial: boolean }> {
+  await loadSnapshot(season);
   const snap = getSnapshot(season);
   const fromSnap = snap?.assists?.[String(seasonType)];
   const finals = (await fetchTeamSchedule(teamId, season, seasonType)).games.filter((g) => g.state === 'post');

@@ -12,6 +12,8 @@ export interface CareerData {
   awards: Record<string, [number, number, number, number, number][]>;
   /** [season, player] */
   allStars: [number, number][];
+  /** Per-team rows for traded seasons: [player, season, league, teamCode, g, pts, trb, ast, stl, blk, mp] */
+  splits?: (number | string)[][];
 }
 
 export const COL = { season: 0, lg: 1, age: 2, g: 3, mp: 4, pts: 5, trb: 6, ast: 7, stl: 8, blk: 9, fg: 10, fga: 11, tp: 12, tpa: 13, ft: 14, fta: 15 } as const;

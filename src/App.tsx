@@ -17,6 +17,7 @@ import { Standings } from './pages/Standings';
 import { Team } from './pages/Team';
 import { Teams } from './pages/Teams';
 import { LiveBar } from './components/LiveBar';
+import { SnapshotGate } from './components/SnapshotGate';
 import { SearchBox } from './components/SearchBox';
 import { SEASONS } from './lib/seasons';
 import { useSeason } from './SeasonContext';
@@ -70,6 +71,7 @@ export function App() {
       </header>
       <LiveBar />
       <main key={season.year}>
+        <SnapshotGate season={season.year}>
         <Routes>
           <Route path="/" element={<Scores />} />
           <Route path="/standings" element={<Standings />} />
@@ -88,6 +90,7 @@ export function App() {
           <Route path="/team/:id" element={<Team />} />
           <Route path="/game/:id" element={<Game />} />
         </Routes>
+        </SnapshotGate>
       </main>
       <footer className="muted small">Data from ESPN's public API. Times shown in your local time zone.</footer>
     </>

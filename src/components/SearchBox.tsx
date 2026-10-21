@@ -2,10 +2,9 @@
 // header button or the "/" key; arrow keys + Enter to pick.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { snapshotPlayers } from '../api/espn';
+import { allSnapshotPlayers } from '../api/espn';
 import { FRANCHISES } from '../lib/franchises';
-import { SEASONS } from '../lib/seasons';
-import { getTeammateGraph } from '../lib/teammateStore';
+import { loadTeammateGraph } from '../lib/teammateStore';
 import { normName } from '../lib/teammates';
 
 interface Result {
@@ -40,18 +39,23 @@ const PAGES = [
   { label: 'Connect the players game', to: '/games?tab=connect', words: 'games connect puzzle chain' },
 ];
 
-function useIndex() {
-  return useMemo(() => {
-    const graph = getTeammateGraph();
-    // ESPN ids for current-era players, matched on accent-free names.
-    const espn = new Map<string, string>();
-    for (const s of SEASONS) for (const [id, name] of Object.entries(snapshotPlayers(s.year))) espn.set(normName(name), id);
-    const players = graph.data.players.map(([name, from, to]) => ({ name, n: normName(name), from, to, espnId: espn.get(normName(name)) }));
-    return { players };
-  }, []);
+interface Index {
+  players: { name: string; n: string; from: number; to: number; espnId?: string }[];
 }
 
-function search(index: ReturnType<typeof useIndex>, query: string): Result[] {
+let indexPromise: Promise<Index> | undefined;
+
+/** Built on first search: every player since 1946-47, with ESPN ids for current-era players. */
+function loadIndex(): Promise<Index> {
+  indexPromise ??= Promise.all([loadTeammateGraph(), allSnapshotPlayers()]).then(([graph, directory]) => {
+    const espn = new Map<string, string>();
+    for (const [id, name] of Object.entries(directory)) espn.set(normName(name), id);
+    return { players: graph.data.players.map(([name, from, to]) => ({ name, n: normName(name), from, to, espnId: espn.get(normName(name)) })) };
+  });
+  return indexPromise;
+}
+
+function search(index: Index | undefined, query: string): Result[] {
   const q = normName(query);
   if (!q) return [];
   const out: Result[] = [];
@@ -68,7 +72,7 @@ function search(index: ReturnType<typeof useIndex>, query: string): Result[] {
     const s = Math.max(rank(f.name), byId ? byId + 5 : 0);
     if (s) out.push({ kind: 'Team', label: f.name, detail: f.id, to: `/team/${f.espnId}`, score: s + 15 });
   }
-  for (const p of index.players) {
+  for (const p of index?.players ?? []) {
     const s = rank(p.name);
     if (!s) continue;
     // Prefer recent, long careers among equal matches.
@@ -94,7 +98,10 @@ export function SearchBox() {
   const [sel, setSel] = useState(0);
   const navigate = useNavigate();
   const input = useRef<HTMLInputElement>(null);
-  const index = useIndex();
+  const [index, setIndex] = useState<Index | undefined>();
+  useEffect(() => {
+    if (open && !index) loadIndex().then(setIndex);
+  }, [open, index]);
   const results = useMemo(() => search(index, query), [index, query]);
 
   useEffect(() => {
@@ -155,7 +162,8 @@ export function SearchBox() {
                   </button>
                 </li>
               ))}
-              {query && results.length === 0 && <li className="muted small pad">No matches.</li>}
+              {query && !index && <li className="muted small pad">Loading players…</li>}
+              {query && index && results.length === 0 && <li className="muted small pad">No matches.</li>}
               {!query && <li className="muted small pad">Try "Durant", "Celtics", "Mikan", "grid"…</li>}
             </ul>
           </div>

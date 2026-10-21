@@ -9,7 +9,8 @@ import { PlayerDatalist, PlayerInput } from '../components/PlayerInput';
 import { Tile } from '../components/Tile';
 import { franchiseById } from '../lib/franchises';
 import { allMoves, careerSegments, commonTeammates, continuity, journeymen, moveMatrix, sharedRosters } from '../lib/history';
-import { getTeammateGraph } from '../lib/teammateStore';
+import { useTeammateGraph } from '../lib/teammateStore';
+import { Loading as GraphLoading } from '../components/Status';
 import { bfs, findPlayer, seasonLabel, type Graph } from '../lib/teammates';
 
 const TABS = [
@@ -23,7 +24,12 @@ const TABS = [
 type Tab = (typeof TABS)[number]['id'];
 
 export function History() {
-  const graph = getTeammateGraph();
+  const graph = useTeammateGraph();
+  if (!graph) return <GraphLoading label="Loading every roster since 1946-47…" />;
+  return <HistoryPage graph={graph} />;
+}
+
+function HistoryPage({ graph }: { graph: Graph }) {
   const [params, setParams] = useSearchParams();
   const tab = (TABS.find((t) => t.id === params.get('tab'))?.id ?? 'movement') as Tab;
   const setParam = (updates: Record<string, string | undefined>) => {
