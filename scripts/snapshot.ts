@@ -1,11 +1,13 @@
 // Builds src/data/season-<year>.json for completed seasons. Run in GitHub
 // Actions (ESPN isn't reachable from every environment):
 //   npx tsx scripts/snapshot.ts 2026 2025
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import * as live from '../src/api/live';
 import { aggregateAssists } from '../src/api/normalize';
 import { compactGame, type SeasonSnapshot } from '../src/api/snapshot';
 import type { AssistEvent } from '../src/api/types';
+import { BoxAccumulator, nameKey } from '../src/lib/boxTotals';
+import { countsInStandings } from '../src/lib/league';
 import { gameLineups, LineupAccumulator, type GameInput } from '../src/lib/lineups';
 import { BinCounter, gameDrama, type DramaRow, type ShotBins } from '../src/lib/pbpStats';
 
@@ -14,7 +16,7 @@ const PLAYER_BIN_FT = 3;
 const SHOT_MAP_PLAYERS = 75;
 
 /** One pass over every game's play-by-play: assists, drama and shot bins. */
-async function playByPlay(gameIds: string[]) {
+async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
   const events: AssistEvent[] = [];
   const names: Record<string, string> = {};
   const fullNames: Record<string, string> = {};
@@ -23,6 +25,7 @@ async function playByPlay(gameIds: string[]) {
   const teams = new Map<string, BinCounter>();
   const players = new Map<string, { team: string; bins: BinCounter }>();
   const lineups = new LineupAccumulator();
+  const box = new BoxAccumulator();
   let failed = 0;
   await live.mapLimit(gameIds, 8, async (id) => {
     const s = await live.fetchSummary(id, false, false).catch(() => undefined);
@@ -31,6 +34,7 @@ async function playByPlay(gameIds: string[]) {
       return;
     }
     Object.assign(names, s.pbp.names);
+    if (!notCounted.has(id)) box.add(s.teams); // the NBA Cup final isn't a regular-season game
     for (const t of s.teams) for (const p of t.players) if (p.id && p.name) fullNames[p.id] = p.name;
     const input: GameInput = {
       starters: Object.fromEntries(s.teams.map((t) => [t.team.id, t.players.filter((p) => p.starter).map((p) => p.id)])),
@@ -63,7 +67,7 @@ async function playByPlay(gameIds: string[]) {
     players: Object.fromEntries(top.map(([id, p]) => [id, { name: names[id] ?? id, team: p.team, attempts: p.bins.attempts, bins: p.bins.rows() }])),
   };
   console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
-  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result() };
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result() };
 }
 
 const SORTS = [
@@ -97,16 +101,39 @@ async function build(year: number): Promise<SeasonSnapshot> {
     const finals = games.filter((g) => g.state === 'post').map((g) => g.id);
     // An unplayed regular-season game means the season is still going.
     if (type === 2 && finals.length < games.length) snap.complete = false;
-    const pbp = await playByPlay(finals);
+    const pbp = await playByPlay(finals, new Set(games.filter((g) => !countsInStandings(g)).map((g) => g.id)));
     snap.assists![type] = pbp.assists;
     snap.drama![type] = pbp.drama;
     snap.shots![type] = pbp.shots;
     snap.lineups![type] = pbp.lineups;
     Object.assign(snap.players!, pbp.fullNames);
+    if (type === 2) snap.box = { 2: { ...pbp.box, rookies: rookies(year, pbp.box.players.map((r) => r[0]), pbp.fullNames) } };
     const pairCount = Object.values(snap.assists![type]).reduce((n, t) => n + t.pairs.length, 0);
     console.log(`type ${type}: assist pairs ${pairCount} across ${Object.keys(snap.assists![type]).length} teams`);
   }
   return snap;
+}
+
+/**
+ * First-year players: their Basketball-Reference debut is this season, or
+ * they aren't in that data yet (current season) and didn't play last season.
+ */
+function rookies(year: number, ids: string[], names: Record<string, string>): string[] {
+  const debuts = new Map<string, number[]>();
+  for (const [name, first] of JSON.parse(readFileSync('src/data/teammates.json', 'utf8')).players as [string, number][]) {
+    const k = nameKey(name);
+    debuts.set(k, [...(debuts.get(k) ?? []), first]);
+  }
+  const prevFile = `src/data/season-${year - 1}.json`;
+  const previous = new Set(existsSync(prevFile) ? Object.keys(JSON.parse(readFileSync(prevFile, 'utf8')).players ?? {}) : []);
+  const out = ids.filter((id) => {
+    const firsts = debuts.get(nameKey(names[id] ?? ''));
+    if (firsts?.includes(year)) return true;
+    if (firsts?.some((f) => f < year)) return false;
+    return !previous.has(id);
+  });
+  console.log(`  rookies: ${out.length}`);
+  return out;
 }
 
 const years = process.argv.slice(2).map(Number).filter(Boolean);
