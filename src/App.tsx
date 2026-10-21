@@ -2,6 +2,7 @@ import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-d
 import { Degrees } from './pages/Degrees';
 import { Game } from './pages/Game';
 import { HeadToHead } from './pages/HeadToHead';
+import { History } from './pages/History';
 import { Leaders } from './pages/Leaders';
 import { Player } from './pages/Player';
 import { Playoffs } from './pages/Playoffs';
@@ -36,6 +37,7 @@ export function App() {
             <NavLink to="/teams">Teams</NavLink>
             <NavLink to="/h2h">H2H</NavLink>
             <NavLink to="/degrees">6 Degrees</NavLink>
+            <NavLink to="/history">History</NavLink>
           </nav>
           <label className="season-select">
             <span className="muted">Season</span>
@@ -56,6 +58,7 @@ export function App() {
           <Route path="/rankings" element={<Rankings />} />
           <Route path="/h2h" element={<HeadToHead />} />
           <Route path="/degrees" element={<Degrees />} />
+          <Route path="/history" element={<History />} />
           <Route path="/player/:id" element={<Player />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/team/:id" element={<Team />} />

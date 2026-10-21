@@ -302,3 +302,32 @@ table.zones { max-width: 320px; margin: .4rem auto 0; }
 .degree-badge { display: inline-grid; place-items: center; min-width: 1.6em; padding: 0 .3em; border-radius: 999px; background: var(--series-2); color: #fff; }
 .roster-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: .6rem; }
 .roster-list summary { cursor: pointer; }
+
+/* History: chord, timelines, heatmap */
+.chord-stage { position: relative; margin: 0 auto; }
+.ribbon { fill: var(--series-1); stroke: none; cursor: pointer; transition: opacity .12s; }
+.ribbon-off { opacity: .04; }
+.ribbon-on { opacity: .75; }
+.ribbon-sel { fill: var(--series-2); opacity: .9; }
+.chord-arc { cursor: pointer; }
+.chord-arc path { fill: var(--text); opacity: .75; }
+.chord-arc.focus path { fill: var(--series-1); opacity: 1; }
+.chord-arc.faded { opacity: .35; }
+.chord-arc text { fill: var(--text); font-size: 10px; font-weight: 600; }
+.pbar-button { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+.pbar-button:hover .pbar-name { color: var(--accent); }
+.move-list { padding-left: 1.2rem; max-height: 520px; overflow-y: auto; font-size: .85rem; }
+.timeline .seg { fill: var(--series-1); }
+.timeline .seg.alt { fill: color-mix(in srgb, var(--series-1) 65%, var(--surface)); }
+.timeline .seg.defunct { fill: var(--context); }
+.timeline .seg-label { fill: #fff; font-size: 11px; font-weight: 700; pointer-events: none; }
+.timeline .timeline-name { fill: var(--text); font-size: 12px; font-weight: 600; }
+.shared-band { fill: var(--series-2); opacity: .22; }
+.journey { columns: 2 220px; padding-left: 1.2rem; font-size: .88rem; margin-top: .8rem; }
+.heatmap { position: relative; }
+.heatmap-scroll { overflow-x: auto; }
+.heat-cell { fill: var(--series-1); cursor: pointer; }
+.heat-cell:hover { stroke: var(--text); stroke-width: 1.5; }
+.heat-label { font-weight: 600; }
+.heat-legend { margin-top: .5rem; align-items: center; }
+.heat-ramp { display: inline-block; width: 120px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, color-mix(in srgb, var(--series-1) 6%, transparent), var(--series-1)); }

@@ -19,6 +19,7 @@ const data: TeammateData = {
     [2010, 'NBA', 'Q', [4]],
   ],
   central: [],
+  stints: [[0], [0, 1], [1, 2], [2], [3]],
 };
 const g = buildGraph(data);
 
