@@ -1,9 +1,11 @@
 // The data API pages use. Completed seasons are served from the bundled
 // snapshot (instant, works offline); anything else comes from ESPN live.
 import { toISODate } from '../lib/dates';
-import { involves } from '../lib/league';
+import { leadersFromBox, teamStatsFromBox } from '../lib/boxTotals';
+import { involves, isFinal } from '../lib/league';
 import * as live from './live';
 import { getSnapshot, loadSnapshot, snapshotGames, snapshotYears } from './snapshotStore';
+import type { SeasonSnapshot } from './snapshot';
 import type { AssistPairs, Game, TeamRef } from './types';
 
 export type { SeasonType, SeasonHighsResult } from './live';
@@ -64,7 +66,36 @@ export async function fetchTeamSchedule(teamId: string, season: number, seasonTy
 
 export async function fetchLeaders(season: number, seasonType: SeasonType, sort: string) {
   await loadSnapshot(season);
-  return finished(season)?.leaders[`${seasonType}:${sort}`] ?? live.fetchLeaders(season, seasonType, sort);
+  const done = finished(season);
+  if (done) return done.leaders[`${seasonType}:${sort}`] ?? live.fetchLeaders(season, seasonType, sort);
+  const snap = getSnapshot(season);
+  try {
+    const table = await live.fetchLeaders(season, seasonType, sort);
+    if (!snap || !staleLeaders(table, snap, seasonType)) return table;
+  } catch (e) {
+    if (!snap) throw e;
+  }
+  // ESPN's feed can serve last season's numbers early in a new season: use our own totals.
+  const box = snap.box?.[String(seasonType)];
+  if (!box) return { columns: [], rows: [] };
+  const abbr = Object.fromEntries(snap.teams.map((t) => [t.id, t.abbr]));
+  return leadersFromBox(box, snap.players ?? {}, abbr, sort);
+}
+
+/** Most games any team has finished this season type, per the snapshot. */
+function maxTeamGames(snap: SeasonSnapshot, seasonType: SeasonType): number {
+  const n = new Map<string, number>();
+  for (const g of snapshotGames(snap.year, seasonType) ?? []) {
+    if (!isFinal(g)) continue;
+    for (const t of [g.home.team.id, g.away.team.id]) n.set(t, (n.get(t) ?? 0) + 1);
+  }
+  return Math.max(0, ...n.values());
+}
+
+/** A player can't have played more games than any team has (allowing for games since the snapshot). */
+function staleLeaders(table: { rows: { values: Record<string, string> }[] }, snap: SeasonSnapshot, seasonType: SeasonType): boolean {
+  const most = Math.max(0, ...table.rows.map((r) => Number(r.values['general.gamesPlayed']) || 0));
+  return most > maxTeamGames(snap, seasonType) + 3;
 }
 
 export async function fetchTeamStats(season: number, seasonType: SeasonType) {
@@ -75,6 +106,10 @@ export async function fetchTeamStats(season: number, seasonType: SeasonType) {
     if (!t) throw new live.ApiError('No team stats for this season', 'not-found');
     return t;
   }
+  // During a season ESPN's team feed can still show last season; our box-score totals are at most a day old.
+  const box = getSnapshot(season)?.box?.[String(seasonType)];
+  const own = box && teamStatsFromBox(box);
+  if (own) return own;
   return live.fetchTeamStats(season, seasonType);
 }
 
@@ -183,4 +218,9 @@ export function snapshotTeams(season: number): TeamRef[] | undefined {
 /** Most-used lineups and on/off splits for a team (loaded snapshot seasons only). */
 export function seasonLineups(season: number, seasonType: SeasonType, teamId: string) {
   return getSnapshot(season)?.lineups?.[String(seasonType)]?.[teamId];
+}
+
+/** The bundled snapshot itself, for models that read several parts of it (e.g. the awards race). */
+export function seasonSnapshot(season: number) {
+  return getSnapshot(season);
 }
