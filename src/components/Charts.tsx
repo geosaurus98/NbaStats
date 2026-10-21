@@ -211,6 +211,8 @@ export interface Column {
   value: number;
   label: string;
   detail?: string;
+  /** Short axis label, shown when `xLabels` is set. */
+  tick?: string;
 }
 
 /** Columns from a zero baseline; positive in --pos, negative in --neg. */
@@ -220,7 +222,10 @@ export function ColumnChart({
   yFormat = (v) => String(v),
   ariaLabel,
   onSelect,
+  xLabels = false,
 }: {
+  /** Print each column's `tick` under it. */
+  xLabels?: boolean;
   columns: Column[];
   height?: number;
   yFormat?: (v: number) => string;
@@ -267,6 +272,9 @@ export function ColumnChart({
         {columns.map((c, i) => (
           <g key={i}>
             <path className={`bar${hover === i ? ' hot' : ''}`} d={barPath(i, c.value)} style={{ fill: c.value >= 0 ? 'var(--pos)' : 'var(--neg)' }} />
+            {xLabels && c.tick && (
+              <text className="tick" x={m.left + i * band + band / 2} y={height - 8} textAnchor="middle">{c.tick}</text>
+            )}
             <rect
               x={m.left + i * band}
               y={m.top}

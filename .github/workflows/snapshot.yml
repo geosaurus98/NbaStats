@@ -3,7 +3,7 @@ name: Season snapshot
 on:
   push:
     branches: [claude/youthful-heisenberg-ag3b0v]
-    paths: [scripts/snapshot.ts, .github/workflows/snapshot.yml]
+    paths: [scripts/snapshot.ts, scripts/teammates.ts, .github/workflows/snapshot.yml]
   workflow_dispatch:
     inputs:
       seasons:
@@ -24,6 +24,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx --yes tsx scripts/snapshot.ts ${{ github.event.inputs.seasons || '2026 2025' }}
+      - run: npx --yes tsx scripts/teammates.ts
       - name: Commit snapshot
         run: |
           git config user.name "github-actions[bot]"
