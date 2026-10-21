@@ -6,6 +6,11 @@ export function isFinal(g: Game): boolean {
   return g.state === 'post' && g.home.score != null && g.away.score != null;
 }
 
+/** The NBA Cup Championship is a real game but doesn't count in the standings. */
+export function countsInStandings(g: Game): boolean {
+  return !/cup championship/i.test(g.note ?? '');
+}
+
 /** The given team's side and its opponent's side of a game. */
 export function sides(g: Game, teamId: string): [Competitor, Competitor] {
   return g.home.team.id === teamId ? [g.home, g.away] : [g.away, g.home];
@@ -42,7 +47,8 @@ export interface TeamRecord {
 
 const CLOSE_MARGIN = 5;
 
-export function teamRecords(teams: TeamRef[], games: Game[]): TeamRecord[] {
+export function teamRecords(teams: TeamRef[], allGames: Game[]): TeamRecord[] {
+  const games = allGames.filter(countsInStandings);
   const finals = games.filter(isFinal);
   return teams.map((team) => {
     const mine = finals.filter((g) => involves(g, team.id));
@@ -119,7 +125,7 @@ export function raceSeries(games: Game[], teamId: string): number[] {
   const out: number[] = [];
   let net = 0;
   for (const g of games) {
-    if (!isFinal(g) || !involves(g, teamId)) continue;
+    if (!isFinal(g) || !involves(g, teamId) || !countsInStandings(g)) continue;
     net += won(g, teamId) ? 1 : -1;
     out.push(net);
   }

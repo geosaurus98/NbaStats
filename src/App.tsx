@@ -1,3 +1,4 @@
+import { Fragment, useEffect } from 'react';
 import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Compare } from './pages/Compare';
 import { Degrees } from './pages/Degrees';
@@ -9,19 +10,33 @@ import { Insights } from './pages/Insights';
 import { Leaders } from './pages/Leaders';
 import { Player } from './pages/Player';
 import { Playoffs } from './pages/Playoffs';
+import { Projections } from './pages/Projections';
 import { Rankings } from './pages/Rankings';
 import { Scores } from './pages/Scores';
 import { Standings } from './pages/Standings';
 import { Team } from './pages/Team';
 import { Teams } from './pages/Teams';
+import { LiveBar } from './components/LiveBar';
 import { SearchBox } from './components/SearchBox';
 import { SEASONS } from './lib/seasons';
 import { useSeason } from './SeasonContext';
+
+// Grouped: this season · stats · teams & players · history & fun.
+const NAV: [string, string][][] = [
+  [['/', 'Scores'], ['/standings', 'Standings'], ['/playoffs', 'Playoffs'], ['/projections', 'Projections']],
+  [['/leaders', 'Leaders'], ['/rankings', 'Rankings'], ['/insights', 'Insights']],
+  [['/teams', 'Teams'], ['/h2h', 'H2H'], ['/compare', 'Compare']],
+  [['/history', 'History'], ['/degrees', '6 Degrees'], ['/games', 'Games']],
+];
 
 export function App() {
   const { season, setSeasonYear } = useSeason();
   const location = useLocation();
   const navigate = useNavigate();
+  // On narrow screens the menu scrolls: keep the current page's link in view.
+  useEffect(() => {
+    document.querySelector('.mainnav a.active')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }, [location.pathname]);
   const changeSeason = (year: number) => {
     setSeasonYear(year);
     // A date picked for the old season makes no sense for the new one.
@@ -32,20 +47,6 @@ export function App() {
       <header className="topbar">
         <div className="topbar-inner">
           <NavLink to="/" className="brand">🏀 NBA Stats Hub</NavLink>
-          <nav>
-            <NavLink to="/" end>Scores</NavLink>
-            <NavLink to="/standings">Standings</NavLink>
-            <NavLink to="/playoffs">Playoffs</NavLink>
-            <NavLink to="/leaders">Leaders</NavLink>
-            <NavLink to="/rankings">Rankings</NavLink>
-            <NavLink to="/teams">Teams</NavLink>
-            <NavLink to="/h2h">H2H</NavLink>
-            <NavLink to="/compare">Compare</NavLink>
-            <NavLink to="/degrees">6 Degrees</NavLink>
-            <NavLink to="/insights">Insights</NavLink>
-            <NavLink to="/history">History</NavLink>
-            <NavLink to="/games">Games</NavLink>
-          </nav>
           <SearchBox />
           <label className="season-select">
             <span className="muted">Season</span>
@@ -56,12 +57,24 @@ export function App() {
             </select>
           </label>
         </div>
+        <nav className="mainnav" aria-label="Main">
+          {NAV.map((group, i) => (
+            <Fragment key={i}>
+              {i > 0 && <span className="nav-sep" aria-hidden />}
+              {group.map(([to, label]) => (
+                <NavLink key={to} to={to} end={to === '/'}>{label}</NavLink>
+              ))}
+            </Fragment>
+          ))}
+        </nav>
       </header>
+      <LiveBar />
       <main key={season.year}>
         <Routes>
           <Route path="/" element={<Scores />} />
           <Route path="/standings" element={<Standings />} />
           <Route path="/playoffs" element={<Playoffs />} />
+          <Route path="/projections" element={<Projections />} />
           <Route path="/leaders" element={<Leaders />} />
           <Route path="/rankings" element={<Rankings />} />
           <Route path="/h2h" element={<HeadToHead />} />

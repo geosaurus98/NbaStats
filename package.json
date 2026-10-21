@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b",
-    "build:standalone": "npm run build && node scripts/standalone.mjs"
+    "build:standalone": "tsc -b && vite build --mode standalone && node scripts/standalone.mjs"
   },
   "dependencies": {
     "react": "^19.3.1",
