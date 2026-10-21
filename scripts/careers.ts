@@ -55,6 +55,14 @@ for (const r of totals) {
 }
 for (const s of seasons) s.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
 
+// Per-team rows for traded players' seasons (for franchise leaderboards).
+const splits: CareerData['splits'] = [];
+for (const r of totals) {
+  if (!multi.has(`${r.player_id}|${r.season}|${r.lg}`) || /^\dTM$/.test(r.team)) continue;
+  const p = indexOf.get(r.player_id);
+  if (p != null) splits.push([p, Number(r.season), LEAGUES.indexOf(r.lg), r.team, num(r.g), num(r.pts), num(r.trb), num(r.ast), num(r.stl), num(r.blk), num(r.mp)]);
+}
+
 const awards: CareerData['awards'] = {};
 for (const r of await table('Player Award Shares.csv')) {
   const p = indexOf.get(r.player_id);
@@ -73,7 +81,8 @@ const data: CareerData = {
   seasons,
   awards,
   allStars,
+  splits,
 };
 const json = JSON.stringify(data);
 writeFileSync('src/data/careers.json', json);
-console.log(`${seasons.filter((s) => s.length).length} players with stats, ${missing} unmatched rows, ${Object.keys(awards).length} awards, ${allStars.length} All-Star selections, ${(json.length / 1024).toFixed(0)} KB`);
+console.log(`${splits.length} traded-season splits, ${seasons.filter((s) => s.length).length} players with stats, ${missing} unmatched rows, ${Object.keys(awards).length} awards, ${allStars.length} All-Star selections, ${(json.length / 1024).toFixed(0)} KB`);

@@ -249,7 +249,21 @@ export function normalizePlays(raw: Raw, teams: TeamBox[] = []): PlayByPlay {
     const away = num(p.awayScore) ?? 0;
     const teamId = String(p.team?.id ?? '');
     const ids: string[] = (p.participants ?? []).map((x: Raw) => String(x.athlete?.id ?? ''));
-    if (p.text) feed.push({ id: String(p.id ?? feed.length), period, clock, text: p.text, teamId, home, away, scoring: !!p.scoringPlay });
+    if (p.text) {
+      feed.push({
+        id: String(p.id ?? feed.length),
+        period,
+        clock,
+        t: elapsedSeconds(period, clock),
+        ids: ids.filter(Boolean),
+        sub: /substitution/i.test(p.type?.text ?? ''),
+        text: p.text,
+        teamId,
+        home,
+        away,
+        scoring: !!p.scoringPlay,
+      });
+    }
 
     if (p.scoringPlay && ids.length >= 2 && /assist/i.test(p.text ?? '')) {
       assists.push({ teamId, scorerId: ids[0], passerId: ids[1], points: num(p.scoreValue) ?? 2 });

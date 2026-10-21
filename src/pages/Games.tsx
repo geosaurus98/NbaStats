@@ -6,7 +6,8 @@ import { PlayerDatalist } from '../components/PlayerInput';
 import { TeamLogo } from '../components/TeamLogo';
 import { espnLogo, franchiseById } from '../lib/franchises';
 import { franchiseSets, hint, linkingRosters, makeConnect, makeGrid, obscurity, seededRandom, seedFromString, todayKey } from '../lib/games';
-import { getTeammateGraph } from '../lib/teammateStore';
+import { useTeammateGraph } from '../lib/teammateStore';
+import { Loading as GraphLoading } from '../components/Status';
 import { bfs, findPlayer, pathTo, seasonLabel, type Graph } from '../lib/teammates';
 
 function load<T>(key: string): T | undefined {
@@ -36,7 +37,12 @@ function FranchiseBadge({ id }: { id: string }) {
 }
 
 export function Games() {
-  const graph = getTeammateGraph();
+  const graph = useTeammateGraph();
+  if (!graph) return <GraphLoading label="Loading every roster since 1946-47…" />;
+  return <GamesPage graph={graph} />;
+}
+
+function GamesPage({ graph }: { graph: Graph }) {
   const [params, setParams] = useSearchParams();
   const tabs = [
     { id: 'grid', label: 'Played for both' },

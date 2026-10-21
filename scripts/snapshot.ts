@@ -6,6 +6,7 @@ import * as live from '../src/api/live';
 import { aggregateAssists } from '../src/api/normalize';
 import { compactGame, type SeasonSnapshot } from '../src/api/snapshot';
 import type { AssistEvent } from '../src/api/types';
+import { gameLineups, LineupAccumulator, type GameInput } from '../src/lib/lineups';
 import { BinCounter, gameDrama, type DramaRow, type ShotBins } from '../src/lib/pbpStats';
 
 const TEAM_BIN_FT = 2;
@@ -21,6 +22,7 @@ async function playByPlay(gameIds: string[]) {
   const league = new BinCounter(TEAM_BIN_FT);
   const teams = new Map<string, BinCounter>();
   const players = new Map<string, { team: string; bins: BinCounter }>();
+  const lineups = new LineupAccumulator();
   let failed = 0;
   await live.mapLimit(gameIds, 8, async (id) => {
     const s = await live.fetchSummary(id, false, false).catch(() => undefined);
@@ -30,6 +32,14 @@ async function playByPlay(gameIds: string[]) {
     }
     Object.assign(names, s.pbp.names);
     for (const t of s.teams) for (const p of t.players) if (p.id && p.name) fullNames[p.id] = p.name;
+    const input: GameInput = {
+      starters: Object.fromEntries(s.teams.map((t) => [t.team.id, t.players.filter((p) => p.starter).map((p) => p.id)])),
+      teamOf: Object.fromEntries(s.teams.flatMap((t) => t.players.map((p) => [p.id, t.team.id]))),
+      homeId: s.game.home.team.id,
+      awayId: s.game.away.team.id,
+      feed: s.pbp.feed,
+    };
+    if (Object.values(input.starters).every((ids) => ids.length === 5)) lineups.add(input, gameLineups(input));
     events.push(...s.pbp.assists);
     const d = gameDrama(id, s.pbp);
     if (d) drama.push(d);
@@ -53,7 +63,7 @@ async function playByPlay(gameIds: string[]) {
     players: Object.fromEntries(top.map(([id, p]) => [id, { name: names[id] ?? id, team: p.team, attempts: p.bins.attempts, bins: p.bins.rows() }])),
   };
   console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
-  return { assists: aggregateAssists(events, names), drama, shots, fullNames };
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result() };
 }
 
 const SORTS = [
@@ -73,7 +83,7 @@ async function build(year: number): Promise<SeasonSnapshot> {
   const teams = standings.flatMap((c) => c.rows.map((r) => r.team)).sort((a, b) => a.name.localeCompare(b.name));
   console.log(`teams: ${teams.length}`);
 
-  const snap: SeasonSnapshot = { year, generatedAt: new Date().toISOString(), teams, standings, games: {}, leaders: {}, teamStats: {}, highs: {}, assists: {}, drama: {}, shots: {}, players: {}, complete: true };
+  const snap: SeasonSnapshot = { year, generatedAt: new Date().toISOString(), teams, standings, games: {}, leaders: {}, teamStats: {}, highs: {}, assists: {}, drama: {}, shots: {}, players: {}, lineups: {}, complete: true };
   for (const type of TYPES) {
     const { games } = await live.fetchLeagueGames(year, type);
     snap.games[type] = games.map(compactGame);
@@ -91,6 +101,7 @@ async function build(year: number): Promise<SeasonSnapshot> {
     snap.assists![type] = pbp.assists;
     snap.drama![type] = pbp.drama;
     snap.shots![type] = pbp.shots;
+    snap.lineups![type] = pbp.lineups;
     Object.assign(snap.players!, pbp.fullNames);
     const pairCount = Object.values(snap.assists![type]).reduce((n, t) => n + t.pairs.length, 0);
     console.log(`type ${type}: assist pairs ${pairCount} across ${Object.keys(snap.assists![type]).length} teams`);
