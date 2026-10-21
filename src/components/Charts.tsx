@@ -31,7 +31,8 @@ const M = { top: 12, right: 64, bottom: 28, left: 40 };
 export interface LineSeries {
   id: string;
   label: string;
-  values: number[];
+  /** null = no value at this x (the line breaks). */
+  values: (number | null)[];
   /** CSS color for highlighted series; omitted = muted context line. */
   color?: string;
 }
@@ -70,7 +71,7 @@ export function LineChart({
   const [ref, width] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
   const n = Math.max(0, ...series.map((s) => s.values.length));
-  const all = series.flatMap((s) => s.values);
+  const all = series.flatMap((s) => s.values).filter((v): v is number => v != null);
   if (n === 0 || all.length === 0) return null;
 
   let lo = yDomain ? yDomain[0] : Math.min(...all, zeroLine ? 0 : Infinity);
@@ -90,15 +91,25 @@ export function LineChart({
   const xAt = (v: number) => m.left + (x1 === x0 ? iw / 2 : ((v - x0) / (x1 - x0)) * iw);
   const x = (i: number) => xAt(xs ? xs[i] : i);
   const y = (v: number) => m.top + ih - ((v - lo) / (hi - lo)) * ih;
-  const path = (vals: number[]) =>
-    vals
-      .map((v, i) => {
-        const px = x(i).toFixed(1);
-        const py = y(v).toFixed(1);
-        if (!i) return `M${px},${py}`;
-        return step ? `H${px}V${py}` : `L${px},${py}`;
-      })
-      .join('');
+  const path = (vals: (number | null)[]) => {
+    let out = '';
+    let pen = false;
+    vals.forEach((v, i) => {
+      if (v == null) {
+        pen = false;
+        return;
+      }
+      const px = x(i).toFixed(1);
+      const py = y(v).toFixed(1);
+      out += !pen ? `M${px},${py}` : step ? `H${px}V${py}` : `L${px},${py}`;
+      pen = true;
+    });
+    return out;
+  };
+  const lastIndex = (vals: (number | null)[]) => {
+    for (let i = vals.length - 1; i >= 0; i--) if (vals[i] != null) return i;
+    return -1;
+  };
 
   const context = series.filter((s) => !s.color);
   const focus = series.filter((s) => s.color);
@@ -161,11 +172,11 @@ export function LineChart({
         {focus.map((s) => (
           <g key={s.id}>
             <path className="line" d={path(s.values)} style={{ stroke: s.color }} />
-            {s.values.length > 0 && (
+            {lastIndex(s.values) >= 0 && (
               <>
-                <circle className="dot" cx={x(s.values.length - 1)} cy={y(s.values[s.values.length - 1])} r={4} style={{ fill: s.color }} />
-                <text className="end-label" x={x(s.values.length - 1) + 8} y={y(s.values[s.values.length - 1])} dy="0.32em">
-                  {yFormat(s.values[s.values.length - 1])}
+                <circle className="dot" cx={x(lastIndex(s.values))} cy={y(s.values[lastIndex(s.values)]!)} r={4} style={{ fill: s.color }} />
+                <text className="end-label" x={x(lastIndex(s.values)) + 8} y={y(s.values[lastIndex(s.values)]!)} dy="0.32em">
+                  {yFormat(s.values[lastIndex(s.values)]!)}
                 </text>
               </>
             )}
@@ -176,7 +187,7 @@ export function LineChart({
             <line className="crosshair" x1={x(hover)} x2={x(hover)} y1={m.top} y2={m.top + ih} />
             {focus.map((s) =>
               s.values[hover] != null ? (
-                <circle key={s.id} className="dot" cx={x(hover)} cy={y(s.values[hover])} r={4} style={{ fill: s.color }} />
+                <circle key={s.id} className="dot" cx={x(hover)} cy={y(s.values[hover]!)} r={4} style={{ fill: s.color }} />
               ) : null,
             )}
           </g>
@@ -197,7 +208,7 @@ export function LineChart({
           {focus.map((s) => (
             <div key={s.id} className="tt-row">
               <i className="key-line" style={{ background: s.color }} />
-              <b>{s.values[hover] != null ? yFormat(s.values[hover]) : '–'}</b>
+              <b>{s.values[hover] != null ? yFormat(s.values[hover]!) : '–'}</b>
               <span>{s.label}</span>
             </div>
           ))}

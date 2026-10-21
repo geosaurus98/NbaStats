@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { GuessPlayer } from '../components/GuessPlayer';
+import { HigherLower } from '../components/HigherLower';
 import { PlayerDatalist } from '../components/PlayerInput';
 import { TeamLogo } from '../components/TeamLogo';
 import { espnLogo, franchiseById } from '../lib/franchises';
@@ -36,16 +38,26 @@ function FranchiseBadge({ id }: { id: string }) {
 export function Games() {
   const graph = getTeammateGraph();
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'connect' ? 'connect' : 'grid';
+  const tabs = [
+    { id: 'grid', label: 'Played for both' },
+    { id: 'connect', label: 'Connect the players' },
+    { id: 'guess', label: 'Guess the player' },
+    { id: 'higher', label: 'Higher or lower' },
+  ];
+  const tab = tabs.find((t) => t.id === params.get('tab'))?.id ?? 'grid';
   return (
     <section>
       <PlayerDatalist graph={graph} />
       <h1>Games</h1>
       <div className="tabs">
-        <button className={tab === 'grid' ? 'active' : ''} onClick={() => setParams({ tab: 'grid' }, { replace: true })}>Played for both</button>
-        <button className={tab === 'connect' ? 'active' : ''} onClick={() => setParams({ tab: 'connect' }, { replace: true })}>Connect the players</button>
+        {tabs.map((t) => (
+          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParams({ tab: t.id }, { replace: true })}>{t.label}</button>
+        ))}
       </div>
-      {tab === 'grid' ? <GridGame graph={graph} /> : <ConnectGame graph={graph} />}
+      {tab === 'grid' && <GridGame graph={graph} />}
+      {tab === 'connect' && <ConnectGame graph={graph} />}
+      {tab === 'guess' && <GuessPlayer graph={graph} />}
+      {tab === 'higher' && <HigherLower graph={graph} />}
       <p className="muted small">Based on every BAA/NBA/ABA roster since 1946-47, grouped into today's franchises (e.g. Seattle counts as OKC).</p>
     </section>
   );

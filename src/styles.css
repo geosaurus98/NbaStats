@@ -406,3 +406,20 @@ table.zones.wide { max-width: 440px; }
 .pbar.compact .pbar-n:not(.best) { font-weight: 400; }
 .compare-shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: .8rem; }
 .compare-shots .card + .card { margin-top: 0; }
+.winners-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .15rem .8rem; max-height: 420px; overflow-y: auto; }
+.winner-row { background: none; border: 0; padding: .2rem .3rem; text-align: left; border-radius: 6px; font-size: .85rem; }
+.winner-row:hover, .winner-row.active { background: var(--accent-soft); }
+.pbar-name .muted.small { margin-left: .3rem; }
+
+.path-clue { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin-bottom: .6rem; }
+.path-step { display: inline-flex; gap: .3rem; align-items: center; }
+.path-clue .chip { font-weight: 700; font-size: 1rem; }
+.hint-list { list-style: none; padding: 0; margin: .4rem 0; font-size: .9rem; }
+.guess-table { margin: .6rem 0; }
+.guess-table tr.right td { background: color-mix(in srgb, var(--pos) 14%, transparent); }
+.hl-cards { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; max-width: 640px; margin: 1rem 0; }
+.hl-card { display: flex; flex-direction: column; align-items: center; gap: .3rem; padding: 1.2rem .6rem; cursor: pointer; text-align: center; }
+.hl-card:hover:not(:disabled) { border-color: var(--accent); }
+.hl-card.right { border-color: var(--pos); background: color-mix(in srgb, var(--pos) 12%, var(--surface)); }
+.hl-card.wrong { border-color: var(--neg); background: color-mix(in srgb, var(--neg) 10%, var(--surface)); }
+.hl-value { font-size: 1.8rem; font-weight: 800; }
