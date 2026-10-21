@@ -46,9 +46,9 @@ function useNetwork(data: AssistPairs, maxPlayers: number) {
   }, [data, maxPlayers]);
 }
 
-export function AssistNetwork({ data, title }: { data: AssistPairs; title?: string }) {
+export function AssistNetwork({ data, title, maxPlayers = MAX_PLAYERS }: { data: AssistPairs; title?: string; maxPlayers?: number }) {
   const [ref, width] = useWidth<HTMLDivElement>();
-  const { ids, names, given, received, edges } = useNetwork(data, MAX_PLAYERS);
+  const { ids, names, given, received, edges } = useNetwork(data, maxPlayers);
   const [hover, setHover] = useState<string | null>(null);
   const [pinned, setPinned] = useState<string | null>(null);
   const [edgeTip, setEdgeTip] = useState<{ e: Edge; x: number; y: number } | null>(null);

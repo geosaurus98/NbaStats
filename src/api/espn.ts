@@ -123,3 +123,28 @@ export function playerAssistPartners(playerId: string, season: number, seasonTyp
   const sort = (m: Map<string, Partner>) => [...m.values()].sort((a, b) => b.assists - a.assists);
   return { to: sort(to), from: sort(from) };
 }
+
+/** Win-probability "drama" rows for a snapshotted season. */
+export function seasonDrama(season: number, seasonType: SeasonType) {
+  return getSnapshot(season)?.drama?.[String(seasonType)];
+}
+
+/** Binned season shots (teams, top shooters, league) for a snapshotted season. */
+export function seasonShots(season: number, seasonType: SeasonType) {
+  return getSnapshot(season)?.shots?.[String(seasonType)];
+}
+
+/** Every team's passer → scorer pairs for a snapshotted season. */
+export function seasonAssists(season: number, seasonType: SeasonType) {
+  return getSnapshot(season)?.assists?.[String(seasonType)];
+}
+
+/** Snapshot games by id (for labelling drama rows). */
+export function snapshotGameMap(season: number, seasonType: SeasonType): Map<string, Game> {
+  return new Map((snapshotGames(season, seasonType) ?? []).map((g) => [g.id, g]));
+}
+
+/** Teams of a snapshotted season. */
+export function snapshotTeams(season: number): TeamRef[] | undefined {
+  return getSnapshot(season)?.teams;
+}

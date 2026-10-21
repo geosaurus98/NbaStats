@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { fetchTeamSchedule, type SeasonType } from '../api/espn';
+import { fetchTeamSchedule, seasonShots, type SeasonType } from '../api/espn';
 import type { Game } from '../api/types';
 import { ColumnChart, LineChart } from '../components/Charts';
 import { FavouriteStar } from '../components/FavouriteStar';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
+import { SeasonShotMap } from '../components/SeasonShotMap';
 import { TeamAssists } from '../components/TeamAssists';
 import { Tile } from '../components/Tile';
 import { useAsync } from '../hooks/useAsync';
@@ -34,6 +35,7 @@ export function Team() {
   const pa = results.reduce((s, g) => s + (sides(g, id)[1].score ?? 0), 0);
   const team = data?.team ?? (games[0] && sides(games[0], id)[0].team);
   const recent = results.slice(-10);
+  const shots = seasonShots(season.year, type);
   const recentWins = recent.filter((g) => won(g, id)).length;
 
   const exportICS = () => {
@@ -77,6 +79,13 @@ export function Team() {
       {results.length > 1 && <TeamCharts id={id} results={results} onSelect={(g) => navigate(`/game/${g.id}`)} />}
 
       {results.length > 0 && <TeamAssists teamId={id} season={season.year} seasonType={type} />}
+
+      {shots?.teams[id] && (
+        <>
+          <h2>Where they shoot from</h2>
+          <SeasonShotMap bins={shots.teams[id]} size={shots.teamSize} league={shots.league} leagueSize={shots.teamSize} />
+        </>
+      )}
 
       {games.length > 0 && (
         <div className="page-head">
