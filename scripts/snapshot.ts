@@ -16,6 +16,7 @@ const SHOT_MAP_PLAYERS = 75;
 async function playByPlay(gameIds: string[]) {
   const events: AssistEvent[] = [];
   const names: Record<string, string> = {};
+  const fullNames: Record<string, string> = {};
   const drama: DramaRow[] = [];
   const league = new BinCounter(TEAM_BIN_FT);
   const teams = new Map<string, BinCounter>();
@@ -28,6 +29,7 @@ async function playByPlay(gameIds: string[]) {
       return;
     }
     Object.assign(names, s.pbp.names);
+    for (const t of s.teams) for (const p of t.players) if (p.id && p.name) fullNames[p.id] = p.name;
     events.push(...s.pbp.assists);
     const d = gameDrama(id, s.pbp);
     if (d) drama.push(d);
@@ -51,7 +53,7 @@ async function playByPlay(gameIds: string[]) {
     players: Object.fromEntries(top.map(([id, p]) => [id, { name: names[id] ?? id, team: p.team, attempts: p.bins.attempts, bins: p.bins.rows() }])),
   };
   console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
-  return { assists: aggregateAssists(events, names), drama, shots };
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames };
 }
 
 const SORTS = [
@@ -71,7 +73,7 @@ async function build(year: number): Promise<SeasonSnapshot> {
   const teams = standings.flatMap((c) => c.rows.map((r) => r.team)).sort((a, b) => a.name.localeCompare(b.name));
   console.log(`teams: ${teams.length}`);
 
-  const snap: SeasonSnapshot = { year, generatedAt: new Date().toISOString(), teams, standings, games: {}, leaders: {}, teamStats: {}, highs: {}, assists: {}, drama: {}, shots: {} };
+  const snap: SeasonSnapshot = { year, generatedAt: new Date().toISOString(), teams, standings, games: {}, leaders: {}, teamStats: {}, highs: {}, assists: {}, drama: {}, shots: {}, players: {}, complete: true };
   for (const type of TYPES) {
     const { games } = await live.fetchLeagueGames(year, type);
     snap.games[type] = games.map(compactGame);
@@ -83,10 +85,13 @@ async function build(year: number): Promise<SeasonSnapshot> {
     snap.highs[type] = games.length ? await live.fetchSeasonHighs(year, type, HIGH_POOL).catch(() => null) : null;
     console.log(`type ${type}: highs pool ${snap.highs[type]?.poolSize ?? 0}`);
     const finals = games.filter((g) => g.state === 'post').map((g) => g.id);
+    // An unplayed regular-season game means the season is still going.
+    if (type === 2 && finals.length < games.length) snap.complete = false;
     const pbp = await playByPlay(finals);
     snap.assists![type] = pbp.assists;
     snap.drama![type] = pbp.drama;
     snap.shots![type] = pbp.shots;
+    Object.assign(snap.players!, pbp.fullNames);
     const pairCount = Object.values(snap.assists![type]).reduce((n, t) => n + t.pairs.length, 0);
     console.log(`type ${type}: assist pairs ${pairCount} across ${Object.keys(snap.assists![type]).length} teams`);
   }
@@ -98,10 +103,13 @@ mkdirSync('src/data', { recursive: true });
 for (const year of years) {
   const snap = await build(year);
   // Guard against writing a broken snapshot over a good one.
+  // Guards against writing a broken snapshot over a good one.
   if (snap.teams.length < 30 || (snap.games['2']?.length ?? 0) < 1000) throw new Error(`Snapshot ${year} looks incomplete`);
-  if (Object.keys(snap.assists?.['2'] ?? {}).length < 30) throw new Error(`Snapshot ${year} is missing assist data`);
-  if ((snap.drama?.['2']?.length ?? 0) < 1000) throw new Error(`Snapshot ${year} is missing game drama data`);
+  if (snap.complete) {
+    if (Object.keys(snap.assists?.['2'] ?? {}).length < 30) throw new Error(`Snapshot ${year} is missing assist data`);
+    if ((snap.drama?.['2']?.length ?? 0) < 1000) throw new Error(`Snapshot ${year} is missing game drama data`);
+  }
   const json = JSON.stringify(snap);
   writeFileSync(`src/data/season-${year}.json`, json);
-  console.log(`wrote src/data/season-${year}.json (${(json.length / 1024).toFixed(0)} KB)`);
+  console.log(`wrote src/data/season-${year}.json (${(json.length / 1024).toFixed(0)} KB, ${snap.complete ? 'complete' : 'in progress'}, ${Object.keys(snap.players!).length} players)`);
 }

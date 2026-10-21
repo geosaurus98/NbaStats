@@ -8,7 +8,10 @@ on:
     inputs:
       seasons:
         description: Season end-years, space separated
-        default: '2026 2025'
+        default: '2027 2026 2025'
+  # Daily refresh of the season in progress (scheduled runs only fire on the default branch).
+  schedule:
+    - cron: '17 9 * * *'
 
 permissions:
   contents: write
@@ -23,8 +26,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx --yes tsx scripts/snapshot.ts ${{ github.event.inputs.seasons || '2026 2025' }}
-      - run: npx --yes tsx scripts/teammates.ts
+      - run: npx --yes tsx scripts/snapshot.ts ${{ github.event_name == 'schedule' && '2027' || github.event.inputs.seasons || '2027 2026 2025' }}
+      - if: github.event_name != 'schedule'
+        run: npx --yes tsx scripts/teammates.ts
       - name: Commit snapshot
         run: |
           git config user.name "github-actions[bot]"

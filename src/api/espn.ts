@@ -14,12 +14,26 @@ export function hasSnapshot(season: number): boolean {
   return !!getSnapshot(season);
 }
 
+/**
+ * Snapshot for light, single-request data: only once the season is over.
+ * While it's being played, live data is fresher than last night's snapshot.
+ */
+function finished(season: number) {
+  const snap = getSnapshot(season);
+  return snap && snap.complete !== false ? snap : undefined;
+}
+
 export async function fetchStandings(season: number) {
-  return getSnapshot(season)?.standings ?? live.fetchStandings(season);
+  return finished(season)?.standings ?? live.fetchStandings(season);
 }
 
 export async function fetchTeams(season: number) {
   return getSnapshot(season)?.teams ?? live.fetchTeams(season);
+}
+
+/** ESPN id → full name for every player in a snapshotted season's box scores. */
+export function snapshotPlayers(season: number): Record<string, string> {
+  return getSnapshot(season)?.players ?? {};
 }
 
 export async function fetchLeagueGames(season: number, seasonType: SeasonType): Promise<{ teams: TeamRef[]; games: Game[] }> {
@@ -29,7 +43,7 @@ export async function fetchLeagueGames(season: number, seasonType: SeasonType): 
 }
 
 export async function fetchTeamSchedule(teamId: string, season: number, seasonType: SeasonType) {
-  const games = snapshotGames(season, seasonType);
+  const games = finished(season) && snapshotGames(season, seasonType);
   if (games) {
     return { team: getSnapshot(season)!.teams.find((t) => t.id === teamId), games: games.filter((g) => involves(g, teamId)) };
   }
@@ -37,11 +51,11 @@ export async function fetchTeamSchedule(teamId: string, season: number, seasonTy
 }
 
 export async function fetchLeaders(season: number, seasonType: SeasonType, sort: string) {
-  return getSnapshot(season)?.leaders[`${seasonType}:${sort}`] ?? live.fetchLeaders(season, seasonType, sort);
+  return finished(season)?.leaders[`${seasonType}:${sort}`] ?? live.fetchLeaders(season, seasonType, sort);
 }
 
 export async function fetchTeamStats(season: number, seasonType: SeasonType) {
-  const snap = getSnapshot(season);
+  const snap = finished(season);
   if (snap && String(seasonType) in snap.teamStats) {
     const t = snap.teamStats[String(seasonType)];
     if (!t) throw new live.ApiError('No team stats for this season', 'not-found');

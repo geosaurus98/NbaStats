@@ -25,6 +25,10 @@ export interface SeasonSnapshot {
   drama?: Record<string, DramaRow[]>;
   /** Per season type. */
   shots?: Record<string, ShotBins>;
+  /** ESPN athlete id → full name for everyone in a box score this season. */
+  players?: Record<string, string>;
+  /** False while the season is still being played. */
+  complete?: boolean;
 }
 
 export function compactGame(g: Game): CompactGame {
