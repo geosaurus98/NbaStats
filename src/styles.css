@@ -240,3 +240,44 @@ a.my-team:hover { border-color: var(--accent); color: inherit; }
   nav { flex-wrap: nowrap; overflow-x: auto; width: 100%; order: 3; scrollbar-width: none; }
   nav a { white-space: nowrap; }
 }
+
+/* Assist network */
+.network { position: relative; }
+.network-body { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; position: relative; }
+.network svg { display: block; overflow: visible; flex: none; }
+.network-side { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: .8rem; }
+.network-who a { font-weight: 700; font-size: 1.05rem; }
+.edge { fill: none; stroke-linecap: round; transition: opacity .12s; }
+.edge-all { stroke: var(--series-1); }
+.edge-out { stroke: var(--series-1); opacity: .9; }
+.edge-in { stroke: var(--series-2); opacity: .9; }
+.edge-off { stroke: var(--context); opacity: .25; }
+.arrow-all, .arrow-out { fill: var(--series-1); }
+.arrow-in { fill: var(--series-2); }
+.node { cursor: pointer; }
+.node-hit { fill: transparent; }
+.node-dot { fill: var(--surface); stroke: var(--text); stroke-width: 2; }
+.node.focus .node-dot { fill: var(--text); }
+.node.faded { opacity: .3; }
+.node-label { fill: var(--text); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+.partner-bars { display: flex; flex-direction: column; gap: .3rem; }
+.pbar { display: grid; grid-template-columns: minmax(90px, 1.2fr) 2fr 2.2em; align-items: center; gap: .5rem; font-size: .82rem; }
+.pbar-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pbar-track { height: 10px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.pbar-fill { display: block; height: 100%; border-radius: 0 4px 4px 0; }
+.pbar-n { text-align: right; font-variant-numeric: tabular-nums; }
+table.matrix td { min-width: 2.4em; font-variant-numeric: tabular-nums; }
+table.matrix td.diag { background: var(--bg); }
+
+/* Shot chart */
+.shot-wrap { position: relative; margin: .4rem auto; }
+.court { display: block; }
+.court-line { fill: none; stroke: var(--axis); stroke-width: 1.5; }
+.shot { stroke-width: 1.5; }
+.shot.made { fill: var(--series-1); stroke: var(--surface); }
+.shot.missed { fill: none; stroke: var(--series-2); }
+.shot:hover { stroke-width: 3; }
+.shot-key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.shot-key.made { background: var(--series-1); }
+.shot-key.missed { border: 2px solid var(--series-2); }
+table.zones { max-width: 320px; margin: .4rem auto 0; }

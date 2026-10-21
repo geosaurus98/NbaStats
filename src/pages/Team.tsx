@@ -6,6 +6,7 @@ import { ColumnChart, LineChart } from '../components/Charts';
 import { FavouriteStar } from '../components/FavouriteStar';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
+import { TeamAssists } from '../components/TeamAssists';
 import { Tile } from '../components/Tile';
 import { useAsync } from '../hooks/useAsync';
 import { formatShortDate, formatTime, parseISODate, toISODate } from '../lib/dates';
@@ -74,6 +75,8 @@ export function Team() {
       )}
 
       {results.length > 1 && <TeamCharts id={id} results={results} onSelect={(g) => navigate(`/game/${g.id}`)} />}
+
+      {results.length > 0 && <TeamAssists teamId={id} season={season.year} seasonType={type} />}
 
       {games.length > 0 && (
         <div className="page-head">

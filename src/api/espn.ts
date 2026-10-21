@@ -92,3 +92,34 @@ export async function fetchTeamAssists(
   const pairs = (await live.fetchAssistPairs(recent, teamId))[teamId];
   return { pairs, games: recent.length, partial: recent.length < finals.length };
 }
+
+export interface Partner {
+  id: string;
+  name: string;
+  assists: number;
+  points: number;
+}
+
+/** Who a player assists and who assists them, from a snapshotted season. */
+export function playerAssistPartners(playerId: string, season: number, seasonType: SeasonType) {
+  const byTeam = getSnapshot(season)?.assists?.[String(seasonType)];
+  if (!byTeam) return undefined;
+  const to = new Map<string, Partner>();
+  const from = new Map<string, Partner>();
+  const add = (m: Map<string, Partner>, id: string, name: string, n: number, pts: number) => {
+    const p = m.get(id) ?? { id, name, assists: 0, points: 0 };
+    p.assists += n;
+    p.points += pts;
+    m.set(id, p);
+  };
+  // A traded player appears under more than one team.
+  for (const t of Object.values(byTeam)) {
+    const names = new Map(t.players);
+    for (const [passer, scorer, n, pts] of t.pairs) {
+      if (passer === playerId) add(to, scorer, names.get(scorer) ?? scorer, n, pts);
+      if (scorer === playerId) add(from, passer, names.get(passer) ?? passer, n, pts);
+    }
+  }
+  const sort = (m: Map<string, Partner>) => [...m.values()].sort((a, b) => b.assists - a.assists);
+  return { to: sort(to), from: sort(from) };
+}

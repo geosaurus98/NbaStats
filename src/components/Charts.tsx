@@ -3,7 +3,7 @@
 // tokens (--series-N, --pos, --neg) so light/dark themes swap in one place.
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode, type RefObject } from 'react';
 
-function useWidth<T extends HTMLElement>(): [RefObject<T | null>, number] {
+export function useWidth<T extends HTMLElement>(): [RefObject<T | null>, number] {
   const ref = useRef<T>(null);
   const [width, setWidth] = useState(320);
   useEffect(() => {
@@ -44,6 +44,10 @@ export function LineChart({
   yFormat = (v) => String(v),
   zeroLine = false,
   ariaLabel,
+  xs,
+  xTickValues,
+  yDomain,
+  step = false,
 }: {
   series: LineSeries[];
   height?: number;
@@ -54,6 +58,14 @@ export function LineChart({
   yFormat?: (v: number) => string;
   zeroLine?: boolean;
   ariaLabel: string;
+  /** Real x value per index (e.g. seconds); default is evenly spaced. */
+  xs?: number[];
+  /** Explicit x-axis ticks in `xs` units. */
+  xTickValues?: { at: number; label: string }[];
+  /** Fixed y range, e.g. [0, 1] for a probability. */
+  yDomain?: [number, number];
+  /** Draw as steps (values that change in jumps, like a score). */
+  step?: boolean;
 }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
@@ -61,27 +73,58 @@ export function LineChart({
   const all = series.flatMap((s) => s.values);
   if (n === 0 || all.length === 0) return null;
 
-  let lo = Math.min(...all, zeroLine ? 0 : Infinity);
-  let hi = Math.max(...all, zeroLine ? 0 : -Infinity);
+  let lo = yDomain ? yDomain[0] : Math.min(...all, zeroLine ? 0 : Infinity);
+  let hi = yDomain ? yDomain[1] : Math.max(...all, zeroLine ? 0 : -Infinity);
   if (lo === hi) [lo, hi] = [lo - 1, hi + 1];
   const ticks = niceTicks(lo, hi);
   lo = Math.min(lo, ticks[0]);
   hi = Math.max(hi, ticks[ticks.length - 1]);
 
-  const iw = width - M.left - M.right;
-  const ih = height - M.top - M.bottom;
-  const x = (i: number) => M.left + (n === 1 ? iw / 2 : (i / (n - 1)) * iw);
-  const y = (v: number) => M.top + ih - ((v - lo) / (hi - lo)) * ih;
-  const path = (vals: number[]) => vals.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+  // Widen the left margin to fit the longest y label (~6.5px per character at 11px).
+  const left = Math.max(M.left, 10 + Math.max(...ticks.map((t) => yFormat(t).length)) * 6.5);
+  const m = { ...M, left };
+  const iw = width - m.left - m.right;
+  const ih = height - m.top - m.bottom;
+  const x0 = xs ? xs[0] : 0;
+  const x1 = xs ? xs[xs.length - 1] : n - 1;
+  const xAt = (v: number) => m.left + (x1 === x0 ? iw / 2 : ((v - x0) / (x1 - x0)) * iw);
+  const x = (i: number) => xAt(xs ? xs[i] : i);
+  const y = (v: number) => m.top + ih - ((v - lo) / (hi - lo)) * ih;
+  const path = (vals: number[]) =>
+    vals
+      .map((v, i) => {
+        const px = x(i).toFixed(1);
+        const py = y(v).toFixed(1);
+        if (!i) return `M${px},${py}`;
+        return step ? `H${px}V${py}` : `L${px},${py}`;
+      })
+      .join('');
 
   const context = series.filter((s) => !s.color);
   const focus = series.filter((s) => s.color);
-  const xTicks = niceTicks(0, n - 1, Math.min(6, n - 1)).filter((t) => Number.isInteger(t));
+  const xTicks = xTickValues
+    ? xTickValues.map((t) => ({ px: xAt(t.at), label: t.label }))
+    : niceTicks(0, n - 1, Math.min(6, n - 1))
+        .filter((t) => Number.isInteger(t))
+        .map((t) => ({ px: x(t), label: xTick(t) }));
 
   const onMove = (e: PointerEvent<SVGRectElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const px = ((e.clientX - rect.left) / rect.width) * iw;
-    setHover(Math.max(0, Math.min(n - 1, Math.round((px / iw) * (n - 1)))));
+    const frac = (e.clientX - rect.left) / rect.width;
+    if (!xs) {
+      setHover(Math.max(0, Math.min(n - 1, Math.round(frac * (n - 1)))));
+      return;
+    }
+    // Last point at or before the pointer (values hold until the next change).
+    const target = x0 + frac * (x1 - x0);
+    let lo2 = 0;
+    let hi2 = xs.length - 1;
+    while (lo2 < hi2) {
+      const mid = (lo2 + hi2 + 1) >> 1;
+      if (xs[mid] <= target) lo2 = mid;
+      else hi2 = mid - 1;
+    }
+    setHover(lo2);
   };
 
   return (
@@ -105,12 +148,12 @@ export function LineChart({
       <svg width={width} height={height} role="img" aria-label={ariaLabel}>
         {ticks.map((t) => (
           <g key={t}>
-            <line className={zeroLine && t === 0 ? 'axis' : 'grid'} x1={M.left} x2={M.left + iw} y1={y(t)} y2={y(t)} />
-            <text className="tick" x={M.left - 6} y={y(t)} dy="0.32em" textAnchor="end">{yFormat(t)}</text>
+            <line className={zeroLine && t === 0 ? 'axis' : 'grid'} x1={m.left} x2={m.left + iw} y1={y(t)} y2={y(t)} />
+            <text className="tick" x={m.left - 6} y={y(t)} dy="0.32em" textAnchor="end">{yFormat(t)}</text>
           </g>
         ))}
-        {xTicks.map((t) => (
-          <text key={t} className="tick" x={x(t)} y={height - 8} textAnchor="middle">{xTick(t)}</text>
+        {xTicks.map((t, i) => (
+          <text key={i} className="tick" x={t.px} y={height - 8} textAnchor="middle">{t.label}</text>
         ))}
         {context.map((s) => (
           <path key={s.id} className="line context" d={path(s.values)} />
@@ -130,7 +173,7 @@ export function LineChart({
         ))}
         {hover !== null && (
           <g>
-            <line className="crosshair" x1={x(hover)} x2={x(hover)} y1={M.top} y2={M.top + ih} />
+            <line className="crosshair" x1={x(hover)} x2={x(hover)} y1={m.top} y2={m.top + ih} />
             {focus.map((s) =>
               s.values[hover] != null ? (
                 <circle key={s.id} className="dot" cx={x(hover)} cy={y(s.values[hover])} r={4} style={{ fill: s.color }} />
@@ -139,8 +182,8 @@ export function LineChart({
           </g>
         )}
         <rect
-          x={M.left}
-          y={M.top}
+          x={m.left}
+          y={m.top}
           width={iw}
           height={ih}
           fill="transparent"
