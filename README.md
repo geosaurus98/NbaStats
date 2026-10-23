@@ -2,7 +2,7 @@
 
 A web app for following the NBA: fixtures, results, live scores, box scores, standings, team schedules and player leaders.
 
-It opens on the **2025-26 season** because that season is complete. You can switch to 2026-27 (in progress) or 2024-25 with the season picker in the header.
+It opens on the **2026-27 season**, which is in progress. You can switch to the completed 2025-26 and 2024-25 seasons with the season picker in the header.
 
 ## Features
 

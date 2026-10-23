@@ -15,10 +15,10 @@ export const SEASONS: Season[] = [
   { year: 2025, label: '2024-25', start: '2024-10-22', regularEnd: '2025-04-13', end: '2025-06-30' },
 ];
 
-export const DEFAULT_SEASON = 2026;
+export const DEFAULT_SEASON = 2027;
 
 export function getSeason(year: number): Season {
-  return SEASONS.find((s) => s.year === year) ?? SEASONS[1];
+  return SEASONS.find((s) => s.year === year) ?? SEASONS.find((s) => s.year === DEFAULT_SEASON)!;
 }
 
 /** The date the scores page opens on for a season. */
