@@ -27,8 +27,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx --yes tsx scripts/snapshot.ts ${{ github.event_name == 'schedule' && '2027' || github.event.inputs.seasons || '2027 2026 2025' }}
-      - if: github.event_name != 'schedule'
-        run: npx --yes tsx scripts/teammates.ts && npx --yes tsx scripts/careers.ts && npx --yes tsx scripts/franchises.ts
+      # Daily too: the teammate graph adds the current season's rosters from the snapshot above,
+      # and careers/franchises are keyed by its player indexes, so all three are rebuilt together.
+      - run: npx --yes tsx scripts/teammates.ts && npx --yes tsx scripts/careers.ts && npx --yes tsx scripts/franchises.ts
       - name: Commit snapshot
         run: |
           git config user.name "github-actions[bot]"

@@ -49,7 +49,7 @@ The season in progress is snapshotted too, and refreshed daily by a scheduled ru
 
 **Loading.** The hosted site loads only what a page needs: the app itself is about 150 KB (gzipped), each season's snapshot about 250 KB, and the history files load only on the pages that use them. The standalone file still bundles everything.
 
-**Teammate graph.** `scripts/teammates.ts` builds `src/data/teammates.json` (every team-season roster since 1946-47, about 330 KB) from Basketball-Reference data via the open [bball-reference-datasets](https://github.com/sumitrodatta/bball-reference-datasets) project. ESPN has no historical rosters. The snapshot workflow refreshes it too.
+**Teammate graph.** `scripts/teammates.ts` builds `src/data/teammates.json` (every team-season roster since 1946-47, about 330 KB) from Basketball-Reference data via the open [bball-reference-datasets](https://github.com/sumitrodatta/bball-reference-datasets) project. ESPN has no historical rosters. Until Basketball-Reference adds the season in progress, its rosters come from our ESPN box scores (everyone who has played a game for each team): returning players are matched by name, first-year players are added. The snapshot workflow rebuilds it, with `careers.json` and `franchises.json`, every day.
 
 ## Quick start (no install)
 
