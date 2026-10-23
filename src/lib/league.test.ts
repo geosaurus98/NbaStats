@@ -103,3 +103,25 @@ describe('buildBracket', () => {
     expect(finals.winner?.id).toBe('W1');
   });
 });
+
+import { mergeResults } from './league';
+
+describe('mergeResults', () => {
+  it('takes newer scores for known games and ignores unknown ones', () => {
+    const team = (id: string) => ({ id, name: id, shortName: id, abbr: id });
+    const g = (id: string, hs?: number, as?: number, note?: string) => ({
+      id,
+      date: '2026-10-22T23:00Z',
+      state: (hs == null ? 'pre' : 'post') as 'pre' | 'post',
+      statusDetail: '',
+      note,
+      home: { team: team('A'), homeAway: 'home' as const, score: hs, winner: hs != null ? hs > as! : undefined, linescores: [], leaders: [] },
+      away: { team: team('B'), homeAway: 'away' as const, score: as, winner: hs != null ? as! > hs : undefined, linescores: [], leaders: [] },
+      broadcasts: [],
+    });
+    const merged = mergeResults([g('1', undefined, undefined, 'Emirates NBA Cup'), g('2', 100, 90)], [g('1', 110, 105), g('99', 1, 0)]);
+    expect(merged).toHaveLength(2);
+    expect([merged[0].state, merged[0].home.score, merged[0].note]).toEqual(['post', 110, 'Emirates NBA Cup']);
+    expect(merged[1].home.score).toBe(100);
+  });
+});

@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { DEFAULT_SEASON, getSeason, type Season } from './lib/seasons';
 
-const KEY = 'nba-hub-season';
+// v2: choices saved while 2025-26 was the default are dropped once, so everyone opens on the current season.
+const KEY = 'nba-hub-season-v2';
 
 interface SeasonCtx {
   season: Season;

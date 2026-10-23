@@ -11,6 +11,18 @@ export function countsInStandings(g: Game): boolean {
   return !/cup championship/i.test(g.note ?? '');
 }
 
+/**
+ * Newer results laid over a saved schedule: games with the same id take the
+ * newer score and state. Unknown ids (preseason, other competitions) are ignored.
+ */
+export function mergeResults(base: Game[], updates: Game[]): Game[] {
+  const byId = new Map(updates.map((g) => [g.id, g]));
+  return base.map((g) => {
+    const u = byId.get(g.id);
+    return u ? { ...g, ...u, note: u.note ?? g.note } : g;
+  });
+}
+
 /** The given team's side and its opponent's side of a game. */
 export function sides(g: Game, teamId: string): [Competitor, Competitor] {
   return g.home.team.id === teamId ? [g.home, g.away] : [g.away, g.home];

@@ -3,8 +3,8 @@ import { addDays, espnDate } from './dates';
 import { DEFAULT_SEASON, defaultDate, getSeason } from './seasons';
 
 describe('seasons', () => {
-  it('defaults to the completed 2025-26 season', () => {
-    expect(getSeason(DEFAULT_SEASON).label).toBe('2025-26');
+  it('defaults to the season in progress, 2026-27', () => {
+    expect(getSeason(DEFAULT_SEASON).label).toBe('2026-27');
   });
 
   it('opens a finished season on its last regular-season day', () => {
