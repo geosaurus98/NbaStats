@@ -1,8 +1,8 @@
 // The data API pages use. Completed seasons are served from the bundled
 // snapshot (instant, works offline); anything else comes from ESPN live.
-import { toISODate } from '../lib/dates';
+import { addDays, toISODate } from '../lib/dates';
 import { leadersFromBox, teamStatsFromBox } from '../lib/boxTotals';
-import { involves, isFinal } from '../lib/league';
+import { involves, isFinal, mergeResults } from '../lib/league';
 import * as live from './live';
 import { getSnapshot, loadSnapshot, snapshotGames, snapshotYears } from './snapshotStore';
 import type { SeasonSnapshot } from './snapshot';
@@ -60,8 +60,34 @@ export { loadSnapshot };
 export async function fetchLeagueGames(season: number, seasonType: SeasonType): Promise<{ teams: TeamRef[]; games: Game[] }> {
   await loadSnapshot(season);
   const games = snapshotGames(season, seasonType);
-  if (games) return { teams: getSnapshot(season)!.teams, games };
+  if (games) return { teams: getSnapshot(season)!.teams, games: await withRecentResults(season, seasonType, games) };
   return live.fetchLeagueGames(season, seasonType);
+}
+
+const MAX_TOP_UP_DAYS = 120;
+const topUps = new Map<string, Promise<Game[]>>();
+
+/**
+ * The snapshot of a season in progress is refreshed once a day (and the
+ * standalone file never), so lay ESPN's scoreboards for every day since it was
+ * saved over the bundled schedule. If ESPN can't be reached, the snapshot stands.
+ */
+function withRecentResults(season: number, seasonType: SeasonType, games: Game[]): Promise<Game[]> {
+  const snap = getSnapshot(season);
+  if (!snap || snap.complete !== false) return Promise.resolve(games);
+  const key = `${season}:${seasonType}`;
+  if (!topUps.has(key)) {
+    const today = toISODate(new Date());
+    const days: string[] = [];
+    for (let d = addDays(toISODate(new Date(snap.generatedAt)), -1); d <= today && days.length < MAX_TOP_UP_DAYS; d = addDays(d, 1)) days.push(d);
+    topUps.set(
+      key,
+      live
+        .mapLimit(days, 6, (d) => live.fetchScoreboard(d).catch(() => [] as Game[]))
+        .then((boards) => mergeResults(games, boards.flat())),
+    );
+  }
+  return topUps.get(key)!;
 }
 
 export async function fetchTeamSchedule(teamId: string, season: number, seasonType: SeasonType) {
