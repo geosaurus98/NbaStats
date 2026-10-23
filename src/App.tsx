@@ -10,6 +10,7 @@ import { HeadToHead } from './pages/HeadToHead';
 import { History } from './pages/History';
 import { Home } from './pages/Home';
 import { Insights } from './pages/Insights';
+import { MyTeam } from './pages/MyTeam';
 import { Leaders } from './pages/Leaders';
 import { Player } from './pages/Player';
 import { Playoffs } from './pages/Playoffs';
@@ -82,6 +83,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/scores" element={<Scores />} />
+          <Route path="/myteam" element={<MyTeam />} />
           <Route path="/standings" element={<Standings />} />
           <Route path="/playoffs" element={<Playoffs />} />
           <Route path="/projections" element={<Projections />} />

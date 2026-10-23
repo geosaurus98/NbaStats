@@ -196,3 +196,17 @@ export interface PlayByPlay {
   shots: Shot[];
   names: Record<string, string>;
 }
+
+/** One player on the league injury report. */
+export interface Injury {
+  teamId: string;
+  athleteId: string;
+  name: string;
+  /** "Out", "Day-To-Day", "Questionable"… */
+  status: string;
+  /** When the report was last updated (ISO). */
+  date?: string;
+  comment?: string;
+  /** Expected return, when ESPN gives one (ISO date). */
+  returnDate?: string;
+}

@@ -5,7 +5,7 @@
 //   npx tsx scripts/careers.ts   (after scripts/teammates.ts)
 import { readFileSync, writeFileSync } from 'node:fs';
 import { parseCSV } from './csv';
-import type { CareerData } from '../src/lib/careers';
+import type { CareerData, OnThisDay } from '../src/lib/careers';
 
 const BASE = 'https://raw.githubusercontent.com/sumitrodatta/bball-reference-datasets/master/Data/';
 const LEAGUES = ['NBA', 'ABA', 'BAA'];
@@ -96,4 +96,37 @@ const data: CareerData = {
 };
 const json = JSON.stringify(data);
 writeFileSync('src/data/careers.json', json);
+
+// "On this day": for each calendar day, the most notable players born or making
+// their debut on it (by career production, Hall of Famers first), so the home
+// page loads a small file instead of every career.
+const born: string[] = [];
+const debut: string[] = [];
+const hof = new Set<number>();
+for (const r of await table('Player Career Info.csv')) {
+  const p = indexOf.get(r.player_id);
+  if (p == null) continue;
+  if (/^\d{4}-\d{2}-\d{2}/.test(r.birth_date ?? '')) born[p] = r.birth_date.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}/.test(r.debut ?? '')) debut[p] = r.debut.slice(0, 10);
+  if (r.hof === 'TRUE') hof.add(p);
+}
+const stars = new Map<number, number>();
+for (const [, p] of allStars) stars.set(p, (stars.get(p) ?? 0) + 1);
+const value = (p: number) => (hof.has(p) ? 1e7 : 0) + (stars.get(p) ?? 0) * 3000 + seasons[p].reduce((a, r) => a + Math.max(0, r[5]) + Math.max(0, r[6]) + 1.5 * Math.max(0, r[7]), 0);
+const days: OnThisDay = {};
+const add = (date: string | undefined, p: number, kind: 'born' | 'debut') => {
+  if (!date) return;
+  const md = date.slice(5);
+  (days[md] ??= { born: [], debut: [] })[kind].push([teammates.players[p][0], Number(date.slice(0, 4)), p, hof.has(p) ? 1 : 0]);
+};
+teammates.players.forEach((_: unknown, p: number) => {
+  add(born[p], p, 'born');
+  add(debut[p], p, 'debut');
+});
+for (const d of Object.values(days)) {
+  d.born = d.born.sort((a, b) => value(b[2]) - value(a[2])).slice(0, 8);
+  d.debut = d.debut.sort((a, b) => value(b[2]) - value(a[2])).slice(0, 4);
+}
+writeFileSync('src/data/onthisday.json', JSON.stringify(days));
+console.log(`on this day: ${Object.keys(days).length} days, ${hof.size} Hall of Famers`);
 console.log(`${splits.length} traded-season splits, ${seasons.filter((s) => s.length).length} players with stats, ${missing} unmatched rows, ${Object.keys(awards).length} awards, ${allStars.length} All-Star selections, ${(json.length / 1024).toFixed(0)} KB`);

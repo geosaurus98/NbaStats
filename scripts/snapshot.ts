@@ -146,6 +146,13 @@ async function build(year: number): Promise<SeasonSnapshot> {
     const pairCount = Object.values(snap.assists![type]).reduce((n, t) => n + t.pairs.length, 0);
     console.log(`type ${type}: assist pairs ${pairCount} across ${Object.keys(snap.assists![type]).length} teams`);
   }
+  if (!snap.complete) {
+    snap.injuries = await live.fetchInjuries().catch((e) => {
+      console.log(`  injuries: failed (${e})`);
+      return undefined;
+    });
+    console.log(`  injuries: ${snap.injuries?.length ?? 0} players`);
+  }
   const out: SeasonLines = { year, ids: [...playerIndex.keys()], games: seasonLines };
   // The last two weeks of nightly bests, small enough for the home page.
   snap.nightly = nightlyBest(out, 2, 3).slice(0, 14);

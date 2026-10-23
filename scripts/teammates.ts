@@ -166,6 +166,7 @@ const data: TeammateData = {
   central: [],
   stints: stintKeys.map((keys) => orderStints(keys.map((k) => rosterIndex.get(k)!))),
   ids: idsByPlayer(),
+  espn: Object.fromEntries([...index].filter(([id]) => id.startsWith('espn:')).map(([id, p]) => [id.slice(5), p])),
 };
 
 // The most connected players in history: lowest average distance to everyone.

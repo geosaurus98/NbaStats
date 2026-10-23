@@ -16,6 +16,8 @@ export interface TeammateData {
   stints: number[][];
   /** Basketball-Reference player ids, by player index. */
   ids?: string[];
+  /** ESPN athlete id → player index, for everyone in the season in progress. */
+  espn?: Record<string, number>;
 }
 
 export interface Graph {

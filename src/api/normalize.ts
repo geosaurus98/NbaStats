@@ -1,7 +1,7 @@
 // Converts raw ESPN API payloads into the app's own types. ESPN's shapes vary
 // between endpoints (e.g. scores are strings on the scoreboard but objects on
 // team schedules), so every accessor here is defensive.
-import type {
+import type { Injury,
   AssistEvent,
   FeedItem,
   AssistPairs,
@@ -407,4 +407,33 @@ export function normalizeTeamStats(raw: Raw, wanted: { category: string; name: s
     return { teamId: String(t.team?.id ?? ''), values };
   });
   return { columns: columns.map((c) => ({ key: `${c.category}.${c.name}`, label: c.label })), rows };
+}
+
+/**
+ * ESPN's league injury report: teams, each with a list of injured players.
+ * Parsed defensively; anything without a player and status is skipped.
+ */
+export function normalizeInjuries(raw: Raw): Injury[] {
+  const out: Injury[] = [];
+  for (const team of raw?.injuries ?? []) {
+    const teamId = String(team.id ?? team.team?.id ?? '');
+    for (const i of team.injuries ?? []) {
+      const a = i.athlete ?? {};
+      // The report's athlete objects carry no id field: it's in their player-card links.
+      const fromLinks = (a.links ?? []).map((l: Raw) => /\/id\/(\d+)/.exec(String(l.href ?? ''))?.[1]).find(Boolean);
+      const athleteId = String(a.id ?? fromLinks ?? '');
+      const status = String(i.status ?? i.type?.description ?? '');
+      if (!athleteId || !status) continue;
+      out.push({
+        teamId: teamId || String(a.team?.id ?? ''),
+        athleteId,
+        name: a.displayName ?? a.fullName ?? '',
+        status,
+        date: i.date,
+        comment: i.shortComment ?? i.longComment,
+        returnDate: i.details?.returnDate,
+      });
+    }
+  }
+  return out;
 }

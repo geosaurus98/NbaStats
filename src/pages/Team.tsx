@@ -11,6 +11,9 @@ import { TeamAssists } from '../components/TeamAssists';
 import { TeamLineups } from '../components/TeamLineups';
 import { Tile } from '../components/Tile';
 import { useAsync } from '../hooks/useAsync';
+import { SeasonPace } from '../components/SeasonPace';
+import { InjuryList } from '../components/TeamBits';
+import { DEFAULT_SEASON } from '../lib/seasons';
 import { formatShortDate, formatTime, parseISODate, toISODate } from '../lib/dates';
 import { downloadFile, gamesToICS } from '../lib/ics';
 import { countsInStandings, isFinal, raceSeries, sides, won } from '../lib/league';
@@ -83,6 +86,15 @@ export function Team() {
       )}
 
       {results.length > 1 && <TeamCharts id={id} results={results} onSelect={(g) => navigate(`/game/${g.id}`)} />}
+
+      {type === 2 && results.length > 0 && <SeasonPace teamId={id} season={season.year} />}
+
+      {season.year === DEFAULT_SEASON && (
+        <div className="card">
+          <h3>Injury report</h3>
+          <InjuryList teamId={id} />
+        </div>
+      )}
 
       {results.length > 0 && <TeamAssists teamId={id} season={season.year} seasonType={type} />}
 

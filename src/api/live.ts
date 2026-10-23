@@ -7,6 +7,7 @@ import {
   aggregateAssists,
   normalizeAthlete,
   normalizeGameLog,
+  normalizeInjuries,
   normalizeLeaders,
   normalizeScoreboard,
   normalizeStandings,
@@ -76,6 +77,10 @@ async function getJSON(url: string, fresh = false, store = true): Promise<unknow
 
 export async function fetchScoreboard(isoDate: string, fresh = false) {
   return normalizeScoreboard(await getJSON(`${SITE}/scoreboard?dates=${espnDate(isoDate)}&limit=100`, fresh));
+}
+
+export async function fetchInjuries() {
+  return normalizeInjuries(await getJSON(`${SITE}/injuries`));
 }
 
 export async function fetchStandings(season: number) {

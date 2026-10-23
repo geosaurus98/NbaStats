@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { fetchLeaders, type SeasonType } from '../api/espn';
+import { MilestoneWatch } from '../components/MilestoneWatch';
 import { SeasonHighs } from '../components/SeasonHighs';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 import { Empty, ErrorBox, Loading } from '../components/Status';
@@ -19,7 +20,9 @@ const SORTS = [
 export function Leaders() {
   const { season } = useSeason();
   const [type, setType] = useState<SeasonType>(2);
-  const [tab, setTab] = useState<'averages' | 'highs'>('averages');
+  const [params, setParams] = useSearchParams();
+  const tab = (['highs', 'milestones'] as const).find((t) => t === params.get('tab')) ?? 'averages';
+  const setTab = (t: string) => setParams(t === 'averages' ? {} : { tab: t }, { replace: true });
 
   return (
     <section>
@@ -30,8 +33,11 @@ export function Leaders() {
       <div className="tabs">
         <button className={tab === 'averages' ? 'active' : ''} onClick={() => setTab('averages')}>Season averages</button>
         <button className={tab === 'highs' ? 'active' : ''} onClick={() => setTab('highs')}>Season highs</button>
+        <button className={tab === 'milestones' ? 'active' : ''} onClick={() => setTab('milestones')}>Milestone watch</button>
       </div>
-      {tab === 'averages' ? <Averages season={season.year} type={type} /> : <SeasonHighs season={season.year} seasonType={type} />}
+      {tab === 'averages' && <Averages season={season.year} type={type} />}
+      {tab === 'highs' && <SeasonHighs season={season.year} seasonType={type} />}
+      {tab === 'milestones' && <MilestoneWatch season={season.year} />}
     </section>
   );
 }
