@@ -255,3 +255,31 @@ describe('normalizeGameLog', () => {
     expect(log.games[2].seasonType).toBe('playoffs');
   });
 });
+
+import { normalizeInjuries } from './normalize';
+
+describe('normalizeInjuries', () => {
+  it('flattens teams into players and skips incomplete rows', () => {
+    const rows = normalizeInjuries({
+      injuries: [
+        {
+          id: '13',
+          displayName: 'Los Angeles Lakers',
+          injuries: [
+            { status: 'Out', date: '2026-10-22T18:00Z', shortComment: 'Ankle sprain; out at least a week.', athlete: { id: '1966', displayName: 'LeBron James' }, details: { returnDate: '2026-10-30' } },
+            { status: 'Day-To-Day', athlete: { id: '', displayName: 'Nobody' } },
+          ],
+        },
+        { id: '2', injuries: [{ type: { description: 'Questionable' }, athlete: { id: '4065648', fullName: 'Jayson Tatum' } }] },
+        // ESPN's real shape: no athlete id, only player-card links.
+        { id: '1', injuries: [{ id: '-58751', status: 'Out', athlete: { displayName: 'Mouhamed Gueye', links: [{ rel: ['playercard'], href: 'https://www.espn.com/nba/player/_/id/4712863/mouhamed-gueye' }] } }] },
+      ],
+    });
+    expect(rows).toEqual([
+      { teamId: '13', athleteId: '1966', name: 'LeBron James', status: 'Out', date: '2026-10-22T18:00Z', comment: 'Ankle sprain; out at least a week.', returnDate: '2026-10-30' },
+      { teamId: '2', athleteId: '4065648', name: 'Jayson Tatum', status: 'Questionable', date: undefined, comment: undefined, returnDate: undefined },
+      { teamId: '1', athleteId: '4712863', name: 'Mouhamed Gueye', status: 'Out', date: undefined, comment: undefined, returnDate: undefined },
+    ]);
+    expect(normalizeInjuries(undefined)).toEqual([]);
+  });
+});

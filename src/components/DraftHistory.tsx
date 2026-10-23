@@ -5,6 +5,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAsync } from '../hooks/useAsync';
 import { allStarCounts, perGame, totals } from '../lib/careers';
 import { loadFranchiseData } from '../lib/franchiseData';
+import { franchiseValue } from '../lib/franchiseHistory';
+import { ordinal } from '../lib/milestones';
 import { franchiseOf, FRANCHISES } from '../lib/franchises';
 import { seasonLabel, type Graph } from '../lib/teammates';
 import { useCareers } from './CareerStats';
@@ -15,6 +17,7 @@ export function DraftHistory({ graph }: { graph: Graph }) {
   const fd = useAsync(() => loadFranchiseData(), []);
   const [params, setParams] = useSearchParams();
   const team = params.get('team') ?? '';
+  const redraft = params.get('view') === 'redraft';
 
   const model = useMemo(() => {
     if (!careers.data || !fd.data) return undefined;
@@ -23,7 +26,7 @@ export function DraftHistory({ graph }: { graph: Graph }) {
       .filter((d) => d[1] !== 1) // NBA/BAA drafts (ABA drafts listed separately in the source)
       .map((d) => {
         const t = d[5] >= 0 ? totals(careers.data!.seasons[d[5]] ?? []) : undefined;
-        return { season: d[0], pick: d[2], round: d[3], code: d[4], player: d[5], name: d[6], college: d[7], pts: t?.values.pts ?? 0, ppg: t ? perGame(t, 'pts') : undefined, seasons: t?.seasons ?? 0, stars: d[5] >= 0 ? (stars.get(d[5]) ?? 0) : 0 };
+        return { season: d[0], pick: d[2], round: d[3], code: d[4], player: d[5], name: d[6], college: d[7], pts: t?.values.pts ?? 0, ppg: t ? perGame(t, 'pts') : undefined, seasons: t?.seasons ?? 0, stars: d[5] >= 0 ? (stars.get(d[5]) ?? 0) : 0, value: t ? franchiseValue(t.values) + (stars.get(d[5]) ?? 0) * 2000 : 0 };
       });
     return { picks, years: [...new Set(picks.map((p) => p.season))].sort((a, b) => b - a) };
   }, [careers.data, fd.data]);
@@ -69,6 +72,12 @@ export function DraftHistory({ graph }: { graph: Graph }) {
           </label>
         </div>
       </div>
+      <div className="chips tight">
+        <button className={!redraft ? 'chip active' : 'chip'} onClick={() => set('view', '')}>As drafted</button>
+        <button className={redraft ? 'chip active' : 'chip'} onClick={() => set('view', 'redraft')}>Redraft by career</button>
+      </div>
+      {redraft && <Redraft picks={model.picks.filter((p) => p.season === year)} year={year} link={link} />}
+      {!redraft && (
       <div className="table-wrap">
         <h3 className="table-title">{year} draft{team ? ` · ${team}` : ''}</h3>
         <table>
@@ -94,6 +103,7 @@ export function DraftHistory({ graph }: { graph: Graph }) {
           </tbody>
         </table>
       </div>
+      )}
       <div className="two-col">
         <div className="card">
           <h3>Best player at each pick{team ? ` (${team})` : ''}</h3>
@@ -135,5 +145,59 @@ export function DraftHistory({ graph }: { graph: Graph }) {
       </div>
       <p className="muted small">NBA and BAA drafts from Basketball-Reference. Seasons and points are each player's whole career. {seasonLabel(year + 1)} was this class's rookie season.</p>
     </>
+  );
+}
+
+interface RedraftPick {
+  pick: number;
+  code: string;
+  player: number;
+  name: string;
+  pts: number;
+  seasons: number;
+  stars: number;
+  value: number;
+}
+
+/** The class re-ordered by what each player went on to do (whole career). */
+function Redraft({ picks, year, link }: { picks: RedraftPick[]; year: number; link: (p: { player: number; name: string }) => React.ReactNode }) {
+  const ranked = [...picks].filter((p) => p.pick > 0).sort((a, b) => b.value - a.value || a.pick - b.pick);
+  const rows = ranked.slice(0, 30).map((p, i) => ({ ...p, redraft: i + 1, move: p.pick - (i + 1) }));
+  const steal = [...rows].sort((a, b) => b.move - a.move)[0];
+  const bust = ranked
+    .map((p, i) => ({ ...p, redraft: i + 1 }))
+    .filter((p) => p.pick <= 5)
+    .sort((a, b) => b.redraft - b.pick - (a.redraft - a.pick))[0];
+  return (
+    <div className="table-wrap">
+      <h3 className="table-title">{year} redraft</h3>
+      <p className="muted small" style={{ padding: '0 .9rem' }}>
+        Ranked by career production (points, rebounds, 1.5× assists, 2× steals and blocks, plus All-Star selections).
+        {steal && steal.move > 0 ? ` Biggest steal: ${steal.name}, taken ${ordinal(steal.pick)}, goes ${ordinal(steal.redraft)}.` : ''}
+        {bust && bust.redraft > bust.pick ? ` Biggest fall: ${bust.name}, taken ${ordinal(bust.pick)}, goes ${ordinal(bust.redraft)}.` : ''}
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>New</th>
+            <th className="left">Player</th>
+            <th>Was</th>
+            <th>Move</th>
+            <th className="left">Career</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((p) => (
+            <tr key={`${p.pick}-${p.name}`}>
+              <td className="sorted">{p.redraft}</td>
+              <td className="left">{link(p)} <span className="muted small">{p.code}</span></td>
+              <td>{p.pick}</td>
+              <td className="small">{p.move > 0 ? <span className="win">▲{p.move}</span> : p.move < 0 ? <span className="loss">▼{-p.move}</span> : '–'}</td>
+              <td className="left small">{p.player < 0 ? <span className="muted">never played</span> : `${p.seasons} season${p.seasons === 1 ? '' : 's'} · ${p.pts.toLocaleString()} pts${p.stars ? ` · ${p.stars}× All-Star` : ''}`}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

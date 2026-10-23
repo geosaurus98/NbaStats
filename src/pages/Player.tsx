@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { fetchAthlete, fetchGameLog, playerAssistPartners, seasonShots } from '../api/espn';
+import { fetchAthlete, fetchGameLog, playerAssistPartners, seasonShots, snapshotPlayers } from '../api/espn';
 import type { LogSeasonType } from '../api/types';
 import { LineChart } from '../components/Charts';
 import { PassingPartners } from '../components/PassingPartners';
+import { PlayerCard } from '../components/PlayerCard';
 import { SeasonShotMap } from '../components/SeasonShotMap';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
@@ -40,6 +41,7 @@ export function Player() {
   const partners = playerAssistPartners(id, season.year, type === 'playoffs' ? 3 : 2);
   const shots = seasonShots(season.year, type === 'playoffs' ? 3 : 2);
   const shotMap = shots?.players[id];
+  const snapshotName = snapshotPlayers(season.year)[id];
 
   const values = games.map((g) => statValue(g, trend));
   const rolling = values.map((_, i) => {
@@ -81,6 +83,10 @@ export function Player() {
           </div>
         )}
       </div>
+
+      {type === 'regular' && (p?.name || snapshotName) && (
+        <PlayerCard playerId={id} name={p?.name ?? snapshotName!} team={p?.team?.abbr} season={season.year} seasonLabel={season.label} />
+      )}
 
       {log.loading && <Loading label="Loading game log…" />}
       {log.error && <ErrorBox error={log.error} />}

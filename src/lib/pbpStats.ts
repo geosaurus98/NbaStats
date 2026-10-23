@@ -138,3 +138,30 @@ export function shotCells(bins: BinRow[], size: number, league: Map<string, numb
     return { ...c, size, value, att, made, pct, diff: pct - (league.get(distanceKey(c, value)) ?? pct) };
   });
 }
+
+export const ZONES = [
+  { id: 'rim', label: 'At the rim', title: 'Twos within 4 feet of the hoop' },
+  { id: 'paint', label: 'Short range', title: 'Twos from 4 to 10 feet' },
+  { id: 'mid', label: 'Mid-range', title: 'Twos from beyond 10 feet' },
+  { id: 'corner3', label: 'Corner three', title: 'Threes from the corners (within 14 feet of the baseline)' },
+  { id: 'arc3', label: 'Above-the-break three', title: 'All other threes' },
+] as const;
+export type ZoneId = (typeof ZONES)[number]['id'];
+
+/** Which zone a bin's centre falls in. */
+export function zoneOf(p: { x: number; y: number }, value: number): ZoneId {
+  if (value === 3) return p.y <= 14 ? 'corner3' : 'arc3';
+  const d = Math.hypot(p.x - HOOP.x, p.y - HOOP.y);
+  return d <= 4 ? 'rim' : d <= 10 ? 'paint' : 'mid';
+}
+
+/** Attempts and makes per zone. */
+export function zoneTotals(bins: BinRow[], size: number): Record<ZoneId, { att: number; made: number }> {
+  const out = Object.fromEntries(ZONES.map((z) => [z.id, { att: 0, made: 0 }])) as Record<ZoneId, { att: number; made: number }>;
+  for (const [b, att, made, value] of bins) {
+    const z = out[zoneOf(binCentre(b, size), value)];
+    z.att += att;
+    z.made += made;
+  }
+  return out;
+}

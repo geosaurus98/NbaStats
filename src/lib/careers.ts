@@ -18,6 +18,15 @@ export interface CareerData {
   pos?: string[];
 }
 
+/** onthisday.json: "MM-DD" → notable players born / debuting that day: [name, year, playerIndex, hallOfFame (0/1)]. */
+export type OnThisDay = Record<string, { born: [string, number, number, number][]; debut: [string, number, number, number][] }>;
+
+let onThisDayPending: Promise<OnThisDay> | undefined;
+export function loadOnThisDay(): Promise<OnThisDay> {
+  onThisDayPending ??= import('../data/onthisday.json').then((m) => (m.default ?? m) as unknown as OnThisDay);
+  return onThisDayPending;
+}
+
 export const COL = { season: 0, lg: 1, age: 2, g: 3, mp: 4, pts: 5, trb: 6, ast: 7, stl: 8, blk: 9, fg: 10, fga: 11, tp: 12, tpa: 13, ft: 14, fta: 15 } as const;
 export type StatKey = 'pts' | 'trb' | 'ast' | 'stl' | 'blk' | 'tp' | 'g' | 'mp';
 

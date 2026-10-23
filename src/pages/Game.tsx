@@ -6,10 +6,17 @@ import type { Competitor, TeamBox } from '../api/types';
 import { AssistNetwork } from '../components/AssistNetwork';
 import { GameFlow, ShotChart } from '../components/GameCharts';
 import { PlayFeed } from '../components/PlayFeed';
+import { GamePreview } from '../components/TeamBits';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
 import { formatDay, formatTime, toISODate } from '../lib/dates';
+
+/** ESPN names a season by the year it ends: games from August on belong to the next one. */
+const seasonOf = (iso: string) => {
+  const d = new Date(iso);
+  return d.getUTCFullYear() + (d.getUTCMonth() >= 7 ? 1 : 0);
+};
 
 export function Game() {
   const { id = '' } = useParams();
@@ -73,6 +80,8 @@ export function Game() {
           </table>
         </div>
       )}
+
+      {game.state === 'pre' && <GamePreview game={game} season={seasonOf(game.date)} />}
 
       {teams.length === 2 && teams[0].teamStats.length > 0 && <TeamComparison a={teams[0]} b={teams[1]} />}
 

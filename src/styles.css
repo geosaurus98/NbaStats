@@ -561,3 +561,51 @@ table.zones.wide { max-width: 440px; }
 .statline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .5rem; margin-bottom: .6rem; }
 .statline-cell { display: flex; flex-direction: column; align-items: center; padding: .5rem; border: 1px solid var(--border); border-radius: 10px; }
 .statline-cell b { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+
+/* Game preview, team bits */
+.preview { margin: 1rem 0; }
+.preview-pick { display: flex; gap: .8rem; align-items: center; }
+.preview-pick > div { flex: 1; min-width: 0; }
+.preview-bar { display: flex; height: 22px; border-radius: 6px; overflow: hidden; margin: .4rem 0; gap: 2px; font-size: .75rem; font-weight: 700; color: #fff; }
+.preview-bar span { display: flex; align-items: center; padding: 0 .4rem; white-space: nowrap; overflow: hidden; }
+.preview-bar span:last-child { justify-content: flex-end; }
+.preview-teams h4 { margin: .6rem 0 .3rem; display: flex; align-items: center; gap: .4rem; }
+.injuries { list-style: none; padding: 0; margin: .2rem 0 .6rem; font-size: .88rem; }
+.injuries li { padding: .15rem 0; }
+.form-strip { display: inline-flex; gap: 2px; align-items: center; flex-wrap: wrap; }
+.form-strip a { display: inline-grid; place-items: center; width: 1.25rem; height: 1.25rem; border-radius: 4px; font-size: .7rem; font-weight: 700; color: #fff; text-decoration: none; }
+.form-w { background: var(--pos); }
+.form-l { background: var(--neg); }
+.leader-list { width: 100%; margin: .3rem 0; }
+.leader-list td { padding: .15rem .3rem; }
+
+/* My team */
+.team-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: .6rem; }
+.team-pick { display: flex; align-items: center; gap: .6rem; cursor: pointer; text-align: left; font: inherit; color: inherit; }
+.team-pick:hover { border-color: var(--accent); }
+.result-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+.result-w { border-color: var(--pos); }
+.result-l { border-color: var(--neg); }
+
+/* Projections → What if */
+.whatif { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 1rem; align-items: start; margin-top: .6rem; }
+.whatif-games { max-height: 70vh; overflow-y: auto; margin-top: 0; }
+.whatif-day { margin: .5rem 0 .2rem; }
+.whatif-game { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; margin-bottom: .3rem; }
+.whatif-side { display: flex; align-items: center; gap: .35rem; padding: .35rem .5rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: inherit; font: inherit; cursor: pointer; }
+.whatif-side.on { border-color: var(--series-1); background: color-mix(in srgb, var(--series-1) 14%, var(--surface)); font-weight: 700; }
+.whatif-side.off { opacity: .55; }
+.whatif-tables { margin-top: 0; }
+tr.zone-playin td:first-child { box-shadow: inset 3px 0 0 var(--series-2); }
+tr.zone-playoffs td:first-child { box-shadow: inset 3px 0 0 var(--series-1); }
+@media (max-width: 800px) { .whatif { grid-template-columns: 1fr; } .whatif-games { max-height: none; } }
+
+/* Games → Trivia */
+.trivia-q { margin-top: .8rem; }
+.trivia-q h3 { margin: .2rem 0 .6rem; }
+.trivia-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem; }
+.trivia-option { text-align: left; white-space: normal; }
+.trivia-option.right { border-color: var(--pos); background: color-mix(in srgb, var(--pos) 15%, var(--surface)); }
+.trivia-option.wrong { border-color: var(--neg); background: color-mix(in srgb, var(--neg) 15%, var(--surface)); }
+@media (max-width: 500px) { .trivia-options { grid-template-columns: 1fr; } }
+.team-picker > .card { margin-top: 0; }

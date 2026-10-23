@@ -56,3 +56,22 @@ describe('BinCounter', () => {
     ]);
   });
 });
+
+import { zoneOf, zoneTotals } from './pbpStats';
+
+describe('shot zones', () => {
+  it('classifies by value and distance', () => {
+    expect(zoneOf({ x: 25, y: 6 }, 2)).toBe('rim');
+    expect(zoneOf({ x: 25, y: 12 }, 2)).toBe('paint');
+    expect(zoneOf({ x: 25, y: 22 }, 2)).toBe('mid');
+    expect(zoneOf({ x: 2, y: 5 }, 3)).toBe('corner3');
+    expect(zoneOf({ x: 25, y: 30 }, 3)).toBe('arc3');
+  });
+  it('sums bins into zones', () => {
+    // size 50: one column, so bin 0 is centred at (25, 25): a mid-range two or an above-the-break three.
+    const z = zoneTotals([[0, 10, 4, 2], [0, 6, 2, 3]], 50);
+    expect(z.mid).toEqual({ att: 10, made: 4 });
+    expect(z.arc3).toEqual({ att: 6, made: 2 });
+    expect(z.rim).toEqual({ att: 0, made: 0 });
+  });
+});

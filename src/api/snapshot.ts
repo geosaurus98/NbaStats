@@ -3,6 +3,7 @@
 // limits). A full season of games fits in ~100 KB instead of ~45 MB of raw
 // team schedules.
 import type { SeasonHighsResult } from './live';
+import type { Injury } from './types';
 import type { BoxTotals } from '../lib/boxTotals';
 import type { ClutchTotals } from '../lib/clutch';
 import type { NightBest } from '../lib/gameLines';
@@ -41,6 +42,8 @@ export interface SeasonSnapshot {
   clutch?: Record<string, ClutchTotals>;
   /** Regular season: the best three lines of each of the last 14 nights, newest first. */
   nightly?: { day: string; best: NightBest[] }[];
+  /** Season in progress: the league injury report when the snapshot was taken. */
+  injuries?: Injury[];
 }
 
 export function compactGame(g: Game): CompactGame {

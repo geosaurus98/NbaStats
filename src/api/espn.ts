@@ -6,7 +6,7 @@ import { involves, isFinal, mergeResults } from '../lib/league';
 import * as live from './live';
 import { getSnapshot, loadSnapshot, snapshotGames, snapshotYears } from './snapshotStore';
 import type { SeasonSnapshot } from './snapshot';
-import type { AssistPairs, Game, TeamRef } from './types';
+import type { AssistPairs, Game, Injury, TeamRef } from './types';
 
 export type { SeasonType, SeasonHighsResult } from './live';
 export { ApiError, fetchAthlete, fetchGameLog, fetchSummary, mapLimit } from './live';
@@ -258,4 +258,18 @@ export function seasonLineups(season: number, seasonType: SeasonType, teamId: st
 /** The bundled snapshot itself, for models that read several parts of it (e.g. the awards race). */
 export function seasonSnapshot(season: number) {
   return getSnapshot(season);
+}
+
+let injuriesPending: Promise<Injury[]> | undefined;
+
+/** The league injury report: live from ESPN, or the copy saved with the latest snapshot. */
+export function fetchInjuries(): Promise<Injury[]> {
+  injuriesPending ??= live.fetchInjuries().catch(async (e) => {
+    const years = snapshotYears();
+    const snaps = await Promise.all(years.map(loadSnapshot));
+    const saved = snaps.find((s) => s?.injuries)?.injuries;
+    if (saved) return saved;
+    throw e;
+  });
+  return injuriesPending;
 }
