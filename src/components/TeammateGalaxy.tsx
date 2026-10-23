@@ -8,7 +8,6 @@ import { pathTo } from '../lib/teammates';
 import { useWidth } from './Charts';
 
 const FIRST = 1947;
-const LAST = 2026;
 
 function hash(i: number): number {
   let h = (i + 1) * 2654435761;
@@ -34,6 +33,8 @@ export function TeammateGalaxy({
   onPick: (player: number) => void;
 }) {
   const [wrapRef, width] = useWidth<HTMLDivElement>();
+  // Latest season in the data, so the clock face grows with the current season.
+  const last = useMemo(() => Math.max(...graph.data.players.map((p) => p[2])), [graph]);
   const base = useRef<HTMLCanvasElement>(null);
   const overlay = useRef<HTMLCanvasElement>(null);
   const [hover, setHover] = useState<number | null>(null);
@@ -77,7 +78,7 @@ export function TeammateGalaxy({
         return;
       }
       const mid = (from + to) / 2;
-      const angle = -Math.PI / 2 + ((mid - FIRST) / (LAST - FIRST + 1)) * Math.PI * 2 + (hash(i * 7) - 0.5) * 0.05;
+      const angle = -Math.PI / 2 + ((mid - FIRST) / (last - FIRST + 1)) * Math.PI * 2 + (hash(i * 7) - 0.5) * 0.05;
       const inner = edges[d - 1];
       const outer = edges[d];
       const r = inner + (outer - inner) * (0.15 + 0.7 * hash(i));
@@ -114,7 +115,7 @@ export function TeammateGalaxy({
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (let year = 1950; year <= 2020; year += 10) {
-      const a = -Math.PI / 2 + ((year - FIRST) / (LAST - FIRST + 1)) * Math.PI * 2;
+      const a = -Math.PI / 2 + ((year - FIRST) / (last - FIRST + 1)) * Math.PI * 2;
       ctx.fillText(`${year}s`, c + (R + 18) * Math.cos(a), c + (R + 18) * Math.sin(a));
     }
     // Ring numbers along the 12 o'clock line, on a surface chip so dots don't hide them.
