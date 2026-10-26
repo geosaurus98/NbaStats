@@ -105,15 +105,15 @@ button.link { background: none; border: 0; padding: 0; color: var(--accent); }
 .season-select { flex: none; display: flex; align-items: center; gap: .5rem; }
 .mainnav { max-width: 1200px; margin: 0 auto; padding: 0 16px .35rem; display: flex; align-items: center; justify-content: space-between; gap: .15rem; overflow-x: auto; scrollbar-width: none; }
 .mainnav::-webkit-scrollbar { display: none; }
-.mainnav a { padding: .35rem .5rem; border-radius: 8px; color: var(--muted); font-weight: 500; white-space: nowrap; flex: none; }
+.mainnav a { padding: .35rem .4rem; font-size: .93rem; border-radius: 8px; color: var(--muted); font-weight: 500; white-space: nowrap; flex: none; }
 .mainnav a:hover { color: var(--text); }
 .mainnav a.active { background: var(--accent-soft); color: var(--accent); }
-.nav-sep { flex: none; width: 1px; height: 1.1rem; background: var(--border); margin: 0 .25rem; }
+.nav-sep { flex: none; width: 1px; height: 1.1rem; background: var(--border); margin: 0 .15rem; }
 @media (max-width: 1200px) {
-  .mainnav a { padding: .35rem .34rem; font-size: .9rem; }
-  .nav-sep { margin: 0 .1rem; }
+  .mainnav a { padding: .35rem .3rem; font-size: .88rem; }
+  .nav-sep { margin: 0 .05rem; }
 }
-@media (max-width: 1040px) {
+@media (max-width: 1100px) {
   .mainnav { justify-content: flex-start; mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); padding-right: 32px; }
 }
 @media (max-width: 600px) {
@@ -609,3 +609,15 @@ tr.zone-playoffs td:first-child { box-shadow: inset 3px 0 0 var(--series-1); }
 .trivia-option.wrong { border-color: var(--neg); background: color-mix(in srgb, var(--neg) 15%, var(--surface)); }
 @media (max-width: 500px) { .trivia-options { grid-template-columns: 1fr; } }
 .team-picker > .card { margin-top: 0; }
+
+/* Salaries */
+.payroll-chart { position: relative; }
+.payroll-seg { fill: var(--series-1); stroke: var(--surface); stroke-width: 0; }
+.payroll-seg:hover { fill: color-mix(in srgb, var(--series-1) 75%, var(--text)); }
+.payroll-row.clickable { cursor: pointer; }
+.payroll-team { font-size: 12px; fill: var(--text); font-weight: 600; }
+.payroll-total { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.cap-line { stroke: var(--muted); stroke-dasharray: 3 3; stroke-width: 1; opacity: .7; }
+.cap-line.strong { stroke-dasharray: none; opacity: .9; }
+.cap-label { font-size: 10.5px; fill: var(--muted); }
+.salary-history { margin-top: .4rem; }

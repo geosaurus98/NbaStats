@@ -283,3 +283,42 @@ describe('normalizeInjuries', () => {
     expect(normalizeInjuries(undefined)).toEqual([]);
   });
 });
+
+import { normalizeRosterContracts } from './normalize';
+
+describe('normalizeRosterContracts', () => {
+  it("reads this season's salary, years left and history (ESPN's real shape)", () => {
+    const rows = normalizeRosterContracts(
+      {
+        athletes: [
+          {
+            id: '4278039',
+            displayName: 'Nickeil Alexander-Walker',
+            age: 28,
+            position: { abbreviation: 'SG' },
+            contracts: [
+              { salary: 14403710, season: { year: 2027 } },
+              { salary: 15161800, season: { year: 2026 } },
+              { salary: 4312500, season: { year: 2025 } },
+            ],
+            contract: { salary: 14403710, yearsRemaining: 3, season: { year: 2027 } },
+          },
+          { id: '5113969', displayName: 'Cameron Carr', contracts: [] },
+          { displayName: 'No id' },
+        ],
+      },
+      2027,
+    );
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toEqual({
+      athleteId: '4278039',
+      name: 'Nickeil Alexander-Walker',
+      position: 'SG',
+      age: 28,
+      salary: 14403710,
+      yearsRemaining: 3,
+      history: [[2027, 14403710], [2026, 15161800], [2025, 4312500]],
+    });
+    expect(rows[1].salary).toBeUndefined();
+  });
+});

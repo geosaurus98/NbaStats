@@ -8,6 +8,7 @@ import {
   normalizeAthlete,
   normalizeGameLog,
   normalizeInjuries,
+  normalizeRosterContracts,
   normalizeLeaders,
   normalizeScoreboard,
   normalizeStandings,
@@ -77,6 +78,10 @@ async function getJSON(url: string, fresh = false, store = true): Promise<unknow
 
 export async function fetchScoreboard(isoDate: string, fresh = false) {
   return normalizeScoreboard(await getJSON(`${SITE}/scoreboard?dates=${espnDate(isoDate)}&limit=100`, fresh));
+}
+
+export async function fetchRosterContracts(teamId: string, season: number) {
+  return normalizeRosterContracts(await getJSON(`${SITE}/teams/${teamId}/roster`), season);
 }
 
 export async function fetchInjuries() {

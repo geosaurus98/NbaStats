@@ -5,6 +5,7 @@ import type { LogSeasonType } from '../api/types';
 import { LineChart } from '../components/Charts';
 import { PassingPartners } from '../components/PassingPartners';
 import { PlayerCard } from '../components/PlayerCard';
+import { SalaryHistory } from '../components/TeamPayroll';
 import { SeasonShotMap } from '../components/SeasonShotMap';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
@@ -87,6 +88,8 @@ export function Player() {
       {type === 'regular' && (p?.name || snapshotName) && (
         <PlayerCard playerId={id} name={p?.name ?? snapshotName!} team={p?.team?.abbr} season={season.year} seasonLabel={season.label} />
       )}
+
+      <SalaryHistory playerId={id} />
 
       {log.loading && <Loading label="Loading game log…" />}
       {log.error && <ErrorBox error={log.error} />}

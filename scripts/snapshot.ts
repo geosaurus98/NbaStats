@@ -5,7 +5,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import * as live from '../src/api/live';
 import { aggregateAssists } from '../src/api/normalize';
 import { compactGame, type SeasonSnapshot } from '../src/api/snapshot';
-import type { AssistEvent } from '../src/api/types';
+import type { AssistEvent, RosterContract } from '../src/api/types';
+import { parseBrefContracts, type PayrollPlayer } from '../src/lib/brefContracts';
+import { FRANCHISES } from '../src/lib/franchises';
 import { BoxAccumulator, lineValues, nameKey, type GameLines, type SeasonLines } from '../src/lib/boxTotals';
 import { ClutchAccumulator } from '../src/lib/clutch';
 import { nightlyBest } from '../src/lib/gameLines';
@@ -152,6 +154,17 @@ async function build(year: number): Promise<SeasonSnapshot> {
       return undefined;
     });
     console.log(`  injuries: ${snap.injuries?.length ?? 0} players`);
+    // Salaries: full payrolls (this season and the next five) from Basketball-Reference,
+    // matched to ESPN players; past salaries from ESPN's roster contracts.
+    const espnRosters: Record<string, RosterContract[]> = {};
+    for (const t of snap.teams) {
+      const roster = await live.fetchRosterContracts(t.id, year).catch(() => undefined);
+      if (roster?.length) espnRosters[t.id] = roster;
+    }
+    snap.salaryHistory = Object.fromEntries(Object.values(espnRosters).flat().filter((r) => r.history.length).map((r) => [r.athleteId, r.history]));
+    snap.payroll = await brefPayrolls(snap.teams.map((t) => t.id), espnRosters);
+    const players = Object.values(snap.payroll ?? {}).flat();
+    console.log(`  payroll: ${Object.keys(snap.payroll ?? {}).length} teams, ${players.length} contracts (${players.filter((p) => p.espn).length} matched to ESPN), ${Object.keys(snap.salaryHistory).length} salary histories`);
   }
   const out: SeasonLines = { year, ids: [...playerIndex.keys()], games: seasonLines };
   // The last two weeks of nightly bests, small enough for the home page.
@@ -181,6 +194,29 @@ function rookies(year: number, ids: string[], names: Record<string, string>): st
   });
   console.log(`  rookies: ${out.length}`);
   return out;
+}
+
+/**
+ * Every team's payroll page on Basketball-Reference, fetched politely (one
+ * request every few seconds, well inside their published bot limits).
+ */
+async function brefPayrolls(teamIds: string[], espnRosters: Record<string, RosterContract[]>): Promise<Record<string, PayrollPlayer[]> | undefined> {
+  const graph = JSON.parse(readFileSync('src/data/teammates.json', 'utf8'));
+  const brefToEspn = new Map<string, string>();
+  for (const [espn, p] of Object.entries((graph.espn ?? {}) as Record<string, number>)) if (graph.ids?.[p]) brefToEspn.set(graph.ids[p], espn);
+  const out: Record<string, PayrollPlayer[]> = {};
+  for (const id of teamIds) {
+    const f = FRANCHISES.find((x) => x.espnId === id);
+    if (!f) continue;
+    const code = f.codes[f.codes.length - 1];
+    const res = await fetch(`https://www.basketball-reference.com/contracts/${code}.html`, { headers: { 'User-Agent': 'NbaStatsHub/1.0 (personal stats site; one payroll refresh a day)' } }).catch(() => undefined);
+    if (res?.ok) {
+      const byName = new Map((espnRosters[id] ?? []).map((r) => [nameKey(r.name), r.athleteId]));
+      out[id] = parseBrefContracts(await res.text()).map((p) => ({ ...p, espn: brefToEspn.get(p.bref) ?? byName.get(nameKey(p.name)) }));
+    } else console.log(`  payroll ${code}: ${res?.status ?? 'failed'}`);
+    await new Promise((r) => setTimeout(r, 3500));
+  }
+  return Object.keys(out).length >= 28 ? out : undefined;
 }
 
 const years = process.argv.slice(2).map(Number).filter(Boolean);

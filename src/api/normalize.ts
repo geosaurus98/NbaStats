@@ -1,7 +1,7 @@
 // Converts raw ESPN API payloads into the app's own types. ESPN's shapes vary
 // between endpoints (e.g. scores are strings on the scoreboard but objects on
 // team schedules), so every accessor here is defensive.
-import type { Injury,
+import type { Injury, RosterContract,
   AssistEvent,
   FeedItem,
   AssistPairs,
@@ -436,4 +436,29 @@ export function normalizeInjuries(raw: Raw): Injury[] {
     }
   }
   return out;
+}
+
+/** A team roster's contracts: this season's salary, years left and salary history. */
+export function normalizeRosterContracts(raw: Raw, season: number): RosterContract[] {
+  return (raw?.athletes ?? []).flatMap((a: Raw) => {
+    const athleteId = String(a.id ?? '');
+    if (!athleteId) return [];
+    const history: [number, number][] = (a.contracts ?? [])
+      .map((c: Raw) => [Number(c.season?.year), Number(c.salary)] as [number, number])
+      .filter(([y, v]: [number, number]) => Number.isFinite(y) && Number.isFinite(v) && v > 0)
+      .sort((x: [number, number], y: [number, number]) => y[0] - x[0]);
+    const current = a.contract?.season?.year === season ? a.contract : undefined;
+    const salary = Number(current?.salary ?? history.find(([y]) => y === season)?.[1]);
+    return [
+      {
+        athleteId,
+        name: a.displayName ?? a.fullName ?? '',
+        position: a.position?.abbreviation,
+        age: typeof a.age === 'number' ? a.age : undefined,
+        salary: Number.isFinite(salary) && salary > 0 ? salary : undefined,
+        yearsRemaining: typeof current?.yearsRemaining === 'number' ? current.yearsRemaining : undefined,
+        history,
+      },
+    ];
+  });
 }
