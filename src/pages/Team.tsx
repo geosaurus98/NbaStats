@@ -14,6 +14,7 @@ import { useAsync } from '../hooks/useAsync';
 import { SeasonPace } from '../components/SeasonPace';
 import { EloHistory } from '../components/MoreGraphs';
 import { PairHeatmap, PointsBySource } from '../components/ShotGraphs';
+import { QuarterSplits } from '../components/TeamAnalytics';
 import { InjuryList } from '../components/TeamBits';
 import { TeamPayroll } from '../components/TeamPayroll';
 import { DEFAULT_SEASON } from '../lib/seasons';
@@ -110,6 +111,8 @@ export function Team() {
       <PairHeatmap teamId={id} season={season.year} type={type} />
 
       {type === 2 && <PointsBySource teamId={id} season={season.year} />}
+
+      <QuarterSplits teamId={id} season={season.year} type={type} />
 
       {shots?.teams[id] && (
         <>

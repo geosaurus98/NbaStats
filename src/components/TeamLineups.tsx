@@ -3,12 +3,12 @@
 import { Link } from 'react-router-dom';
 import { seasonLineups, snapshotPlayers, type SeasonType } from '../api/espn';
 
-const PER48 = 2880;
-const per48 = (pf: number, pa: number, sec: number) => (sec > 0 ? ((pf - pa) / sec) * PER48 : 0);
-const signed = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`;
+export const PER48 = 2880;
+export const per48 = (pf: number, pa: number, sec: number) => (sec > 0 ? ((pf - pa) / sec) * PER48 : 0);
+export const signed = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`;
 
 /** Diverging bar around zero: blue right for positive, red left for negative. */
-function NetBar({ v, max }: { v: number; max: number }) {
+export function NetBar({ v, max }: { v: number; max: number }) {
   const w = Math.min(50, (Math.abs(v) / max) * 50);
   return (
     <span className="net-bar">
@@ -77,8 +77,8 @@ export function TeamLineups({ teamId, season, seasonType }: { teamId: string; se
               <tr>
                 <th className="left">Player</th>
                 <th>Min</th>
-                <th title="Team point margin per 48 while he's on court">On</th>
-                <th title="…and while he's on the bench (in games he played)">Off</th>
+                <th title="Team point margin per 48 while they're on court">On</th>
+                <th title="…and while they're on the bench (in games he played)">Off</th>
                 <th title="On minus off">Swing</th>
                 <th />
               </tr>

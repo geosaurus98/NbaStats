@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { fetchLeagueGames, fetchTeamStats, type SeasonType } from '../api/espn';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
@@ -7,6 +7,7 @@ import { useAsync } from '../hooks/useAsync';
 import { addStrengthOfSchedule, teamRecords, type TeamRecord } from '../lib/league';
 import { useSeason } from '../SeasonContext';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
+import { FourFactorsTable, GarbageTime, LuckMeter, QuarterSplits } from '../components/TeamAnalytics';
 
 interface Col {
   key: string;
@@ -40,21 +41,53 @@ const BASE_COLS: Col[] = [
 
 const LOWER_BETTER_STATS = new Set(['offensive.avgTurnovers']);
 
+const TABS = [
+  { id: 'table', label: 'Rankings' },
+  { id: 'factors', label: 'Four factors' },
+  { id: 'luck', label: 'Luck meter' },
+  { id: 'quarters', label: 'Quarter splits' },
+  { id: 'garbage', label: 'Garbage time' },
+] as const;
+type Tab = (typeof TABS)[number]['id'];
+
 export function Rankings() {
   const { season } = useSeason();
   const [type, setType] = useState<SeasonType>(2);
+  const [params, setParams] = useSearchParams();
+  const tab: Tab = TABS.find((t) => t.id === params.get('tab'))?.id ?? 'table';
+  return (
+    <section>
+      <div className="page-head">
+        <h1>{season.label} team rankings</h1>
+        {tab !== 'luck' && <SeasonTypeToggle value={type} onChange={setType} />}
+      </div>
+      <div className="tabs">
+        {TABS.map((t) => (
+          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParams(t.id === 'table' ? {} : { tab: t.id }, { replace: true })}>{t.label}</button>
+        ))}
+      </div>
+      {tab === 'table' && <RankingTable season={season.year} type={type} />}
+      {tab === 'factors' && <FourFactorsTable season={season.year} type={type} />}
+      {tab === 'luck' && <LuckMeter season={season.year} />}
+      {tab === 'quarters' && <QuarterSplits season={season.year} type={type} />}
+      {tab === 'garbage' && <GarbageTime season={season.year} type={type} />}
+    </section>
+  );
+}
+
+function RankingTable({ season: year, type }: { season: number; type: SeasonType }) {
   const [sort, setSort] = useState('net');
   const [asc, setAsc] = useState(false);
 
   const { data, error, loading } = useAsync(async () => {
     const [league, stats] = await Promise.all([
-      fetchLeagueGames(season.year, type),
-      fetchTeamStats(season.year, type).catch(() => undefined),
+      fetchLeagueGames(year, type),
+      fetchTeamStats(year, type).catch(() => undefined),
     ]);
     const records = addStrengthOfSchedule(teamRecords(league.teams, league.games), league.games).filter((r) => r.gp + r.remaining > 0);
     const statsById = new Map(stats?.rows.map((r) => [r.teamId, r.values]));
     return { rows: records.map((r) => ({ ...r, extra: statsById.get(r.team.id) ?? {} })), statCols: stats?.columns ?? [] };
-  }, [season.year, type]);
+  }, [year, type]);
 
   const statCols: Col[] = (data?.statCols ?? []).map((c) => {
     return {
@@ -84,11 +117,7 @@ export function Rankings() {
   };
 
   return (
-    <section>
-      <div className="page-head">
-        <h1>{season.label} team rankings</h1>
-        <SeasonTypeToggle value={type} onChange={setType} />
-      </div>
+    <>
       <p className="muted">Click a column to rank by it. Click again to reverse the order.</p>
       {loading && <Loading label="Loading every team's games…" />}
       {error && <ErrorBox error={error} />}
@@ -130,6 +159,6 @@ export function Rankings() {
         SOS = average win % of the opponents a team has played (and, while the season is on, still has to play).
         Higher means a harder schedule.
       </p>
-    </section>
+    </>
   );
 }

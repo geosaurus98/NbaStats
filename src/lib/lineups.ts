@@ -28,6 +28,23 @@ export interface GameLineups {
   on: Record<string, Tally>;
   /** teamId → whole-game team totals. */
   team: Record<string, Tally>;
+  /** The same on-court and team tallies, garbage time only (see isGarbageTime). */
+  garbageOn: Record<string, Tally>;
+  garbageTeam: Record<string, Tally>;
+  /** Garbage-time stretches as [from, to] seconds since tip-off. */
+  garbageWindows: [number, number][];
+}
+
+/**
+ * Garbage time, Cleaning the Glass's rule: the fourth quarter with the lead
+ * at 25+ (12 to 9 minutes left), 20+ (9 to 6) or 10+ (6 or fewer), and two
+ * or fewer of the game's starters on the floor between both teams.
+ */
+export function isGarbageTime(period: number, t: number, margin: number, startersOn = 0): boolean {
+  if (period !== 4 || startersOn > 2) return false;
+  const left = 2880 - t;
+  const m = Math.abs(margin);
+  return left > 540 ? m >= 25 : left > 360 ? m >= 20 : m >= 10;
 }
 
 const add = (t: Tally, sec: number, pf: number, pa: number) => {
@@ -56,7 +73,8 @@ function periodStarters(feed: FeedItem[], period: number, teamId: string, teamOf
 }
 
 export function gameLineups(g: GameInput): GameLineups {
-  const res: GameLineups = { lineups: {}, on: {}, team: {} };
+  const res: GameLineups = { lineups: {}, on: {}, team: {}, garbageOn: {}, garbageTeam: {}, garbageWindows: [] };
+  const starters = new Set(Object.values(g.starters).flat());
   const teams = [g.homeId, g.awayId];
   for (const t of teams) {
     res.lineups[t] = {};
@@ -70,6 +88,14 @@ export function gameLineups(g: GameInput): GameLineups {
 
   const credit = (sec: number, home: number, away: number) => {
     if (sec <= 0 && home === 0 && away === 0) return;
+    // The state at the start of the stretch decides whether it counts as garbage time.
+    const startersOn = teams.reduce((n, t) => n + [...court[t]].filter((id) => starters.has(id)).length, 0);
+    const garbage = isGarbageTime(period, lastT, lastHome - lastAway, startersOn);
+    if (garbage && sec > 0) {
+      const w = res.garbageWindows[res.garbageWindows.length - 1];
+      if (w && w[1] === lastT) w[1] = lastT + sec;
+      else res.garbageWindows.push([lastT, lastT + sec]);
+    }
     for (const t of teams) {
       const pf = t === g.homeId ? home : away;
       const pa = t === g.homeId ? away : home;
@@ -77,6 +103,10 @@ export function gameLineups(g: GameInput): GameLineups {
       const five = court[t];
       for (const id of five) add((res.on[id] ??= tally()), sec, pf, pa);
       if (five.size === 5) add((res.lineups[t][[...five].sort().join(',')] ??= tally()), sec, pf, pa);
+      if (garbage) {
+        add((res.garbageTeam[t] ??= tally()), sec, pf, pa);
+        for (const id of five) add((res.garbageOn[id] ??= tally()), sec, pf, pa);
+      }
     }
   };
 

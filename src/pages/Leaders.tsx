@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { fetchLeaders, type SeasonType } from '../api/espn';
 import { MilestoneWatch } from '../components/MilestoneWatch';
+import { AdvancedLeaders, BuildYourOwn, OnOffLeaders, ShotQuality } from '../components/PlayerAnalytics';
 import { SeasonHighs } from '../components/SeasonHighs';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 import { Empty, ErrorBox, Loading } from '../components/Status';
@@ -21,23 +22,32 @@ export function Leaders() {
   const { season } = useSeason();
   const [type, setType] = useState<SeasonType>(2);
   const [params, setParams] = useSearchParams();
-  const tab = (['highs', 'milestones'] as const).find((t) => t === params.get('tab')) ?? 'averages';
+  const tab = (['highs', 'milestones', 'advanced', 'build', 'onoff', 'quality'] as const).find((t) => t === params.get('tab')) ?? 'averages';
+  const regularOnly = tab === 'milestones' || tab === 'advanced' || tab === 'build';
   const setTab = (t: string) => setParams(t === 'averages' ? {} : { tab: t }, { replace: true });
 
   return (
     <section>
       <div className="page-head">
         <h1>{season.label} player leaders</h1>
-        <SeasonTypeToggle value={type} onChange={setType} />
+        {!regularOnly && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
       <div className="tabs">
         <button className={tab === 'averages' ? 'active' : ''} onClick={() => setTab('averages')}>Season averages</button>
         <button className={tab === 'highs' ? 'active' : ''} onClick={() => setTab('highs')}>Season highs</button>
         <button className={tab === 'milestones' ? 'active' : ''} onClick={() => setTab('milestones')}>Milestone watch</button>
+        <button className={tab === 'advanced' ? 'active' : ''} onClick={() => setTab('advanced')}>Advanced (PER, WS)</button>
+        <button className={tab === 'build' ? 'active' : ''} onClick={() => setTab('build')}>Build your own</button>
+        <button className={tab === 'onoff' ? 'active' : ''} onClick={() => setTab('onoff')}>On/off</button>
+        <button className={tab === 'quality' ? 'active' : ''} onClick={() => setTab('quality')}>Shot quality</button>
       </div>
       {tab === 'averages' && <Averages season={season.year} type={type} />}
       {tab === 'highs' && <SeasonHighs season={season.year} seasonType={type} />}
       {tab === 'milestones' && <MilestoneWatch season={season.year} />}
+      {tab === 'advanced' && <AdvancedLeaders season={season.year} />}
+      {tab === 'build' && <BuildYourOwn season={season.year} />}
+      {tab === 'onoff' && <OnOffLeaders season={season.year} type={type} />}
+      {tab === 'quality' && <ShotQuality season={season.year} type={type} />}
     </section>
   );
 }

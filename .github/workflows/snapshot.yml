@@ -3,7 +3,7 @@ name: Season snapshot
 on:
   push:
     branches: [claude/youthful-heisenberg-ag3b0v]
-    paths: [scripts/snapshot.ts, scripts/teammates.ts, scripts/careers.ts, scripts/franchises.ts, src/lib/lineups.ts, src/lib/boxTotals.ts, src/lib/clutch.ts, src/lib/gameLines.ts, src/lib/brefContracts.ts, src/lib/shotTypes.ts, src/api/normalize.ts, src/lib/pbpStats.ts, .github/workflows/snapshot.yml]
+    paths: [scripts/snapshot.ts, scripts/teammates.ts, scripts/careers.ts, scripts/franchises.ts, src/lib/lineups.ts, src/lib/boxTotals.ts, src/lib/clutch.ts, src/lib/gameLines.ts, src/lib/brefContracts.ts, src/lib/shotTypes.ts, src/lib/garbageTime.ts, src/lib/quarters.ts, src/api/normalize.ts, src/lib/pbpStats.ts, .github/workflows/snapshot.yml]
   workflow_dispatch:
     inputs:
       seasons:

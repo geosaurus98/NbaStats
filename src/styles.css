@@ -672,3 +672,16 @@ tr.zone-playoffs td:first-child { box-shadow: inset 3px 0 0 var(--series-1); }
 .heat-cell.self { background: var(--border); font-weight: 700; }
 .heat-cell.hot { outline: 2px solid var(--text); }
 @media (max-width: 600px) { .st-row { grid-template-columns: minmax(90px, 1.2fr) 1.2fr 2.4em 3.4em; } .st-diff { display: none; } }
+
+/* Four factors, advanced leaders, build your own */
+table.factors th.group { text-align: center; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border); }
+table.factors td { font-variant-numeric: tabular-nums; }
+td.strong { font-weight: 700; }
+.bar-cell { width: 28%; min-width: 60px; }
+.bar-cell .bar { display: block; height: 8px; border-radius: 4px; background: var(--series-1); }
+.sliders { display: grid; gap: .45rem; align-content: start; }
+.slider-row { display: grid; grid-template-columns: 9.5rem 1fr 1.6rem; gap: .6rem; align-items: center; font-size: .9rem; }
+.slider-row input { width: 100%; accent-color: var(--series-1); }
+.slider-row b { text-align: right; font-variant-numeric: tabular-nums; }
+.game-factors { width: 100%; }
+.game-factors .net-cell { width: 45%; }

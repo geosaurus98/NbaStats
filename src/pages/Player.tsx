@@ -7,6 +7,7 @@ import { PassingPartners } from '../components/PassingPartners';
 import { PlayerCard } from '../components/PlayerCard';
 import { PlayerTimeline } from '../components/MoreGraphs';
 import { PlayerShotTypes } from '../components/ShotGraphs';
+import { AgingCurve } from '../components/PlayerAnalytics';
 import { SalaryHistory } from '../components/TeamPayroll';
 import { SeasonShotMap } from '../components/SeasonShotMap';
 import { Empty, ErrorBox, Loading } from '../components/Status';
@@ -94,6 +95,8 @@ export function Player() {
       {type === 'regular' && <PlayerTimeline playerId={id} season={season.year} />}
 
       <PlayerShotTypes playerId={id} season={season.year} type={type === 'playoffs' ? 3 : 2} />
+
+      {type === 'regular' && <AgingCurve playerId={id} season={season.year} />}
 
       <SalaryHistory playerId={id} />
 
