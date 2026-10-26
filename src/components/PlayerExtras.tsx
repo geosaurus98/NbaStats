@@ -206,7 +206,7 @@ export function WpaLeaders({ season, type }: { season: number; type: SeasonType 
   return (
     <>
       <p className="muted">
-        Win probability added: every play moves ESPN's win probability, and the players in it get the credit (or blame). A made shot goes to the shooter (a third to the passer on an assist); a steal or block is split between the two players. Totals are in wins: +1.0 means plays worth one extra win.
+        Win probability added: every play moves ESPN's win probability, and the players in it get the credit (or blame). A made shot goes to the shooter (a third to the passer on an assist); a steal or block is split between the two players. Totals are in wins: +1.0 means plays worth one extra win. Misses, turnovers and fouls are always charged to someone while the matching gain often has no name on it, so totals lean negative: compare players with each other rather than with zero.
       </p>
       <div className="segmented">
         <button className={!worst ? 'active' : ''} onClick={() => setWorst(false)}>Most added</button>
@@ -234,7 +234,7 @@ export function WpaLeaders({ season, type }: { season: number; type: SeasonType 
                   <td className="net-cell"><NetBar v={r[3]} max={max} /></td>
                   <td>{signed((100 * r[3]) / Math.max(1, r[2]))}</td>
                   <td className="left small nowrap">
-                    {worst ? <>{signed(100 * r[6])} <Link to={`/game/${r[7]}`}>{gameLabel(r[7], r[1])}</Link></> : <>{signed(100 * r[4])} <Link to={`/game/${r[5]}`}>{gameLabel(r[5], r[1])}</Link></>}
+                    {worst ? <>{signed(100 * r[6])}% <Link to={`/game/${r[7]}`}>{gameLabel(r[7], r[1])}</Link></> : <>{signed(100 * r[4])}% <Link to={`/game/${r[5]}`}>{gameLabel(r[5], r[1])}</Link></>}
                   </td>
                 </tr>
               ))}
@@ -254,7 +254,7 @@ export function WpaLeaders({ season, type }: { season: number; type: SeasonType 
               ))}
             </tbody>
           </table>
-          <p className="muted small">Percentage points of win probability added in one game: +60% is like taking a game from a 20% chance to an 80% one on your own.</p>
+          <p className="muted small">Percentage points of win probability added in one game: +60% is like taking a game from a 20% chance to an 80% one on your own. Back-and-forth games can add up to more than 100%.</p>
         </div>
       </div>
     </>
