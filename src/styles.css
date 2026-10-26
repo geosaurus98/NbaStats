@@ -13,6 +13,7 @@
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --series-3: #1baf7a;
+  --series-4: #eda100;
   --pos: #2a78d6;
   --neg: #e34948;
   --grid: #e1e0d9;
@@ -42,6 +43,7 @@
     --series-1: #3987e5;
     --series-2: #d95926;
     --series-3: #199e70;
+    --series-4: #c98500;
     --pos: #3987e5;
     --neg: #e66767;
     --grid: #2c2c2a;
@@ -66,6 +68,7 @@
   --series-1: #3987e5;
   --series-2: #d95926;
   --series-3: #199e70;
+  --series-4: #c98500;
   --pos: #3987e5;
   --neg: #e66767;
   --grid: #2c2c2a;
@@ -621,3 +624,51 @@ tr.zone-playoffs td:first-child { box-shadow: inset 3px 0 0 var(--series-1); }
 .cap-line.strong { stroke-dasharray: none; opacity: .9; }
 .cap-label { font-size: 10.5px; fill: var(--muted); }
 .salary-history { margin-top: .4rem; }
+
+/* Scatter plots */
+.scatter { position: relative; }
+.scatter .grid { stroke: var(--grid, var(--border)); stroke-width: 1; }
+.scatter .tick { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.scatter .axis-label { font-size: 12px; fill: var(--muted); }
+.scatter .guide { stroke: var(--muted); stroke-dasharray: 4 4; opacity: .6; }
+.scatter .dot { fill: var(--series-1); stroke: var(--surface); stroke-width: 1.5; opacity: .8; }
+.scatter .dot.hl { fill: var(--series-2); opacity: 1; }
+.scatter .dot.context { fill: var(--neutral); stroke: none; opacity: .7; }
+.scatter .dot-ring { fill: none; stroke: var(--text); stroke-width: 1.5; pointer-events: none; }
+.scatter .dot-label { font-size: 11px; fill: var(--text); pointer-events: none; }
+
+/* Player season timeline */
+.tl-strip { display: flex; align-items: stretch; gap: 2px; overflow-x: auto; padding-bottom: .2rem; }
+.tl-col { position: relative; flex: 1 0 6px; min-width: 6px; max-width: 18px; }
+.tl-bar { position: absolute; left: 0; right: 0; background: var(--series-1); border-radius: 2px; }
+.tl-bar.neg { background: var(--neg); }
+.tl-missed { position: absolute; left: 0; right: 0; text-align: center; font-size: 10px; color: var(--muted); }
+
+/* Shot types, stacked bars, heat map */
+.shot-types { display: grid; gap: .3rem; margin: .4rem 0; }
+.st-row { display: grid; grid-template-columns: minmax(120px, 1.2fr) 2fr 2.6em 3.6em 3em; gap: .5rem; align-items: center; font-size: .85rem; }
+.st-share, .st-pct, .st-diff { text-align: right; font-variant-numeric: tabular-nums; }
+.quarters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .4rem; }
+.q-cell { display: flex; flex-direction: column; align-items: center; padding: .4rem; border: 1px solid var(--border); border-radius: 8px; }
+.key-sq { display: inline-block; width: .75rem; height: .75rem; border-radius: 3px; vertical-align: -1px; margin-right: .25rem; }
+.legend.small { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin: .2rem 0 .5rem; }
+.stack-track { display: flex; height: 12px; gap: 2px; min-width: 0; }
+.stack-track > span { display: block; height: 100%; border-radius: 3px; min-width: 0; }
+.stack-row { grid-template-columns: minmax(110px, 1.2fr) 3fr 2.6em; cursor: pointer; }
+.source-bars { display: grid; gap: .3rem; }
+.source-row { display: grid; grid-template-columns: 4.2rem 1fr 3rem; align-items: center; gap: .5rem; position: relative; }
+.source-row.clickable { cursor: pointer; }
+.source-row .stack-track { height: 14px; }
+.source-team { display: inline-flex; align-items: center; gap: .3rem; font-size: .82rem; font-weight: 600; }
+.source-total { text-align: right; font-variant-numeric: tabular-nums; font-size: .85rem; }
+.source-tip { grid-column: 2 / 4; }
+.source-table { margin-top: .6rem; }
+.heat-wrap { overflow-x: auto; }
+.heat { width: auto; border-collapse: separate; border-spacing: 2px; font-size: .78rem; }
+.heat th { font-weight: 500; padding: 2px 6px 2px 0; text-transform: none; text-align: right; white-space: nowrap; border: 0; }
+.heat-col { height: 6.5rem; vertical-align: bottom; }
+.heat-col span { display: inline-block; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; }
+.heat-cell { width: 2.4rem; height: 2rem; text-align: center; border-radius: 4px; font-variant-numeric: tabular-nums; }
+.heat-cell.self { background: var(--border); font-weight: 700; }
+.heat-cell.hot { outline: 2px solid var(--text); }
+@media (max-width: 600px) { .st-row { grid-template-columns: minmax(90px, 1.2fr) 1.2fr 2.4em 3.4em; } .st-diff { display: none; } }
