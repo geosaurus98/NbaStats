@@ -6,6 +6,7 @@ import type { AssistEvent, Game, TeamRef } from './types';
 import {
   aggregateAssists,
   normalizeAthlete,
+  normalizeDraft,
   normalizeGameLog,
   normalizeInjuries,
   normalizeRosterContracts,
@@ -21,6 +22,7 @@ const SITE = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const STANDINGS = 'https://site.api.espn.com/apis/v2/sports/basketball/nba/standings';
 const COMMON = 'https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba';
 const STATS = `${COMMON}/statistics/byathlete`;
+const CORE = 'https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba';
 
 export type SeasonType = 2 | 3; // 2 = regular season, 3 = playoffs
 
@@ -145,6 +147,12 @@ export async function fetchLeaders(season: number, seasonType: SeasonType, sort:
 
 export async function fetchAthlete(id: string) {
   return normalizeAthlete(await getJSON(`${COMMON}/athletes/${id}`));
+}
+
+/** Where a player was drafted, from ESPN's core athlete record (the site profile doesn't include it). */
+export async function fetchAthleteDraft(id: string) {
+  const raw = (await getJSON(`${CORE}/athletes/${id}`, false, false)) as Record<string, unknown>;
+  return { draft: normalizeDraft(raw?.draft), keys: Object.keys(raw ?? {}) };
 }
 
 export async function fetchGameLog(id: string, season: number) {

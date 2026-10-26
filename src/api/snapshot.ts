@@ -10,6 +10,8 @@ import type { ClutchTotals } from '../lib/clutch';
 import type { ShotSplits } from '../lib/shotTypes';
 import type { GarbageTotals } from '../lib/garbageTime';
 import type { TeamQuarters } from '../lib/quarters';
+import type { RunTotals } from '../lib/runs';
+import type { WpaTotals } from '../lib/wpa';
 import type { NightBest } from '../lib/gameLines';
 import type { TeamLineupSeason } from '../lib/lineups';
 import type { DramaRow, ShotBins } from '../lib/pbpStats';
@@ -52,6 +54,12 @@ export interface SeasonSnapshot {
   garbage?: Record<string, GarbageTotals>;
   /** Per season type, then team id: quarter-by-quarter scoring and lead records. */
   quarters?: Record<string, Record<string, TeamQuarters>>;
+  /** Per season type: win probability added by player. */
+  wpa?: Record<string, WpaTotals>;
+  /** Per season type: scoring runs by team and the season's biggest. */
+  runs?: Record<string, RunTotals>;
+  /** Regular season: rookies' draft [year, round, overall pick], null = undrafted. */
+  rookieDraft?: Record<string, [number, number, number] | null>;
   /** Regular season: the best three lines of each of the last 14 nights, newest first. */
   nightly?: { day: string; best: NightBest[] }[];
   /** Season in progress: the league injury report when the snapshot was taken. */

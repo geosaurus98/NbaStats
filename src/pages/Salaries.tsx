@@ -3,6 +3,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { loadSnapshot } from '../api/espn';
 import { SalaryScatter } from '../components/MoreGraphs';
+import { WinSharesValue } from '../components/PlayerExtras';
 import { PayrollChart, payrollRows, yearsLeft } from '../components/PayrollChart';
 import { playerLink } from '../components/TeamPayroll';
 import { Empty, ErrorBox, Loading } from '../components/Status';
@@ -58,6 +59,7 @@ export function Salaries() {
         <p className="muted small">Each block is one player; hover for the contract, click a team to open it.</p>
       </div>
       <SalaryScatter season={DEFAULT_SEASON} payroll={s.payroll} />
+      <WinSharesValue season={DEFAULT_SEASON} payroll={s.payroll} />
       <div className="two-col home-row">
         <div className="table-wrap">
           <h3 className="table-title">Biggest salaries</h3>

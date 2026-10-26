@@ -262,6 +262,7 @@ export function normalizePlays(raw: Raw, teams: TeamBox[] = []): PlayByPlay {
         home,
         away,
         scoring: !!p.scoringPlay,
+        wp: winById.get(String(p.id)),
       });
     }
 
@@ -352,7 +353,21 @@ export function normalizeAthlete(raw: Raw): PlayerProfile {
     weight: a.displayWeight,
     age: num(a.age),
     team: a.team ? normalizeTeam(a.team) : undefined,
+    draft: normalizeDraft(a.draft),
   };
+}
+
+/** ESPN's athlete.draft: { year, round, selection } or just "2025: Rd 1, Pk 3 (PHI)". */
+export function normalizeDraft(d: Raw): PlayerProfile['draft'] {
+  if (!d) return undefined;
+  const text = String(d.displayText ?? '');
+  const m = /(\d{4}).*?Rd\s*(\d+).*?Pk\s*(\d+)/i.exec(text);
+  const year = num(d.year) ?? (m ? Number(m[1]) : undefined);
+  const round = num(d.round) ?? (m ? Number(m[2]) : undefined);
+  let pick = num(d.selection) ?? (m ? Number(m[3]) : undefined);
+  // Some records number second-round picks within the round.
+  if (round === 2 && pick != null && pick <= 30) pick += 30;
+  return year && round && pick ? { year, round, pick } : undefined;
 }
 
 /**

@@ -8,6 +8,7 @@ import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 import { ShootingZones } from '../components/ShootingZones';
 import { TeamStyles, UsageEfficiency } from '../components/MoreGraphs';
 import { PointsBySource, ShotTypeLeaders } from '../components/ShotGraphs';
+import { ArchetypesView, FreeThrowPressure } from '../components/PlayerExtras';
 import { Empty } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { formatShortDate } from '../lib/dates';
@@ -26,11 +27,12 @@ const TABS = [
   { id: 'sources', label: 'Points by source' },
   { id: 'usage', label: 'Usage vs efficiency' },
   { id: 'styles', label: 'Team styles' },
+  { id: 'archetypes', label: 'Player archetypes' },
   { id: 'schedule', label: 'Schedule ahead' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 /** Tabs that only cover the regular season. */
-const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'schedule', 'usage', 'styles', 'sources']);
+const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'schedule', 'usage', 'styles', 'sources', 'archetypes']);
 
 export function Insights() {
   const { season } = useSeason();
@@ -60,7 +62,13 @@ export function Insights() {
       {hasData && tab === 'zones' && <ShootingZones season={season.year} type={type} />}
       {hasData && tab === 'night' && <PlayerOfTheNight season={season.year} />}
       {hasData && tab === 'hot' && <HotCold season={season.year} />}
-      {hasData && tab === 'clutch' && <Clutch season={season.year} type={type} />}
+      {hasData && tab === 'clutch' && (
+        <>
+          <Clutch season={season.year} type={type} />
+          <FreeThrowPressure season={season.year} type={type} />
+        </>
+      )}
+      {hasData && tab === 'archetypes' && <ArchetypesView season={season.year} />}
       {hasData && tab === 'combos' && <Combos season={season.year} type={type} />}
       {tab === 'schedule' && <ScheduleAheadTab season={season.year} start={season.start} end={season.regularEnd} />}
     </section>

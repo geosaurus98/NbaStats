@@ -14,6 +14,10 @@
   --series-2: #eb6834;
   --series-3: #1baf7a;
   --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #6250d6;
+  --series-8: #e34948;
   --pos: #2a78d6;
   --neg: #e34948;
   --grid: #e1e0d9;
@@ -44,6 +48,10 @@
     --series-2: #d95926;
     --series-3: #199e70;
     --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
     --pos: #3987e5;
     --neg: #e66767;
     --grid: #2c2c2a;
@@ -69,6 +77,10 @@
   --series-2: #d95926;
   --series-3: #199e70;
   --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
   --pos: #3987e5;
   --neg: #e66767;
   --grid: #2c2c2a;
@@ -155,6 +167,7 @@ select, input[type='date'] { background: var(--surface); border: 1px solid var(-
 
 .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
 .table-wrap.narrow { max-width: 560px; }
+.table-wrap.flush { border: 0; border-radius: 0; background: none; }
 .two-col .table-wrap h2 { margin: .8rem .9rem .4rem; }
 .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(520px, 100%), 1fr)); gap: 1rem; }
 .two-col > *, .card, .chart { min-width: 0; }
@@ -685,3 +698,16 @@ td.strong { font-weight: 700; }
 .slider-row b { text-align: right; font-variant-numeric: tabular-nums; }
 .game-factors { width: 100%; }
 .game-factors .net-cell { width: 45%; }
+
+/* Team style profile */
+.style-rows { display: grid; gap: .35rem; }
+.style-row { display: grid; grid-template-columns: minmax(8.5rem, 1fr) 2fr 3.6rem 4.4rem; gap: .5rem; align-items: center; font-size: .86rem; }
+.style-row b { text-align: right; font-variant-numeric: tabular-nums; }
+.style-track { position: relative; height: 10px; border-radius: 5px; background: var(--border); }
+.style-mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--muted); }
+.style-dot { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--series-1); border: 2px solid var(--surface); }
+.arch-rows { display: grid; gap: .25rem; }
+.arch-row { display: grid; grid-template-columns: 3rem 1fr; align-items: center; gap: .5rem; }
+.arch-row .stack-track { height: 12px; }
+.arch-row .dim { opacity: .35; }
+.table-wrap > p { padding: 0 .8rem; }
