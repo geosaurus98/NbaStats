@@ -8,6 +8,7 @@ import { addStrengthOfSchedule, teamRecords, type TeamRecord } from '../lib/leag
 import { useSeason } from '../SeasonContext';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 import { FourFactorsTable, GarbageTime, LuckMeter, QuarterSplits } from '../components/TeamAnalytics';
+import { RestTravel, ScoringRuns, SrsTable } from '../components/TeamExtras';
 
 interface Col {
   key: string;
@@ -43,10 +44,13 @@ const LOWER_BETTER_STATS = new Set(['offensive.avgTurnovers']);
 
 const TABS = [
   { id: 'table', label: 'Rankings' },
+  { id: 'srs', label: 'SRS & title DNA' },
   { id: 'factors', label: 'Four factors' },
   { id: 'luck', label: 'Luck meter' },
   { id: 'quarters', label: 'Quarter splits' },
   { id: 'garbage', label: 'Garbage time' },
+  { id: 'runs', label: 'Scoring runs' },
+  { id: 'rest', label: 'Rest & travel' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 
@@ -59,7 +63,7 @@ export function Rankings() {
     <section>
       <div className="page-head">
         <h1>{season.label} team rankings</h1>
-        {tab !== 'luck' && <SeasonTypeToggle value={type} onChange={setType} />}
+        {!['luck', 'srs', 'rest'].includes(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
       <div className="tabs">
         {TABS.map((t) => (
@@ -71,6 +75,9 @@ export function Rankings() {
       {tab === 'luck' && <LuckMeter season={season.year} />}
       {tab === 'quarters' && <QuarterSplits season={season.year} type={type} />}
       {tab === 'garbage' && <GarbageTime season={season.year} type={type} />}
+      {tab === 'srs' && <SrsTable season={season.year} />}
+      {tab === 'runs' && <ScoringRuns season={season.year} type={type} />}
+      {tab === 'rest' && <RestTravel season={season.year} />}
     </section>
   );
 }

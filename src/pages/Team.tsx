@@ -15,6 +15,8 @@ import { SeasonPace } from '../components/SeasonPace';
 import { EloHistory } from '../components/MoreGraphs';
 import { PairHeatmap, PointsBySource } from '../components/ShotGraphs';
 import { QuarterSplits } from '../components/TeamAnalytics';
+import { TeamStyleCard, WithWithoutCard } from '../components/TeamExtras';
+import { LineupExplorer } from '../components/PlayerExtras';
 import { InjuryList } from '../components/TeamBits';
 import { TeamPayroll } from '../components/TeamPayroll';
 import { DEFAULT_SEASON } from '../lib/seasons';
@@ -108,11 +110,20 @@ export function Team() {
 
       {results.length > 0 && <TeamLineups teamId={id} season={season.year} seasonType={type} />}
 
+      <LineupExplorer teamId={id} season={season.year} type={type} />
+
       <PairHeatmap teamId={id} season={season.year} type={type} />
 
       {type === 2 && <PointsBySource teamId={id} season={season.year} />}
 
       <QuarterSplits teamId={id} season={season.year} type={type} />
+
+      {type === 2 && (
+        <div className="two-col">
+          <TeamStyleCard teamId={id} season={season.year} />
+          <WithWithoutCard teamId={id} season={season.year} />
+        </div>
+      )}
 
       {shots?.teams[id] && (
         <>

@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { seasonSnapshot } from '../api/espn';
+import { loadSnapshot } from '../api/snapshotStore';
+import { useAsync } from '../hooks/useAsync';
 import { AwardTimeline } from '../components/AwardTimeline';
+import { RookieLadder } from '../components/PlayerExtras';
 import { Empty } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
-import { ACTUAL, actualVotes, AWARDS, candidates, MIN_GAMES_SHARE, rankAward, type AwardId, type Ranked } from '../lib/awards';
+import { ACTUAL, actualVotes, awardOdds, AWARDS, candidates, MIN_GAMES_SHARE, rankAward, type AwardId, type Ranked } from '../lib/awards';
 import { nameKey } from '../lib/boxTotals';
 import { useSeason } from '../SeasonContext';
 
@@ -13,7 +16,7 @@ const SHOW = 15;
 const METHOD: Record<AwardId, string> = {
   mvp: 'Game Score per game (a one-number box-score rating), scaled down for missed games, plus team win % (30 × above .500), plus-minus per game (× 0.25) and on/off net rating (× 0.1). Needs 20+ minutes a game and the 65-game minimum (pro-rated during the season).',
   dpoy:
-    'Steals (× 2.2) and blocks (× 2.4) per game, defensive rebounds (× 0.3), how many fewer points per 48 the team allows with him on court (× 0.2), and the team’s defensive rating against the league (weighted by his minutes). A small deduction per point scored nudges it towards defensive specialists, as voters do. Needs 24+ minutes and the 65-game minimum.',
+    'Steals (× 2.2) and blocks (× 2.4) per game, defensive rebounds (× 0.3), how many fewer points per 48 the team allows with them on court (× 0.2), and the team’s defensive rating against the league (weighted by their minutes). A small deduction per point scored nudges it towards defensive specialists, as voters do. Needs 24+ minutes and the 65-game minimum.',
   roy: 'First-year players only. Game Score per game, scaled down for missed games, plus minutes per game (× 0.1) and a little for team record. Needs 12+ minutes a game.',
 };
 
@@ -34,6 +37,14 @@ export function Awards() {
   const best = eligible[0]?.score ?? 1;
   const games = model?.list.length ? Math.max(...model.list.map((c) => c.teamGames)) : 0;
   const done = snap?.complete !== false;
+  // Last season's model scores steady the odds early on.
+  const prevSnap = useAsync(() => (done ? Promise.resolve(undefined) : loadSnapshot(season.year - 1)), [season.year, done]).data;
+  const prior = useMemo(() => {
+    if (!prevSnap || award === 'roy') return undefined;
+    const prev = candidates(prevSnap);
+    return new Map(rankAward(award, prev.list, prev.leagueDrtg).map((r) => [r.c.id, r.score]));
+  }, [prevSnap, award]);
+  const odds = useMemo(() => (done ? undefined : awardOdds(ranked, award, prior)), [ranked, award, done, prior]);
 
   return (
     <section>
@@ -63,7 +74,7 @@ export function Awards() {
                       <th>STL</th>
                       <th>BLK</th>
                       <th className="hide-sm">DREB</th>
-                      <th title="Points per 48 the team allows with him off court minus on court">On/off D</th>
+                      <th title="Points per 48 the team allows with them off court minus on court">On/off D</th>
                     </>
                   ) : (
                     <>
@@ -75,16 +86,18 @@ export function Awards() {
                   )}
                   <th className="hide-sm">Team</th>
                   <th className="left">Model score</th>
+                  {odds && <th title="Chance of finishing first, from simulating the rest of the season">Win odds</th>}
                   {actual && <th title="Share of the maximum voting points, and finishing place">Real vote</th>}
                 </tr>
               </thead>
               <tbody>
                 {eligible.map((r, i) => (
-                  <Row key={r.c.id} r={r} rank={i + 1} best={best} award={award} team={teams.get(r.c.teamId)} actual={actual?.get(nameKey(r.c.name))} showActual={!!actual} />
+                  <Row key={r.c.id} r={r} rank={i + 1} best={best} award={award} team={teams.get(r.c.teamId)} actual={actual?.get(nameKey(r.c.name))} showActual={!!actual} odds={odds?.get(r.c.id) ?? (odds ? 0 : undefined)} />
                 ))}
               </tbody>
             </table>
           </div>
+          {odds && <p className="muted small">Win odds: each player's expected score blends this season with last season (leaning on this season more as games are played), then the rest of the season is simulated 4,000 times with random swings that shrink as fewer games are left. Players who can no longer reach the games minimum are out.</p>}
           {short.length > 0 && (
             <p className="muted small">
               Would rank higher but {done ? 'missed' : 'are behind'} the 65-game minimum ({Math.floor(MIN_GAMES_SHARE * games)} of {games} so far):{' '}
@@ -99,6 +112,7 @@ export function Awards() {
           )}
           {actual && <Missed season={season.year} award={award} shown={new Set(eligible.map((r) => nameKey(r.c.name)))} />}
           {snap && <AwardTimeline snap={snap} award={award} />}
+          {award === 'roy' && <RookieLadder season={season.year} />}
           <div className="card">
             <h3>How the model works</h3>
             <p className="small">{METHOD[award]}</p>
@@ -120,7 +134,7 @@ function Missed({ season, award, shown }: { season: number; award: AwardId; show
   return <p className="muted small">Real vote-getters outside the model's top {SHOW}: {missing.map((r) => `${r.name} (${r.rank}${['st', 'nd', 'rd'][r.rank - 1] ?? 'th'})`).join(', ')}.</p>;
 }
 
-function Row({ r, rank, best, award, team, actual, showActual }: { r: Ranked; rank: number; best: number; award: AwardId; team?: { id: string; name: string; shortName: string; abbr: string; logo?: string }; actual?: { share: number; rank: number }; showActual: boolean }) {
+function Row({ r, rank, best, award, team, actual, showActual, odds }: { r: Ranked; rank: number; best: number; award: AwardId; team?: { id: string; name: string; shortName: string; abbr: string; logo?: string }; actual?: { share: number; rank: number }; showActual: boolean; odds?: number }) {
   const c = r.c;
   const f1 = (v: number | undefined) => (v == null ? '–' : v.toFixed(1));
   const why = r.parts.filter((p) => Math.abs(p.value) >= 0.5).sort((a, b) => b.value - a.value).map((p) => `${p.label} ${p.value > 0 ? '+' : ''}${p.value.toFixed(1)}`).join(' · ');
@@ -158,6 +172,7 @@ function Row({ r, rank, best, award, team, actual, showActual }: { r: Ranked; ra
         <span className="pbar-track"><span className="pbar-fill" style={{ width: `${Math.max(0, r.score / best) * 100}%`, background: 'var(--series-1)' }} /></span>
         <b>{r.score.toFixed(1)}</b>
       </td>
+      {odds != null && <td className={odds >= 0.2 ? 'strong' : odds < 0.01 ? 'muted' : undefined}>{odds < 0.01 ? '<1%' : `${Math.round(odds * 100)}%`}</td>}
       {showActual && <td>{actual ? `${Math.round(actual.share * 100)}% · #${actual.rank}` : <span className="muted">–</span>}</td>}
     </tr>
   );

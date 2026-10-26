@@ -141,7 +141,7 @@ function periodEnd(period: number): number {
 
 /** Season totals across games, for one team. */
 export interface TeamLineupSeason {
-  /** [ids, seconds, points for, points against], most-used first. */
+  /** [ids, seconds, points for, points against], most-used first (lineups with 2+ minutes). */
   lineups: [string[], number, number, number][];
   /** [id, onSec, onPF, onPA, gameSec, gamePF, gamePA] over games the player played. */
   onOff: [string, number, number, number, number, number, number][];
@@ -197,11 +197,13 @@ export class LineupAccumulator {
     }
   }
 
-  result(topLineups = 20): Record<string, TeamLineupSeason> {
+  /** Lineups with 2+ minutes (most-used first, up to `topLineups`), so any combination can be summed from them. */
+  result(topLineups = 250): Record<string, TeamLineupSeason> {
     const out: Record<string, TeamLineupSeason> = {};
     for (const team of new Set([...this.lineups.keys(), ...this.on.keys()])) {
       const lus = [...(this.lineups.get(team) ?? new Map<string, Tally>())]
         .sort((a, b) => b[1].sec - a[1].sec)
+        .filter(([, t], i) => i < 20 || t.sec >= 120)
         .slice(0, topLineups)
         .map(([k, t]) => [k.split(','), Math.round(t.sec), t.pf, t.pa] as [string[], number, number, number]);
       const onOff = [...(this.on.get(team) ?? new Map())]

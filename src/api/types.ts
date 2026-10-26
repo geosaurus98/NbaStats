@@ -105,6 +105,8 @@ export interface PlayerProfile {
   weight?: string;
   age?: number;
   team?: TeamRef;
+  /** Draft year, round and overall pick (undefined = undrafted or unknown). */
+  draft?: { year: number; round: number; pick: number };
 }
 
 export type LogSeasonType = 'regular' | 'playoffs';
@@ -186,6 +188,8 @@ export interface FeedItem {
   home: number;
   away: number;
   scoring: boolean;
+  /** Home win probability (0-1) after this play, when ESPN provides it. */
+  wp?: number;
 }
 
 export interface PlayByPlay {

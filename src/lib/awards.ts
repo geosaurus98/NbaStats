@@ -173,3 +173,50 @@ export function actualVotes(season: number, award: AwardId): Map<string, { share
   const rows = ACTUAL[season]?.[award];
   return rows && new Map(rows.map(([name, share], i) => [nameKey(name), { share, rank: i + 1 }]));
 }
+
+/**
+ * Chance each candidate finishes first. Each player's expected final score
+ * blends this season's score with last season's (`prior`), leaning on this
+ * season more as games are played; the rest of the season is then simulated
+ * by adding random noise that shrinks as fewer games are left. Players who
+ * can't reach the games minimum any more are left out.
+ */
+export function awardOdds(ranked: Ranked[], award: AwardId, prior?: Map<string, number>, totalGames = 82, sims = 4000): Map<string, number> {
+  // This season's top 40, plus last season's top 15 wherever they are now.
+  const priorTop = new Set([...(prior ?? [])].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([id]) => id));
+  const pool = [...ranked].sort((a, b) => b.score - a.score).filter((r, i) => i < 40 || priorTop.has(r.c.id));
+  if (!pool.length) return new Map();
+  const played = Math.max(...pool.map((r) => r.c.teamGames));
+  const left = Math.max(0, totalGames - played) / totalGames;
+  const possible = pool.filter((r) => award === 'roy' || r.c.gp + (r.c.teamGames ? (totalGames - r.c.teamGames) * 0.9 : 0) >= Math.floor(MIN_GAMES_SHARE * totalGames));
+  if (!possible.length) return new Map();
+  if (left === 0) return new Map([[[...possible].sort((a, b) => b.score - a.score)[0].c.id, 1]]);
+  const top = [...possible].sort((a, b) => b.score - a.score).slice(0, 10).map((r) => r.score);
+  const mean = top.reduce((a, b) => a + b, 0) / top.length;
+  const spread = Math.sqrt(top.reduce((a, b) => a + (b - mean) ** 2, 0) / top.length) || 1;
+  // Players with no score last season start from a modest baseline.
+  const baseline = [...possible].sort((a, b) => b.score - a.score)[Math.min(possible.length - 1, 19)].score;
+  const priorValues = [...(prior?.values() ?? [])].sort((a, b) => b - a);
+  const priorBase = priorValues[19] ?? baseline;
+  const done = 1 - left;
+  const expected = possible.map((r) => {
+    const p = prior?.get(r.c.id);
+    return { id: r.c.id, mean: prior ? done * r.score + (1 - done) * (p ?? priorBase) : r.score };
+  });
+  const sd = spread * (0.3 + 1.5 * Math.sqrt(left));
+  // A fixed-seed generator keeps the odds stable between page loads.
+  let seed = 12345;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const normal = () => Math.sqrt(-2 * Math.log(rand() || 1e-9)) * Math.cos(2 * Math.PI * rand());
+  const wins = new Map<string, number>();
+  for (let s = 0; s < sims; s++) {
+    let best = -Infinity;
+    let who = '';
+    for (const e of expected) {
+      const v = e.mean + sd * normal();
+      if (v > best) [best, who] = [v, e.id];
+    }
+    wins.set(who, (wins.get(who) ?? 0) + 1);
+  }
+  return new Map([...wins].map(([id, n]) => [id, n / sims]));
+}

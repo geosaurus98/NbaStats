@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { fetchLeaders, type SeasonType } from '../api/espn';
 import { MilestoneWatch } from '../components/MilestoneWatch';
 import { AdvancedLeaders, BuildYourOwn, OnOffLeaders, ShotQuality } from '../components/PlayerAnalytics';
+import { StreaksView, WpaLeaders } from '../components/PlayerExtras';
 import { SeasonHighs } from '../components/SeasonHighs';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 import { Empty, ErrorBox, Loading } from '../components/Status';
@@ -22,8 +23,8 @@ export function Leaders() {
   const { season } = useSeason();
   const [type, setType] = useState<SeasonType>(2);
   const [params, setParams] = useSearchParams();
-  const tab = (['highs', 'milestones', 'advanced', 'build', 'onoff', 'quality'] as const).find((t) => t === params.get('tab')) ?? 'averages';
-  const regularOnly = tab === 'milestones' || tab === 'advanced' || tab === 'build';
+  const tab = (['highs', 'milestones', 'advanced', 'build', 'onoff', 'quality', 'wpa', 'streaks'] as const).find((t) => t === params.get('tab')) ?? 'averages';
+  const regularOnly = tab === 'milestones' || tab === 'advanced' || tab === 'build' || tab === 'streaks';
   const setTab = (t: string) => setParams(t === 'averages' ? {} : { tab: t }, { replace: true });
 
   return (
@@ -40,6 +41,8 @@ export function Leaders() {
         <button className={tab === 'build' ? 'active' : ''} onClick={() => setTab('build')}>Build your own</button>
         <button className={tab === 'onoff' ? 'active' : ''} onClick={() => setTab('onoff')}>On/off</button>
         <button className={tab === 'quality' ? 'active' : ''} onClick={() => setTab('quality')}>Shot quality</button>
+        <button className={tab === 'wpa' ? 'active' : ''} onClick={() => setTab('wpa')}>Win prob. added</button>
+        <button className={tab === 'streaks' ? 'active' : ''} onClick={() => setTab('streaks')}>Streaks</button>
       </div>
       {tab === 'averages' && <Averages season={season.year} type={type} />}
       {tab === 'highs' && <SeasonHighs season={season.year} seasonType={type} />}
@@ -48,6 +51,8 @@ export function Leaders() {
       {tab === 'build' && <BuildYourOwn season={season.year} />}
       {tab === 'onoff' && <OnOffLeaders season={season.year} type={type} />}
       {tab === 'quality' && <ShotQuality season={season.year} type={type} />}
+      {tab === 'wpa' && <WpaLeaders season={season.year} type={type} />}
+      {tab === 'streaks' && <StreaksView season={season.year} />}
     </section>
   );
 }
