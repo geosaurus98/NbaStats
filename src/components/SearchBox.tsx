@@ -39,6 +39,7 @@ const PAGES = [
   { label: 'Awards race (MVP, DPOY, ROY)', to: '/awards', words: 'awards race mvp dpoy roy rookie defensive ladder model' },
   { label: 'Milestone watch', to: '/leaders?tab=milestones', words: 'milestones career records passing all time watch' },
   { label: 'Shooting zones', to: '/insights?tab=zones', words: 'shooting zones corner three mid range rim' },
+  { label: 'Salaries & payrolls', to: '/salaries', words: 'salaries salary payroll cap tax apron contracts money' },
   { label: 'Team rankings', to: '/rankings', words: 'rankings team stats strength schedule sos' },
   { label: 'Head-to-head', to: '/h2h', words: 'h2h head to head compare teams' },
   { label: 'Compare players', to: '/compare', words: 'compare players side by side' },

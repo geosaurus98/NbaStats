@@ -210,3 +210,17 @@ export interface Injury {
   /** Expected return, when ESPN gives one (ISO date). */
   returnDate?: string;
 }
+
+/** One rostered player's contract, from a team's roster. */
+export interface RosterContract {
+  athleteId: string;
+  name: string;
+  position?: string;
+  age?: number;
+  /** This season's salary in dollars (undefined if ESPN lists no contract). */
+  salary?: number;
+  /** Seasons left on the deal, counting this one. */
+  yearsRemaining?: number;
+  /** [seasonEndYear, salary] for every season ESPN has, newest first. */
+  history: [number, number][];
+}

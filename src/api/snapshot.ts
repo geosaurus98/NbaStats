@@ -3,6 +3,7 @@
 // limits). A full season of games fits in ~100 KB instead of ~45 MB of raw
 // team schedules.
 import type { SeasonHighsResult } from './live';
+import type { PayrollPlayer } from '../lib/brefContracts';
 import type { Injury } from './types';
 import type { BoxTotals } from '../lib/boxTotals';
 import type { ClutchTotals } from '../lib/clutch';
@@ -44,6 +45,10 @@ export interface SeasonSnapshot {
   nightly?: { day: string; best: NightBest[] }[];
   /** Season in progress: the league injury report when the snapshot was taken. */
   injuries?: Injury[];
+  /** Season in progress: every team's payroll (Basketball-Reference), by ESPN team id. */
+  payroll?: Record<string, PayrollPlayer[]>;
+  /** Season in progress: [season, salary] by ESPN athlete id, newest first (ESPN contracts). */
+  salaryHistory?: Record<string, [number, number][]>;
 }
 
 export function compactGame(g: Game): CompactGame {

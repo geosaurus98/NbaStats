@@ -16,6 +16,7 @@ import { Player } from './pages/Player';
 import { Playoffs } from './pages/Playoffs';
 import { Projections } from './pages/Projections';
 import { Rankings } from './pages/Rankings';
+import { Salaries } from './pages/Salaries';
 import { Scores } from './pages/Scores';
 import { Standings } from './pages/Standings';
 import { Team } from './pages/Team';
@@ -32,7 +33,7 @@ import { useSeason } from './SeasonContext';
 const NAV: [string, string][][] = [
   [['/', 'Home'], ['/scores', 'Scores'], ['/standings', 'Standings'], ['/playoffs', 'Playoffs'], ['/projections', 'Projections']],
   [['/leaders', 'Leaders'], ['/awards', 'Awards'], ['/rankings', 'Rankings'], ['/insights', 'Insights']],
-  [['/teams', 'Teams'], ['/h2h', 'H2H'], ['/compare', 'Compare']],
+  [['/teams', 'Teams'], ['/salaries', 'Salaries'], ['/h2h', 'H2H'], ['/compare', 'Compare']],
   [['/history', 'History'], ['/degrees', '6 Degrees'], ['/games', 'Games']],
 ];
 
@@ -99,6 +100,7 @@ export function App() {
           <Route path="/games" element={<Games />} />
           <Route path="/player/:id" element={<Player />} />
           <Route path="/teams" element={<Teams />} />
+          <Route path="/salaries" element={<Salaries />} />
           <Route path="/team/:id" element={<Team />} />
           <Route path="/game/:id" element={<Game />} />
         </Routes>

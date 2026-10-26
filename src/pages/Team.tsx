@@ -13,6 +13,7 @@ import { Tile } from '../components/Tile';
 import { useAsync } from '../hooks/useAsync';
 import { SeasonPace } from '../components/SeasonPace';
 import { InjuryList } from '../components/TeamBits';
+import { TeamPayroll } from '../components/TeamPayroll';
 import { DEFAULT_SEASON } from '../lib/seasons';
 import { formatShortDate, formatTime, parseISODate, toISODate } from '../lib/dates';
 import { downloadFile, gamesToICS } from '../lib/ics';
@@ -88,6 +89,8 @@ export function Team() {
       {results.length > 1 && <TeamCharts id={id} results={results} onSelect={(g) => navigate(`/game/${g.id}`)} />}
 
       {type === 2 && results.length > 0 && <SeasonPace teamId={id} season={season.year} />}
+
+      {season.year === DEFAULT_SEASON && <TeamPayroll teamId={id} />}
 
       {season.year === DEFAULT_SEASON && (
         <div className="card">
