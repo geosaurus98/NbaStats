@@ -4,6 +4,8 @@ import type { Conference } from '../api/types';
 import { useFavourite } from '../FavouriteContext';
 import { useAsync } from '../hooks/useAsync';
 import { raceSeries } from '../lib/league';
+import { formatShortDate } from '../lib/dates';
+import { rankHistory } from '../lib/standingsHistory';
 import { LineChart } from './Charts';
 import { ErrorBox, Loading } from './Status';
 
@@ -17,6 +19,7 @@ export function RaceChart({ season, conferences }: { season: number; conferences
   const conf = conferences.find((c) => c.name === confName) ?? conferences[0];
   // Fixed slots so a team keeps its colour when others are toggled.
   const [slots, setSlots] = useState<(string | null)[]>([]);
+  const [mode, setMode] = useState<'race' | 'rank'>('race');
   const league = useAsync(() => fetchLeagueGames(season, 2), [season]);
 
   useEffect(() => {
@@ -39,12 +42,14 @@ export function RaceChart({ season, conferences }: { season: number; conferences
   };
 
   const games = league.data?.games ?? [];
+  const history = mode === 'rank' ? rankHistory(games, conferences.map((c) => c.rows.map((r) => r.team.id)), conferences.flatMap((c) => c.rows.map((r) => r.team))) : undefined;
   const series = conf.rows.map((r) => {
     const slot = slots.indexOf(r.team.id);
     return {
       id: r.team.id,
       label: r.team.shortName,
-      values: raceSeries(games, r.team.id),
+      // Ranks are drawn negative so first place sits at the top.
+      values: history ? (history.ranks.get(r.team.id) ?? []).map((x) => -x) : raceSeries(games, r.team.id),
       color: slot >= 0 ? SLOT_COLORS[slot] : undefined,
     };
   });
@@ -55,7 +60,11 @@ export function RaceChart({ season, conferences }: { season: number; conferences
   return (
     <div className="card">
       <div className="page-head">
-        <h2>The race: games above .500</h2>
+        <h2>{mode === 'race' ? 'The race: games above .500' : 'Standings over time'}</h2>
+        <div className="segmented">
+          <button className={mode === 'race' ? 'active' : ''} onClick={() => setMode('race')}>Above .500</button>
+          <button className={mode === 'rank' ? 'active' : ''} onClick={() => setMode('rank')}>Seed by week</button>
+        </div>
         <div className="segmented">
           {conferences.map((c) => (
             <button key={c.name} className={c.name === conf.name ? 'active' : ''} onClick={() => setConfName(c.name)}>
@@ -83,7 +92,18 @@ export function RaceChart({ season, conferences }: { season: number; conferences
       </div>
       {league.loading && <Loading label="Loading every team's games…" />}
       {league.error && <ErrorBox error={league.error} />}
-      {games.length > 0 && (
+      {history && history.weeks.length > 0 && (
+        <LineChart
+          ariaLabel={`${conf.name} teams' conference rank at the end of each week`}
+          series={ordered}
+          height={340}
+          xLabel={(i) => `Week ending ${formatShortDate(`${history.weeks[i]}T12:00:00Z`)}`}
+          xTick={(i) => formatShortDate(`${history.weeks[i]}T12:00:00Z`)}
+          yFormat={(v) => `#${-v}`}
+          yDomain={[-conf.rows.length, -1]}
+        />
+      )}
+      {!history && games.length > 0 && (
         <LineChart
           ariaLabel={`${conf.name} teams' wins minus losses by game number`}
           series={ordered}

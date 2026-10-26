@@ -36,6 +36,7 @@ export function ScatterPlot({
   xFormat = (v) => String(v),
   yFormat = (v) => String(v),
   guides,
+  diagonal = false,
   height = 380,
   ariaLabel,
   onPick,
@@ -47,6 +48,8 @@ export function ScatterPlot({
   yFormat?: (v: number) => string;
   /** Average lines, e.g. the league mean on each axis. */
   guides?: { x?: number; y?: number };
+  /** A dashed y = x line (e.g. actual vs expected). */
+  diagonal?: boolean;
   height?: number;
   ariaLabel: string;
   onPick?: (p: ScatterPoint) => void;
@@ -78,6 +81,11 @@ export function ScatterPlot({
         ))}
         {guides?.x != null && <line x1={sx(guides.x)} x2={sx(guides.x)} y1={PAD.top} y2={height - PAD.bottom} className="guide" />}
         {guides?.y != null && <line x1={PAD.left} x2={width - PAD.right} y1={sy(guides.y)} y2={sy(guides.y)} className="guide" />}
+        {diagonal && (() => {
+          const lo = Math.max(x0, y0);
+          const hi = Math.min(x1, y1);
+          return hi > lo ? <line x1={sx(lo)} y1={sy(lo)} x2={sx(hi)} y2={sy(hi)} className="guide" /> : null;
+        })()}
         <text x={(PAD.left + width - PAD.right) / 2} y={height - 6} textAnchor="middle" className="axis-label">{xLabel}</text>
         <text x={12} y={(PAD.top + height - PAD.bottom) / 2} textAnchor="middle" className="axis-label" transform={`rotate(-90 12 ${(PAD.top + height - PAD.bottom) / 2})`}>{yLabel}</text>
         {order.map((p) => (

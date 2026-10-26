@@ -7,6 +7,7 @@ import { AssistNetwork } from '../components/AssistNetwork';
 import { GameFlow, ShotChart } from '../components/GameCharts';
 import { PlayFeed } from '../components/PlayFeed';
 import { GamePreview } from '../components/TeamBits';
+import { GameFactors } from '../components/TeamAnalytics';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
@@ -86,6 +87,8 @@ export function Game() {
       {teams.length === 2 && teams[0].teamStats.length > 0 && <TeamComparison a={teams[0]} b={teams[1]} />}
 
       <GameFlow game={game} pbp={pbp} />
+
+      {game.state === 'post' && <GameFactors season={seasonOf(game.date)} gameId={game.id} />}
 
       {Object.keys(assists).length > 0 && (
         <>

@@ -11,6 +11,8 @@ import { FRANCHISES } from '../src/lib/franchises';
 import { BoxAccumulator, lineValues, nameKey, type GameLines, type SeasonLines } from '../src/lib/boxTotals';
 import { ClutchAccumulator } from '../src/lib/clutch';
 import { ShotSplitAccumulator } from '../src/lib/shotTypes';
+import { GarbageAccumulator } from '../src/lib/garbageTime';
+import { QuarterAccumulator } from '../src/lib/quarters';
 import { nightlyBest } from '../src/lib/gameLines';
 import { countsInStandings } from '../src/lib/league';
 import { gameLineups, LineupAccumulator, type GameInput } from '../src/lib/lineups';
@@ -33,6 +35,8 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
   const box = new BoxAccumulator();
   const clutch = new ClutchAccumulator();
   const shotSplits = new ShotSplitAccumulator();
+  const garbage = new GarbageAccumulator();
+  const quarters = new QuarterAccumulator();
   const teamStatSums = new Map<string, { gp: number; sums: Record<string, number> }>();
   const lines = new Map<string, { home: boolean; starter: boolean; id: string; v: number[] }[]>();
   let failed = 0;
@@ -62,6 +66,8 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
       awayScore: s.game.away.score ?? 0,
     });
     for (const t of s.teams) for (const p of t.players) if (p.id && p.name) fullNames[p.id] = p.name;
+    quarters.add(s.game.home.team.id, s.game.home.linescores, s.game.away.linescores);
+    quarters.add(s.game.away.team.id, s.game.away.linescores, s.game.home.linescores);
     // Team box-score extras ESPN reports per game (points in the paint, fast break points…): sum the plain numbers.
     for (const t of s.teams) {
       const row = teamStatSums.get(t.team.id) ?? { gp: 0, sums: {} };
@@ -76,7 +82,11 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
       awayId: s.game.away.team.id,
       feed: s.pbp.feed,
     };
-    if (Object.values(input.starters).every((ids) => ids.length === 5)) lineups.add(input, gameLineups(input));
+    if (Object.values(input.starters).every((ids) => ids.length === 5)) {
+      const r = gameLineups(input);
+      lineups.add(input, r);
+      garbage.add(input.feed, input.teamOf, r);
+    }
     events.push(...s.pbp.assists);
     const d = gameDrama(id, s.pbp);
     if (d) drama.push(d);
@@ -101,7 +111,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     players: Object.fromEntries(top.map(([id, p]) => [id, { name: names[id] ?? id, team: p.team, attempts: p.bins.attempts, bins: p.bins.rows() }])),
   };
   console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
-  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums) };
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums), garbage: garbage.result(), quarters: quarters.result() };
 }
 
 const SORTS = [
@@ -149,6 +159,11 @@ async function build(year: number): Promise<SeasonSnapshot> {
     snap.shotSplits[type] = pbp.shotSplits;
     snap.teamStatSums ??= {};
     snap.teamStatSums[type] = pbp.teamStatSums;
+    snap.garbage ??= {};
+    snap.garbage[type] = pbp.garbage;
+    snap.quarters ??= {};
+    snap.quarters[type] = pbp.quarters;
+    console.log(`  garbage time: ${pbp.garbage.teams.length} teams, ${pbp.garbage.players.length} players; quarters: ${Object.keys(pbp.quarters).length} teams`);
     console.log(`  shot splits: ${Object.keys(pbp.shotSplits.players).length} players; team stat labels: ${Object.keys(Object.values(pbp.teamStatSums)[0]?.sums ?? {}).join(', ')}`);
     for (const g of games) {
       const ls = pbp.lines.get(g.id);
