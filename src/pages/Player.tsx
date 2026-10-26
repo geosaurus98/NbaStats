@@ -5,6 +5,8 @@ import type { LogSeasonType } from '../api/types';
 import { LineChart } from '../components/Charts';
 import { PassingPartners } from '../components/PassingPartners';
 import { PlayerCard } from '../components/PlayerCard';
+import { PlayerTimeline } from '../components/MoreGraphs';
+import { PlayerShotTypes } from '../components/ShotGraphs';
 import { SalaryHistory } from '../components/TeamPayroll';
 import { SeasonShotMap } from '../components/SeasonShotMap';
 import { Empty, ErrorBox, Loading } from '../components/Status';
@@ -88,6 +90,10 @@ export function Player() {
       {type === 'regular' && (p?.name || snapshotName) && (
         <PlayerCard playerId={id} name={p?.name ?? snapshotName!} team={p?.team?.abbr} season={season.year} seasonLabel={season.label} />
       )}
+
+      {type === 'regular' && <PlayerTimeline playerId={id} season={season.year} />}
+
+      <PlayerShotTypes playerId={id} season={season.year} type={type === 'playoffs' ? 3 : 2} />
 
       <SalaryHistory playerId={id} />
 

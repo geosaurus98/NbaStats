@@ -6,6 +6,8 @@ import { useWidth } from '../components/Charts';
 import { Clutch, Combos, HotCold, PlayerOfTheNight, ScheduleAheadTab } from '../components/InsightsMore';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 import { ShootingZones } from '../components/ShootingZones';
+import { TeamStyles, UsageEfficiency } from '../components/MoreGraphs';
+import { PointsBySource, ShotTypeLeaders } from '../components/ShotGraphs';
 import { Empty } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { formatShortDate } from '../lib/dates';
@@ -20,11 +22,15 @@ const TABS = [
   { id: 'combos', label: 'Duos & trios' },
   { id: 'duos', label: 'Passing duos' },
   { id: 'zones', label: 'Shooting zones' },
+  { id: 'shots', label: 'Shot types' },
+  { id: 'sources', label: 'Points by source' },
+  { id: 'usage', label: 'Usage vs efficiency' },
+  { id: 'styles', label: 'Team styles' },
   { id: 'schedule', label: 'Schedule ahead' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 /** Tabs that only cover the regular season. */
-const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'schedule']);
+const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'schedule', 'usage', 'styles', 'sources']);
 
 export function Insights() {
   const { season } = useSeason();
@@ -47,6 +53,10 @@ export function Insights() {
       {!hasData && tab !== 'schedule' && <Empty>These are built from every game's play-by-play once a season is finished. Pick 2025-26 or 2024-25.</Empty>}
       {hasData && tab === 'drama' && <Drama season={season.year} type={type} />}
       {hasData && tab === 'duos' && <Duos season={season.year} type={type} />}
+      {hasData && tab === 'shots' && <ShotTypeLeaders season={season.year} type={type} />}
+      {hasData && tab === 'sources' && <PointsBySource season={season.year} />}
+      {hasData && tab === 'usage' && <UsageEfficiency season={season.year} />}
+      {hasData && tab === 'styles' && <TeamStyles season={season.year} />}
       {hasData && tab === 'zones' && <ShootingZones season={season.year} type={type} />}
       {hasData && tab === 'night' && <PlayerOfTheNight season={season.year} />}
       {hasData && tab === 'hot' && <HotCold season={season.year} />}

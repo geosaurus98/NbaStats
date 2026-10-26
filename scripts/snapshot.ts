@@ -10,6 +10,7 @@ import { parseBrefContracts, type PayrollPlayer } from '../src/lib/brefContracts
 import { FRANCHISES } from '../src/lib/franchises';
 import { BoxAccumulator, lineValues, nameKey, type GameLines, type SeasonLines } from '../src/lib/boxTotals';
 import { ClutchAccumulator } from '../src/lib/clutch';
+import { ShotSplitAccumulator } from '../src/lib/shotTypes';
 import { nightlyBest } from '../src/lib/gameLines';
 import { countsInStandings } from '../src/lib/league';
 import { gameLineups, LineupAccumulator, type GameInput } from '../src/lib/lineups';
@@ -31,6 +32,8 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
   const lineups = new LineupAccumulator();
   const box = new BoxAccumulator();
   const clutch = new ClutchAccumulator();
+  const shotSplits = new ShotSplitAccumulator();
+  const teamStatSums = new Map<string, { gp: number; sums: Record<string, number> }>();
   const lines = new Map<string, { home: boolean; starter: boolean; id: string; v: number[] }[]>();
   let failed = 0;
   await live.mapLimit(gameIds, 8, async (id) => {
@@ -59,6 +62,13 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
       awayScore: s.game.away.score ?? 0,
     });
     for (const t of s.teams) for (const p of t.players) if (p.id && p.name) fullNames[p.id] = p.name;
+    // Team box-score extras ESPN reports per game (points in the paint, fast break points…): sum the plain numbers.
+    for (const t of s.teams) {
+      const row = teamStatSums.get(t.team.id) ?? { gp: 0, sums: {} };
+      row.gp++;
+      for (const { label, value } of t.teamStats) if (/^-?\d+(\.\d+)?$/.test(value)) row.sums[label] = (row.sums[label] ?? 0) + Number(value);
+      teamStatSums.set(t.team.id, row);
+    }
     const input: GameInput = {
       starters: Object.fromEntries(s.teams.map((t) => [t.team.id, t.players.filter((p) => p.starter).map((p) => p.id)])),
       teamOf: Object.fromEntries(s.teams.flatMap((t) => t.players.map((p) => [p.id, t.team.id]))),
@@ -72,6 +82,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     if (d) drama.push(d);
     for (const shot of s.pbp.shots) {
       league.add(shot);
+      shotSplits.add(shot);
       if (!teams.has(shot.teamId)) teams.set(shot.teamId, new BinCounter(TEAM_BIN_FT));
       teams.get(shot.teamId)!.add(shot);
       if (!shot.athleteId) continue;
@@ -90,7 +101,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     players: Object.fromEntries(top.map(([id, p]) => [id, { name: names[id] ?? id, team: p.team, attempts: p.bins.attempts, bins: p.bins.rows() }])),
   };
   console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
-  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines };
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums) };
 }
 
 const SORTS = [
@@ -134,6 +145,11 @@ async function build(year: number): Promise<SeasonSnapshot> {
     Object.assign(snap.players!, pbp.fullNames);
     snap.clutch ??= {};
     snap.clutch[type] = pbp.clutch;
+    snap.shotSplits ??= {};
+    snap.shotSplits[type] = pbp.shotSplits;
+    snap.teamStatSums ??= {};
+    snap.teamStatSums[type] = pbp.teamStatSums;
+    console.log(`  shot splits: ${Object.keys(pbp.shotSplits.players).length} players; team stat labels: ${Object.keys(Object.values(pbp.teamStatSums)[0]?.sums ?? {}).join(', ')}`);
     for (const g of games) {
       const ls = pbp.lines.get(g.id);
       if (!ls) continue;

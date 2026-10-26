@@ -115,7 +115,7 @@ export interface TeamLineupSeason {
   lineups: [string[], number, number, number][];
   /** [id, onSec, onPF, onPA, gameSec, gamePF, gamePA] over games the player played. */
   onOff: [string, number, number, number, number, number, number][];
-  /** Two- and three-man combinations, same shape as lineups (most-used first, 100+ / 60+ minutes). */
+  /** Two- and three-man combinations, same shape as lineups (most-used first; the 120 most-used pairs, trios with 60+ minutes). */
   pairs?: [string[], number, number, number][];
   trios?: [string[], number, number, number][];
 }
@@ -178,7 +178,7 @@ export class LineupAccumulator {
         .map(([id, { on, game }]) => [id, Math.round(on.sec), on.pf, on.pa, Math.round(game.sec), game.pf, game.pa] as TeamLineupSeason['onOff'][number])
         .sort((a, b) => b[1] - a[1]);
       const all = this.lineups.get(team) ?? new Map<string, Tally>();
-      out[team] = { lineups: lus, onOff, pairs: combos(all, 2, 6000, 40), trios: combos(all, 3, 3600, 40) };
+      out[team] = { lineups: lus, onOff, pairs: combos(all, 2, 0, 120), trios: combos(all, 3, 3600, 40) };
     }
     return out;
   }

@@ -12,6 +12,8 @@ import { TeamLineups } from '../components/TeamLineups';
 import { Tile } from '../components/Tile';
 import { useAsync } from '../hooks/useAsync';
 import { SeasonPace } from '../components/SeasonPace';
+import { EloHistory } from '../components/MoreGraphs';
+import { PairHeatmap, PointsBySource } from '../components/ShotGraphs';
 import { InjuryList } from '../components/TeamBits';
 import { TeamPayroll } from '../components/TeamPayroll';
 import { DEFAULT_SEASON } from '../lib/seasons';
@@ -90,6 +92,8 @@ export function Team() {
 
       {type === 2 && results.length > 0 && <SeasonPace teamId={id} season={season.year} />}
 
+      {type === 2 && results.length > 0 && <EloHistory teamId={id} season={season.year} />}
+
       {season.year === DEFAULT_SEASON && <TeamPayroll teamId={id} />}
 
       {season.year === DEFAULT_SEASON && (
@@ -102,6 +106,10 @@ export function Team() {
       {results.length > 0 && <TeamAssists teamId={id} season={season.year} seasonType={type} />}
 
       {results.length > 0 && <TeamLineups teamId={id} season={season.year} seasonType={type} />}
+
+      <PairHeatmap teamId={id} season={season.year} type={type} />
+
+      {type === 2 && <PointsBySource teamId={id} season={season.year} />}
 
       {shots?.teams[id] && (
         <>
