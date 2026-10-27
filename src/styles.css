@@ -711,3 +711,23 @@ td.strong { font-weight: 700; }
 .arch-row .stack-track { height: 12px; }
 .arch-row .dim { opacity: .35; }
 .table-wrap > p { padding: 0 .8rem; }
+
+/* Season calendar: one sequential blue ramp, faint steps recede toward the surface. */
+:root { --seq-1: #cde2fb; --seq-2: #9ec5f4; --seq-3: #5598e7; --seq-4: #2a78d6; --seq-5: #184f95; }
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) { --seq-1: #1c3a5e; --seq-2: #1c5cab; --seq-3: #2a78d6; --seq-4: #5598e7; --seq-5: #9ec5f4; }
+}
+:root[data-theme="dark"] { --seq-1: #1c3a5e; --seq-2: #1c5cab; --seq-3: #2a78d6; --seq-4: #5598e7; --seq-5: #9ec5f4; }
+.calendar-scroll { overflow-x: auto; }
+.cal-empty { fill: var(--border); opacity: .35; }
+.cal-day.seq-1, .key-sq.seq-1 { fill: var(--seq-1); background: var(--seq-1); }
+.cal-day.seq-2, .key-sq.seq-2 { fill: var(--seq-2); background: var(--seq-2); }
+.cal-day.seq-3, .key-sq.seq-3 { fill: var(--seq-3); background: var(--seq-3); }
+.cal-day.seq-4, .key-sq.seq-4 { fill: var(--seq-4); background: var(--seq-4); }
+.cal-day.seq-5, .key-sq.seq-5 { fill: var(--seq-5); background: var(--seq-5); }
+.cal-missed { fill: var(--surface); stroke: var(--muted); stroke-width: 1; }
+.cal-x { font-size: 11px; fill: var(--muted); pointer-events: none; }
+.cal-playoffs { stroke: var(--text); stroke-width: 1.5; }
+.cal-hover { stroke: var(--text); stroke-width: 2; }
+.cal-detail { min-height: 1.4em; }
+.cal-missed-key { border: 1px solid var(--muted); background: var(--surface); color: var(--muted); font-size: 9px; line-height: .7rem; text-align: center; font-style: normal; }

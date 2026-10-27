@@ -45,6 +45,7 @@ const PAGES = [
   { label: 'Rest & travel', to: '/rankings?tab=rest', words: 'rest back to back b2b travel miles time zones road trip fatigue' },
   { label: 'Win probability added', to: '/leaders?tab=wpa', words: 'wpa win probability added clutch impact' },
   { label: 'Streaks', to: '/leaders?tab=streaks', words: 'streak consecutive games 20 points double double' },
+  { label: 'Hot hand test', to: '/insights?tab=hothand', words: 'hot hand streak shooting after make miss heat check' },
   { label: 'Player archetypes', to: '/insights?tab=archetypes', words: 'archetype role style shooter slasher rim protector playmaker' },
   { label: 'Four factors', to: '/rankings?tab=factors', words: 'four factors efg turnover rebound free throw rate offence defence net rating dean oliver' },
   { label: 'Luck meter (expected wins)', to: '/rankings?tab=luck', words: 'luck pythagorean expected wins close games opponent shooting' },
