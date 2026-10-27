@@ -9,6 +9,7 @@ import { PlayerTimeline } from '../components/MoreGraphs';
 import { PlayerShotTypes } from '../components/ShotGraphs';
 import { AgingCurve } from '../components/PlayerAnalytics';
 import { SeasonVsLast } from '../components/PlayerExtras';
+import { GameCalendar } from '../components/GameCalendar';
 import { SalaryHistory } from '../components/TeamPayroll';
 import { SeasonShotMap } from '../components/SeasonShotMap';
 import { Empty, ErrorBox, Loading } from '../components/Status';
@@ -94,6 +95,8 @@ export function Player() {
       )}
 
       {type === 'regular' && <PlayerTimeline playerId={id} season={season.year} />}
+
+      <GameCalendar playerId={id} season={season.year} />
 
       <PlayerShotTypes playerId={id} season={season.year} type={type === 'playoffs' ? 3 : 2} />
 

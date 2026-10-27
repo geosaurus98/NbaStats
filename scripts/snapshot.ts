@@ -14,6 +14,7 @@ import { ShotSplitAccumulator } from '../src/lib/shotTypes';
 import { GarbageAccumulator } from '../src/lib/garbageTime';
 import { QuarterAccumulator } from '../src/lib/quarters';
 import { RunAccumulator } from '../src/lib/runs';
+import { HotHandAccumulator } from '../src/lib/hotHand';
 import { WpaAccumulator } from '../src/lib/wpa';
 import { nightlyBest } from '../src/lib/gameLines';
 import { countsInStandings } from '../src/lib/league';
@@ -41,6 +42,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
   const quarters = new QuarterAccumulator();
   const wpa = new WpaAccumulator();
   const runs = new RunAccumulator();
+  const hotHand = new HotHandAccumulator();
   const teamStatSums = new Map<string, { gp: number; sums: Record<string, number> }>();
   const lines = new Map<string, { home: boolean; starter: boolean; id: string; v: number[] }[]>();
   let failed = 0;
@@ -96,6 +98,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     events.push(...s.pbp.assists);
     const d = gameDrama(id, s.pbp);
     if (d) drama.push(d);
+    hotHand.add(s.pbp.shots);
     for (const shot of s.pbp.shots) {
       league.add(shot);
       shotSplits.add(shot);
@@ -117,7 +120,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     players: Object.fromEntries(top.map(([id, p]) => [id, { name: names[id] ?? id, team: p.team, attempts: p.bins.attempts, bins: p.bins.rows() }])),
   };
   console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
-  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums), garbage: garbage.result(), quarters: quarters.result(), wpa: wpa.result(), runs: runs.result() };
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums), garbage: garbage.result(), quarters: quarters.result(), wpa: wpa.result(), runs: runs.result(), hotHand: hotHand.result() };
 }
 
 const SORTS = [
@@ -173,6 +176,9 @@ async function build(year: number): Promise<SeasonSnapshot> {
     snap.wpa[type] = pbp.wpa;
     snap.runs ??= {};
     snap.runs[type] = pbp.runs;
+    snap.hotHand ??= {};
+    snap.hotHand[type] = pbp.hotHand;
+    console.log(`  hot hand: ${Object.keys(pbp.hotHand.players).length} players`);
     console.log(`  wpa: ${pbp.wpa.players.length} players, top game ${JSON.stringify(pbp.wpa.games[0])}; runs: ${pbp.runs.teams.length} teams, biggest ${JSON.stringify(pbp.runs.biggest[0])}`);
     console.log(`  garbage time: ${pbp.garbage.teams.length} teams, ${pbp.garbage.players.length} players; quarters: ${Object.keys(pbp.quarters).length} teams`);
     console.log(`  shot splits: ${Object.keys(pbp.shotSplits.players).length} players; team stat labels: ${Object.keys(Object.values(pbp.teamStatSums)[0]?.sums ?? {}).join(', ')}`);

@@ -9,6 +9,7 @@ import { ShootingZones } from '../components/ShootingZones';
 import { TeamStyles, UsageEfficiency } from '../components/MoreGraphs';
 import { PointsBySource, ShotTypeLeaders } from '../components/ShotGraphs';
 import { ArchetypesView, FreeThrowPressure } from '../components/PlayerExtras';
+import { HotHandView } from '../components/HotHand';
 import { Empty } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { formatShortDate } from '../lib/dates';
@@ -24,6 +25,7 @@ const TABS = [
   { id: 'duos', label: 'Passing duos' },
   { id: 'zones', label: 'Shooting zones' },
   { id: 'shots', label: 'Shot types' },
+  { id: 'hothand', label: 'Hot hand' },
   { id: 'sources', label: 'Points by source' },
   { id: 'usage', label: 'Usage vs efficiency' },
   { id: 'styles', label: 'Team styles' },
@@ -69,6 +71,7 @@ export function Insights() {
         </>
       )}
       {hasData && tab === 'archetypes' && <ArchetypesView season={season.year} />}
+      {hasData && tab === 'hothand' && <HotHandView season={season.year} type={type} />}
       {hasData && tab === 'combos' && <Combos season={season.year} type={type} />}
       {tab === 'schedule' && <ScheduleAheadTab season={season.year} start={season.start} end={season.regularEnd} />}
     </section>
