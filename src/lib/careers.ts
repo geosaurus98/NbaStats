@@ -16,6 +16,12 @@ export interface CareerData {
   splits?: (number | string)[][];
   /** Main position per player index: PG, SG, SF, PF, C (G/F for early eras), '' if unknown. */
   pos?: string[];
+  /** All-NBA (and All-ABA) selections: [season, player, team 1-3]. */
+  allNba?: [number, number, number][];
+  /** Seasons on a championship team: [season, player]. */
+  rings?: [number, number][];
+  /** Hall of Famers inducted as players (player indexes). */
+  hof?: number[];
 }
 
 /** onthisday.json: "MM-DD" → notable players born / debuting that day: [name, year, playerIndex, hallOfFame (0/1)]. */

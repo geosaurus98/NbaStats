@@ -731,3 +731,30 @@ td.strong { font-weight: 700; }
 .cal-hover { stroke: var(--text); stroke-width: 2; }
 .cal-detail { min-height: 1.4em; }
 .cal-missed-key { border: 1px solid var(--muted); background: var(--surface); color: var(--muted); font-size: 9px; line-height: .7rem; text-align: center; font-style: normal; }
+.matchup-table { width: 100%; }
+.matchup-table td, .matchup-table th { text-align: center; }
+.matchup-table td:first-child, .matchup-table th:first-child { text-align: left; }
+.matchup-table td:last-child, .matchup-table th:last-child { text-align: right; }
+.recap-card svg { display: block; }
+.digest { list-style: none; padding: 0; margin: .3rem 0; display: grid; gap: .35rem; }
+.digest li { font-size: .9rem; }
+.digest-kind { display: inline-block; min-width: 7.5rem; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+.rotation-scroll { overflow-x: auto; }
+.rotation { border-collapse: separate; border-spacing: 2px; width: auto; }
+.rotation th { font-size: .72rem; padding: 0 2px; text-align: left; border: 0; }
+.rotation td { border: 0; }
+.rot-cell { width: 22px; min-width: 22px; height: 18px; padding: 0; border-radius: 3px; background: color-mix(in srgb, var(--border) 50%, transparent); }
+.rot-cell.seq-1 { background: var(--seq-1); }
+.rot-cell.seq-2 { background: var(--seq-2); }
+.rot-cell.seq-3 { background: var(--seq-3); }
+.rot-cell.seq-4 { background: var(--seq-4); }
+.rot-cell.seq-5 { background: var(--seq-5); }
+.rotation .q-start { border-left: 2px solid var(--surface); padding-left: 3px; }
+.sit-bars { display: grid; gap: .3rem; }
+.sit-row { display: grid; grid-template-columns: minmax(9rem, 1.2fr) 2fr 3.5rem minmax(9rem, 1.2fr); gap: .6rem; align-items: center; background: none; border: 0; padding: .15rem .2rem; border-radius: 6px; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.sit-row.active { background: color-mix(in srgb, var(--series-1) 12%, transparent); }
+.sit-row.dim { opacity: .55; }
+.sit-track { height: 10px; border-radius: 5px; background: var(--border); }
+.sit-fill { display: block; height: 100%; border-radius: 5px; background: var(--series-1); }
+@media (max-width: 600px) { .sit-row { grid-template-columns: 7.5rem 1fr 3.2rem; } .sit-row > .muted { display: none; } }
+.era-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .6rem; margin-bottom: .6rem; }

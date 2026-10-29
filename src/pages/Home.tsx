@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { fetchLeaders, fetchScoreboard, fetchStandings, seasonSnapshot } from '../api/espn';
 import type { Game } from '../api/types';
 import { MyTeamCard } from '../components/MyTeamCard';
+import { LastNight } from '../components/LastNight';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useFavourite } from '../FavouriteContext';
@@ -40,6 +41,7 @@ export function Home() {
       </div>
       <MyTeamCard season={season.year} />
       <TodayGames date={date} />
+      <LastNight season={season.year} />
       <div className="two-col home-row">
         <StandingsSnapshot season={season.year} />
         <div className="home-stack">

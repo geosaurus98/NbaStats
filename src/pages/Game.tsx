@@ -8,6 +8,8 @@ import { GameFlow, ShotChart } from '../components/GameCharts';
 import { PlayFeed } from '../components/PlayFeed';
 import { GamePreview } from '../components/TeamBits';
 import { GameFactors } from '../components/TeamAnalytics';
+import { MatchupNumbers } from '../components/MatchupNumbers';
+import { RecapCard } from '../components/RecapCard';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
@@ -83,6 +85,8 @@ export function Game() {
       )}
 
       {game.state === 'pre' && <GamePreview game={game} season={seasonOf(game.date)} />}
+      {game.state === 'pre' && <MatchupNumbers game={game} season={seasonOf(game.date)} />}
+      {game.state === 'post' && <RecapCard summary={data} />}
 
       {teams.length === 2 && teams[0].teamStats.length > 0 && <TeamComparison a={teams[0]} b={teams[1]} />}
 

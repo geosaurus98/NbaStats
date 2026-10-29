@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { EraCompare, HallOfFameOdds, LotteryHistory, OnThisDate } from '../components/HistoryExtras';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AllTimeLeaders, Awards } from '../components/AllTime';
 import { CareerArc, CareerStatsTable } from '../components/CareerStats';
@@ -28,6 +29,10 @@ const TABS = [
   { id: 'teams', label: 'Team vs team' },
   { id: 'greatest', label: 'Greatest teams' },
   { id: 'continuity', label: 'Roster continuity' },
+  { id: 'eras', label: 'Across eras' },
+  { id: 'hof', label: 'Hall of Fame odds' },
+  { id: 'lottery', label: 'Lottery history' },
+  { id: 'thisdate', label: 'On this date' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 
@@ -69,9 +74,13 @@ function HistoryPage({ graph }: { graph: Graph }) {
       {tab === 'greatest' && <GreatestTeams graph={graph} />}
       {tab === 'similar' && <SimilarPlayers graph={graph} params={params} setParam={setParam} />}
       {tab === 'continuity' && <Continuity graph={graph} />}
+      {tab === 'eras' && <EraCompare graph={graph} />}
+      {tab === 'hof' && <HallOfFameOdds graph={graph} />}
+      {tab === 'lottery' && <LotteryHistory />}
+      {tab === 'thisdate' && <OnThisDate />}
       <p className="muted small">
         Rosters from Basketball-Reference via the open bball-reference-datasets project. The source doesn't say in which order a player
-        traded mid-season played for his teams, so it's inferred from the seasons either side and can be off for some trades.
+        traded mid-season played for their teams, so it's inferred from the seasons either side and can be off for some trades.
       </p>
     </section>
   );
