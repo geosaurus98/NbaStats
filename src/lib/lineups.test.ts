@@ -77,3 +77,31 @@ describe('combos', () => {
     expect(trios.length).toBe(4); // abc, abd, acd, bcd
   });
 });
+
+describe('rotation, clutch and defence', () => {
+  it('splits minutes into 3-minute slots, finds clutch lineups and credits defenders', async () => {
+    const { gameLineups, SEGMENTS } = await import('./lineups');
+    const H = ['h1', 'h2', 'h3', 'h4', 'h5'];
+    const A = ['a1', 'a2', 'a3', 'a4', 'a5'];
+    const teamOf = Object.fromEntries([...H.map((id) => [id, 'H']), ...A.map((id) => [id, 'A']), ['h6', 'H']]);
+    const f = (period: number, t: number, home: number, away: number, text: string, ids: string[], sub = false, clock = '') => ({ id: String(t), period, clock, t, ids, sub, text, teamId: '', home, away, scoring: false });
+    const feed = [
+      f(1, 10, 0, 0, 'a1 misses 3-foot layup', ['a1'], false, '11:50'),
+      f(1, 200, 0, 0, 'h6 enters the game for h1', ['h6', 'h1'], true),
+      f(4, 2700, 100, 98, 'h2 makes jumper', ['h2']),
+      f(4, 2880, 102, 98, 'end', []),
+    ];
+    const r = gameLineups({ starters: { H, A }, teamOf, homeId: 'H', awayId: 'A', feed, shots: [{ teamId: 'A', athleteId: 'a1', x: 25, y: 6, made: false, value: 2, text: '', period: 1, clock: '11:50' }] });
+    // h1 played the first 200 seconds: all of slot 0 (180s) and 20s of slot 1.
+    expect(r.segments.h1.slice(0, 2)).toEqual([180, 20]);
+    expect(r.segments.h1.length).toBe(SEGMENTS);
+    expect(r.segments.h2.reduce((a, b) => a + b, 0)).toBe(2880);
+    // The last 3 minutes, within 2 points, were clutch time for h2-h6.
+    const clutch = Object.entries(r.clutch.H);
+    expect(clutch.length).toBe(1);
+    expect(clutch[0][0]).toBe(['h2', 'h3', 'h4', 'h5', 'h6'].sort().join(','));
+    // The layup attempt at the rim counts against every home player on court then.
+    expect(r.defZones.h1.slice(0, 2)).toEqual([1, 0]);
+    expect(r.oppZones.H.slice(0, 2)).toEqual([1, 0]);
+  });
+});

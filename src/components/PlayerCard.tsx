@@ -1,6 +1,7 @@
 // Player page: a one-image season card (averages and league percentiles),
 // drawn as SVG so it can be saved as a PNG.
 import { useMemo, useRef } from 'react';
+import { saveSvgAsPng } from '../lib/svgImage';
 import { seasonSnapshot } from '../api/espn';
 import { P } from '../lib/boxTotals';
 import { ShareButton } from './ShareButton';
@@ -49,25 +50,7 @@ export function PlayerCard({ playerId, name, team, season, seasonLabel }: { play
   const top = 96;
   const H = top + model.rows.length * rowH + 40;
 
-  const download = () => {
-    const el = svg.current;
-    if (!el) return;
-    const xml = new XMLSerializer().serializeToString(el);
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = W * 2;
-      canvas.height = H * 2;
-      const ctx = canvas.getContext('2d')!;
-      ctx.scale(2, 2);
-      ctx.drawImage(img, 0, 0);
-      const a = document.createElement('a');
-      a.download = `${name.replace(/\s+/g, '-')}-${seasonLabel}.png`;
-      a.href = canvas.toDataURL('image/png');
-      a.click();
-    };
-    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(xml)}`;
-  };
+  const download = () => saveSvgAsPng(svg.current, W, H, `${name.replace(/\s+/g, '-')}-${seasonLabel}.png`);
 
   return (
     <div className="card player-card">

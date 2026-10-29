@@ -10,6 +10,7 @@ import { TeamStyles, UsageEfficiency } from '../components/MoreGraphs';
 import { PointsBySource, ShotTypeLeaders } from '../components/ShotGraphs';
 import { ArchetypesView, FreeThrowPressure } from '../components/PlayerExtras';
 import { HotHandView } from '../components/HotHand';
+import { ShotSituations } from '../components/ShotSituations';
 import { Empty } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { formatShortDate } from '../lib/dates';
@@ -26,6 +27,7 @@ const TABS = [
   { id: 'zones', label: 'Shooting zones' },
   { id: 'shots', label: 'Shot types' },
   { id: 'hothand', label: 'Hot hand' },
+  { id: 'situations', label: 'Shot situations' },
   { id: 'sources', label: 'Points by source' },
   { id: 'usage', label: 'Usage vs efficiency' },
   { id: 'styles', label: 'Team styles' },
@@ -72,6 +74,7 @@ export function Insights() {
       )}
       {hasData && tab === 'archetypes' && <ArchetypesView season={season.year} />}
       {hasData && tab === 'hothand' && <HotHandView season={season.year} type={type} />}
+      {hasData && tab === 'situations' && <ShotSituations season={season.year} type={type} />}
       {hasData && tab === 'combos' && <Combos season={season.year} type={type} />}
       {tab === 'schedule' && <ScheduleAheadTab season={season.year} start={season.start} end={season.regularEnd} />}
     </section>

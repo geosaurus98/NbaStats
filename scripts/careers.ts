@@ -6,6 +6,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { parseCSV } from './csv';
 import type { CareerData, OnThisDay } from '../src/lib/careers';
+import { CHAMPIONS } from '../src/lib/franchiseData';
 
 const BASE = 'https://raw.githubusercontent.com/sumitrodatta/bball-reference-datasets/master/Data/';
 const LEAGUES = ['NBA', 'ABA', 'BAA'];
@@ -86,12 +87,34 @@ for (const r of await table('All-Star Selections.csv')) {
   if (p != null) allStars.push([Number(r.season), p]);
 }
 
+// All-NBA selections (first, second, third team), for the Hall of Fame model.
+const allNba: NonNullable<CareerData['allNba']> = [];
+try {
+  for (const r of await table('End of Season Teams.csv')) {
+    const p = indexOf.get(r.player_id);
+    const team = Number(String(r.number_tm ?? '').replace(/\D/g, ''));
+    if (p != null && /^All-(NBA|ABA)$/i.test(r.type ?? '') && team >= 1 && team <= 3) allNba.push([Number(r.season), p, team]);
+  }
+} catch (e) {
+  console.log(`All-NBA teams: ${e}`);
+}
+
+// Championship rings: a season on the title team (per-team rows for traded players).
+const rings: NonNullable<CareerData['rings']> = [];
+for (const r of totals) {
+  if (/^\dTM$/.test(r.team) || CHAMPIONS[Number(r.season)] !== r.team || r.lg === 'ABA') continue;
+  const p = indexOf.get(r.player_id);
+  if (p != null && Number(r.g) > 0) rings.push([Number(r.season), p]);
+}
+
 const data: CareerData = {
   source: 'Basketball-Reference via github.com/sumitrodatta/bball-reference-datasets',
   seasons,
   awards,
   allStars,
   splits,
+  allNba,
+  rings,
   pos,
 };
 const json = JSON.stringify(data);
@@ -128,5 +151,8 @@ for (const d of Object.values(days)) {
   d.debut = d.debut.sort((a, b) => value(b[2]) - value(a[2])).slice(0, 4);
 }
 writeFileSync('src/data/onthisday.json', JSON.stringify(days));
-console.log(`on this day: ${Object.keys(days).length} days, ${hof.size} Hall of Famers`);
+// Hall of Famers (inducted as players), known only after reading career info.
+data.hof = [...hof].sort((a, b) => a - b);
+writeFileSync('src/data/careers.json', JSON.stringify(data));
+console.log(`on this day: ${Object.keys(days).length} days, ${hof.size} Hall of Famers, ${allNba.length} All-NBA selections, ${rings.length} rings`);
 console.log(`${splits.length} traded-season splits, ${seasons.filter((s) => s.length).length} players with stats, ${missing} unmatched rows, ${Object.keys(awards).length} awards, ${allStars.length} All-Star selections, ${(json.length / 1024).toFixed(0)} KB`);
