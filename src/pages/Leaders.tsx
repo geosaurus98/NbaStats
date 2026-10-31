@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GroupedTabs, type TabGroup } from '../components/GroupedTabs';
 import { Link, useSearchParams } from 'react-router-dom';
 import { fetchLeaders, type SeasonType } from '../api/espn';
 import { MilestoneWatch } from '../components/MilestoneWatch';
@@ -19,13 +20,19 @@ const SORTS = [
   { key: 'offensive.threePointFieldGoalPct', label: '3P%' },
 ];
 
+const LEADER_GROUPS: TabGroup<LeaderTab>[] = [
+  { label: 'Season', tabs: [{ id: 'averages', label: 'Season averages' }, { id: 'highs', label: 'Season highs' }, { id: 'streaks', label: 'Streaks' }, { id: 'milestones', label: 'Milestone watch' }] },
+  { label: 'Advanced', tabs: [{ id: 'advanced', label: 'Advanced (PER, WS)' }, { id: 'wpa', label: 'Win prob. added' }, { id: 'onoff', label: 'On/off' }, { id: 'quality', label: 'Shot quality' }, { id: 'build', label: 'Build your own' }] },
+];
+type LeaderTab = 'averages' | 'highs' | 'milestones' | 'advanced' | 'build' | 'onoff' | 'quality' | 'wpa' | 'streaks';
+
 export function Leaders() {
   const { season } = useSeason();
   const [type, setType] = useState<SeasonType>(2);
   const [params, setParams] = useSearchParams();
   const tab = (['highs', 'milestones', 'advanced', 'build', 'onoff', 'quality', 'wpa', 'streaks'] as const).find((t) => t === params.get('tab')) ?? 'averages';
   const regularOnly = tab === 'milestones' || tab === 'advanced' || tab === 'build' || tab === 'streaks';
-  const setTab = (t: string) => setParams(t === 'averages' ? {} : { tab: t }, { replace: true });
+  const setTab = (t: LeaderTab) => setParams(t === 'averages' ? {} : { tab: t }, { replace: true });
 
   return (
     <section>
@@ -33,17 +40,7 @@ export function Leaders() {
         <h1>{season.label} player leaders</h1>
         {!regularOnly && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
-      <div className="tabs">
-        <button className={tab === 'averages' ? 'active' : ''} onClick={() => setTab('averages')}>Season averages</button>
-        <button className={tab === 'highs' ? 'active' : ''} onClick={() => setTab('highs')}>Season highs</button>
-        <button className={tab === 'milestones' ? 'active' : ''} onClick={() => setTab('milestones')}>Milestone watch</button>
-        <button className={tab === 'advanced' ? 'active' : ''} onClick={() => setTab('advanced')}>Advanced (PER, WS)</button>
-        <button className={tab === 'build' ? 'active' : ''} onClick={() => setTab('build')}>Build your own</button>
-        <button className={tab === 'onoff' ? 'active' : ''} onClick={() => setTab('onoff')}>On/off</button>
-        <button className={tab === 'quality' ? 'active' : ''} onClick={() => setTab('quality')}>Shot quality</button>
-        <button className={tab === 'wpa' ? 'active' : ''} onClick={() => setTab('wpa')}>Win prob. added</button>
-        <button className={tab === 'streaks' ? 'active' : ''} onClick={() => setTab('streaks')}>Streaks</button>
-      </div>
+      <GroupedTabs groups={LEADER_GROUPS} active={tab} onChange={setTab} />
       {tab === 'averages' && <Averages season={season.year} type={type} />}
       {tab === 'highs' && <SeasonHighs season={season.year} seasonType={type} />}
       {tab === 'milestones' && <MilestoneWatch season={season.year} />}

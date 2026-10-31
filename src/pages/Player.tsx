@@ -10,6 +10,7 @@ import { PlayerShotTypes } from '../components/ShotGraphs';
 import { AgingCurve } from '../components/PlayerAnalytics';
 import { SeasonVsLast } from '../components/PlayerExtras';
 import { GameCalendar } from '../components/GameCalendar';
+import { FollowButton } from '../components/FollowButton';
 import { SalaryHistory } from '../components/TeamPayroll';
 import { SeasonShotMap } from '../components/SeasonShotMap';
 import { Empty, ErrorBox, Loading } from '../components/Status';
@@ -64,7 +65,7 @@ export function Player() {
       <div className="player-head">
         {p?.headshot && <img className="headshot" src={p.headshot} alt="" width={96} height={70} />}
         <div>
-          <h1>{p?.name ?? (profile.loading ? 'Loading…' : 'Player')}</h1>
+          <h1>{p?.name ?? (profile.loading ? 'Loading…' : 'Player')} {(p?.name || snapshotName) && <FollowButton playerId={id} name={p?.name ?? snapshotName!} />}</h1>
           <p className="muted">
             {p?.team && (
               <Link to={`/team/${p.team.id}`} className="team-cell">

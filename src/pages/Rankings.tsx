@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GroupedTabs, type TabGroup } from '../components/GroupedTabs';
 import { Link, useSearchParams } from 'react-router-dom';
 import { fetchLeagueGames, fetchTeamStats, type SeasonType } from '../api/espn';
 import { ErrorBox, Loading } from '../components/Status';
@@ -53,6 +54,10 @@ const TABS = [
   { id: 'rest', label: 'Rest & travel' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
+const GROUPS: TabGroup<Tab>[] = [
+  { label: 'Ratings', tabs: TABS.filter((t) => (['table', 'srs', 'factors', 'luck'] as Tab[]).includes(t.id)) },
+  { label: 'Situations', tabs: TABS.filter((t) => (['quarters', 'runs', 'garbage', 'rest'] as Tab[]).includes(t.id)) },
+];
 
 export function Rankings() {
   const { season } = useSeason();
@@ -65,11 +70,7 @@ export function Rankings() {
         <h1>{season.label} team rankings</h1>
         {!['luck', 'srs', 'rest'].includes(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
-      <div className="tabs">
-        {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParams(t.id === 'table' ? {} : { tab: t.id }, { replace: true })}>{t.label}</button>
-        ))}
-      </div>
+      <GroupedTabs groups={GROUPS} active={tab} onChange={(t) => setParams(t === 'table' ? {} : { tab: t }, { replace: true })} />
       {tab === 'table' && <RankingTable season={season.year} type={type} />}
       {tab === 'factors' && <FourFactorsTable season={season.year} type={type} />}
       {tab === 'luck' && <LuckMeter season={season.year} />}

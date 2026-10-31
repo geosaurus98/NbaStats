@@ -3,7 +3,8 @@
 // between quarters, so each period's starters are inferred: players who show
 // up in a play before being subbed in, topped up from who was on court at the
 // end of the previous period.
-import type { FeedItem } from '../api/types';
+import type { FeedItem, Shot } from '../api/types';
+import { ZONES, zoneOf } from './pbpStats';
 
 export interface GameInput {
   /** teamId → the five starters (from the box score). */
@@ -13,7 +14,14 @@ export interface GameInput {
   homeId: string;
   awayId: string;
   feed: FeedItem[];
+  /** Located field-goal attempts, for opponents' shooting by zone with each player on court. */
+  shots?: Shot[];
 }
+
+/** Rotation slots: sixteen 3-minute stretches of regulation, then all overtime. */
+export const SEGMENTS = 17;
+/** Zones in ZONES order, as [attempts, makes] pairs. */
+export const ZONE_COUNT = ZONES.length;
 
 export interface Tally {
   sec: number;
@@ -33,6 +41,14 @@ export interface GameLineups {
   garbageTeam: Record<string, Tally>;
   /** Garbage-time stretches as [from, to] seconds since tip-off. */
   garbageWindows: [number, number][];
+  /** athleteId → seconds on court in each rotation slot (SEGMENTS). */
+  segments: Record<string, number[]>;
+  /** teamId → lineup key → tally, clutch time only (last 5 minutes of the 4th or OT, within 5 points). */
+  clutch: Record<string, Record<string, Tally>>;
+  /** athleteId → opponents' [attempts, makes] by zone while on court. */
+  defZones: Record<string, number[]>;
+  /** teamId → opponents' [attempts, makes] by zone, whole game. */
+  oppZones: Record<string, number[]>;
 }
 
 /**
@@ -73,13 +89,31 @@ function periodStarters(feed: FeedItem[], period: number, teamId: string, teamOf
 }
 
 export function gameLineups(g: GameInput): GameLineups {
-  const res: GameLineups = { lineups: {}, on: {}, team: {}, garbageOn: {}, garbageTeam: {}, garbageWindows: [] };
+  const res: GameLineups = { lineups: {}, on: {}, team: {}, garbageOn: {}, garbageTeam: {}, garbageWindows: [], segments: {}, clutch: {}, defZones: {}, oppZones: {} };
+  // Shots by period, clock and shooter, to line them up with their feed plays.
+  const shotAt = new Map<string, Shot[]>();
+  for (const s of g.shots ?? []) {
+    const k = `${s.period}|${s.clock}|${s.athleteId}`;
+    shotAt.set(k, [...(shotAt.get(k) ?? []), s]);
+  }
   const starters = new Set(Object.values(g.starters).flat());
   const teams = [g.homeId, g.awayId];
   for (const t of teams) {
     res.lineups[t] = {};
+    res.clutch[t] = {};
     res.team[t] = tally();
+    res.oppZones[t] = Array(ZONE_COUNT * 2).fill(0);
   }
+  const addSegments = (id: string, from: number, to: number) => {
+    const seg = (res.segments[id] ??= Array(SEGMENTS).fill(0));
+    let t = from;
+    while (t < to) {
+      const i = t >= 2880 ? SEGMENTS - 1 : Math.floor(t / 180);
+      const end = i === SEGMENTS - 1 ? to : Math.min(to, (i + 1) * 180);
+      seg[i] += end - t;
+      t = end;
+    }
+  };
   const court: Record<string, Set<string>> = Object.fromEntries(teams.map((t) => [t, new Set(g.starters[t] ?? [])]));
   let lastT = 0;
   let lastHome = 0;
@@ -96,13 +130,18 @@ export function gameLineups(g: GameInput): GameLineups {
       if (w && w[1] === lastT) w[1] = lastT + sec;
       else res.garbageWindows.push([lastT, lastT + sec]);
     }
+    const clutch = period >= 4 && periodEnd(period) - lastT <= 300 && Math.abs(lastHome - lastAway) <= 5;
     for (const t of teams) {
       const pf = t === g.homeId ? home : away;
       const pa = t === g.homeId ? away : home;
       add(res.team[t], sec, pf, pa);
       const five = court[t];
-      for (const id of five) add((res.on[id] ??= tally()), sec, pf, pa);
+      for (const id of five) {
+        add((res.on[id] ??= tally()), sec, pf, pa);
+        if (sec > 0) addSegments(id, lastT, lastT + sec);
+      }
       if (five.size === 5) add((res.lineups[t][[...five].sort().join(',')] ??= tally()), sec, pf, pa);
+      if (clutch && five.size === 5) add((res.clutch[t][[...five].sort().join(',')] ??= tally()), sec, pf, pa);
       if (garbage) {
         add((res.garbageTeam[t] ??= tally()), sec, pf, pa);
         for (const id of five) add((res.garbageOn[id] ??= tally()), sec, pf, pa);
@@ -122,6 +161,22 @@ export function gameLineups(g: GameInput): GameLineups {
     lastT = Math.max(lastT, f.t);
     lastHome = f.home;
     lastAway = f.away;
+    // A located shot: credit the defenders on court with the attempt in its zone.
+    const shooter = f.ids[0];
+    const shot = shooter ? shotAt.get(`${f.period}|${f.clock}|${shooter}`)?.shift() : undefined;
+    if (shot && g.teamOf[shooter]) {
+      const def = teams.find((t) => t !== g.teamOf[shooter]);
+      if (def) {
+        const z = ZONES.findIndex((x) => x.id === zoneOf(shot, shot.value)) * 2;
+        res.oppZones[def][z]++;
+        if (shot.made) res.oppZones[def][z + 1]++;
+        for (const id of court[def]) {
+          const d = (res.defZones[id] ??= Array(ZONE_COUNT * 2).fill(0));
+          d[z]++;
+          if (shot.made) d[z + 1]++;
+        }
+      }
+    }
     if (f.sub && f.ids.length >= 2) {
       const [inId, outId] = f.ids;
       const t = g.teamOf[inId] ?? g.teamOf[outId];
@@ -148,6 +203,14 @@ export interface TeamLineupSeason {
   /** Two- and three-man combinations, same shape as lineups (most-used first; the 120 most-used pairs, trios with 60+ minutes). */
   pairs?: [string[], number, number, number][];
   trios?: [string[], number, number, number][];
+  /** [id, games, average seconds in each rotation slot (SEGMENTS)…], most minutes first. */
+  rotation?: [string, number, ...number[]][];
+  /** Clutch-time five-man lineups with 2+ minutes, same shape as lineups. */
+  clutchLineups?: [string[], number, number, number][];
+  /** [id, opponents' attempts and makes by zone while on court…], players with 100+ minutes. */
+  defense?: [string, ...number[]][];
+  /** Opponents' attempts and makes by zone, all games. */
+  oppZones?: number[];
 }
 
 /** Every k-player subset of a sorted five-man lineup. */
@@ -177,6 +240,10 @@ export function combos(lineups: Map<string, Tally>, k: number, minSec: number, t
 export class LineupAccumulator {
   private lineups = new Map<string, Map<string, Tally>>();
   private on = new Map<string, Map<string, { on: Tally; game: Tally }>>();
+  private seg = new Map<string, Map<string, { games: number; sec: number[] }>>();
+  private clutch = new Map<string, Map<string, Tally>>();
+  private def = new Map<string, Map<string, number[]>>();
+  private opp = new Map<string, number[]>();
 
   add(g: GameInput, r: GameLineups) {
     for (const [team, lus] of Object.entries(r.lineups)) {
@@ -195,6 +262,35 @@ export class LineupAccumulator {
       m.set(id, row);
       this.on.set(team, m);
     }
+    for (const [id, sec] of Object.entries(r.segments)) {
+      const team = g.teamOf[id];
+      if (!team) continue;
+      const m = this.seg.get(team) ?? new Map();
+      const row = m.get(id) ?? { games: 0, sec: Array(SEGMENTS).fill(0) };
+      row.games++;
+      sec.forEach((v, i) => (row.sec[i] += v));
+      m.set(id, row);
+      this.seg.set(team, m);
+    }
+    for (const [team, lus] of Object.entries(r.clutch)) {
+      const m = this.clutch.get(team) ?? new Map<string, Tally>();
+      for (const [k, t] of Object.entries(lus)) add(m.get(k) ?? (m.set(k, tally()), m.get(k)!), t.sec, t.pf, t.pa);
+      this.clutch.set(team, m);
+    }
+    for (const [id, z] of Object.entries(r.defZones)) {
+      const team = g.teamOf[id];
+      if (!team) continue;
+      const m = this.def.get(team) ?? new Map<string, number[]>();
+      const row = m.get(id) ?? Array(ZONE_COUNT * 2).fill(0);
+      z.forEach((v, i) => (row[i] += v));
+      m.set(id, row);
+      this.def.set(team, m);
+    }
+    for (const [team, z] of Object.entries(r.oppZones)) {
+      const row = this.opp.get(team) ?? Array(ZONE_COUNT * 2).fill(0);
+      z.forEach((v, i) => (row[i] += v));
+      this.opp.set(team, row);
+    }
   }
 
   /** Lineups with 2+ minutes (most-used first, up to `topLineups`), so any combination can be summed from them. */
@@ -210,7 +306,19 @@ export class LineupAccumulator {
         .map(([id, { on, game }]) => [id, Math.round(on.sec), on.pf, on.pa, Math.round(game.sec), game.pf, game.pa] as TeamLineupSeason['onOff'][number])
         .sort((a, b) => b[1] - a[1]);
       const all = this.lineups.get(team) ?? new Map<string, Tally>();
-      out[team] = { lineups: lus, onOff, pairs: combos(all, 2, 0, 120), trios: combos(all, 3, 3600, 40) };
+      const minutes = new Map(onOff.map((r) => [r[0], r[1]]));
+      const rotation = [...(this.seg.get(team) ?? new Map<string, { games: number; sec: number[] }>())]
+        .filter(([id]) => (minutes.get(id) ?? 0) >= 6000)
+        .sort((a, b) => (minutes.get(b[0]) ?? 0) - (minutes.get(a[0]) ?? 0))
+        .slice(0, 15)
+        .map(([id, r]) => [id, r.games, ...r.sec.map((v) => Math.round(v / r.games))] as [string, number, ...number[]]);
+      const clutchLineups = [...(this.clutch.get(team) ?? new Map<string, Tally>())]
+        .filter(([, t]) => t.sec >= 120)
+        .sort((a, b) => b[1].sec - a[1].sec)
+        .slice(0, 10)
+        .map(([k, t]) => [k.split(','), Math.round(t.sec), t.pf, t.pa] as [string[], number, number, number]);
+      const defense = [...(this.def.get(team) ?? new Map<string, number[]>())].filter(([id]) => (minutes.get(id) ?? 0) >= 6000).map(([id, z]) => [id, ...z] as [string, ...number[]]);
+      out[team] = { lineups: lus, onOff, pairs: combos(all, 2, 0, 120), trios: combos(all, 3, 3600, 40), rotation, clutchLineups, defense, oppZones: this.opp.get(team) };
     }
     return out;
   }

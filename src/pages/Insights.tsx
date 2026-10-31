@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { GroupedTabs, type TabGroup } from '../components/GroupedTabs';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { seasonAssists, seasonDrama, seasonShots, snapshotGameMap, snapshotTeams, type SeasonType } from '../api/espn';
 import type { Game } from '../api/types';
@@ -10,6 +11,7 @@ import { TeamStyles, UsageEfficiency } from '../components/MoreGraphs';
 import { PointsBySource, ShotTypeLeaders } from '../components/ShotGraphs';
 import { ArchetypesView, FreeThrowPressure } from '../components/PlayerExtras';
 import { HotHandView } from '../components/HotHand';
+import { ShotSituations } from '../components/ShotSituations';
 import { Empty } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { formatShortDate } from '../lib/dates';
@@ -26,6 +28,7 @@ const TABS = [
   { id: 'zones', label: 'Shooting zones' },
   { id: 'shots', label: 'Shot types' },
   { id: 'hothand', label: 'Hot hand' },
+  { id: 'situations', label: 'Shot situations' },
   { id: 'sources', label: 'Points by source' },
   { id: 'usage', label: 'Usage vs efficiency' },
   { id: 'styles', label: 'Team styles' },
@@ -33,6 +36,12 @@ const TABS = [
   { id: 'schedule', label: 'Schedule ahead' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
+const GROUPS: TabGroup<Tab>[] = [
+  { label: 'Games & form', tabs: TABS.filter((t) => (['drama', 'night', 'hot', 'clutch'] as Tab[]).includes(t.id)) },
+  { label: 'Shooting', tabs: TABS.filter((t) => (['zones', 'shots', 'hothand', 'situations'] as Tab[]).includes(t.id)) },
+  { label: 'Players', tabs: TABS.filter((t) => (['usage', 'archetypes', 'combos', 'duos'] as Tab[]).includes(t.id)) },
+  { label: 'Teams', tabs: TABS.filter((t) => (['sources', 'styles', 'schedule'] as Tab[]).includes(t.id)) },
+];
 /** Tabs that only cover the regular season. */
 const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'schedule', 'usage', 'styles', 'sources', 'archetypes']);
 
@@ -49,11 +58,7 @@ export function Insights() {
         <h1>{season.label} insights</h1>
         {!REGULAR_ONLY.has(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
-      <div className="tabs">
-        {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParams({ tab: t.id }, { replace: true })}>{t.label}</button>
-        ))}
-      </div>
+      <GroupedTabs groups={GROUPS} active={tab} onChange={(t) => setParams({ tab: t }, { replace: true })} />
       {!hasData && tab !== 'schedule' && <Empty>These are built from every game's play-by-play once a season is finished. Pick 2025-26 or 2024-25.</Empty>}
       {hasData && tab === 'drama' && <Drama season={season.year} type={type} />}
       {hasData && tab === 'duos' && <Duos season={season.year} type={type} />}
@@ -72,6 +77,7 @@ export function Insights() {
       )}
       {hasData && tab === 'archetypes' && <ArchetypesView season={season.year} />}
       {hasData && tab === 'hothand' && <HotHandView season={season.year} type={type} />}
+      {hasData && tab === 'situations' && <ShotSituations season={season.year} type={type} />}
       {hasData && tab === 'combos' && <Combos season={season.year} type={type} />}
       {tab === 'schedule' && <ScheduleAheadTab season={season.year} start={season.start} end={season.regularEnd} />}
     </section>

@@ -17,6 +17,7 @@ import { PairHeatmap, PointsBySource } from '../components/ShotGraphs';
 import { QuarterSplits } from '../components/TeamAnalytics';
 import { TeamStyleCard, WithWithoutCard } from '../components/TeamExtras';
 import { LineupExplorer } from '../components/PlayerExtras';
+import { ClutchLineups, DefenseByZone, RotationChart } from '../components/TeamRotation';
 import { InjuryList } from '../components/TeamBits';
 import { TeamPayroll } from '../components/TeamPayroll';
 import { DEFAULT_SEASON } from '../lib/seasons';
@@ -67,6 +68,7 @@ export function Team() {
         <SeasonTypeToggle value={type} onChange={setType} />
       </div>
       <div className="actions">
+        <Link className="chip" to={`/team/${id}/report`}>📄 Season report</Link>
         {games.length > 0 && (
           <button className="chip" onClick={exportICS}>
             📅 Add {fixtures.length > 0 ? 'fixtures' : 'schedule'} to calendar (.ics)
@@ -111,6 +113,12 @@ export function Team() {
       {results.length > 0 && <TeamLineups teamId={id} season={season.year} seasonType={type} />}
 
       <LineupExplorer teamId={id} season={season.year} type={type} />
+
+      <RotationChart teamId={id} season={season.year} type={type} />
+
+      <DefenseByZone teamId={id} season={season.year} type={type} />
+
+      <ClutchLineups teamId={id} season={season.year} type={type} />
 
       <PairHeatmap teamId={id} season={season.year} type={type} />
 

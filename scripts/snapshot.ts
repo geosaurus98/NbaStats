@@ -15,6 +15,7 @@ import { GarbageAccumulator } from '../src/lib/garbageTime';
 import { QuarterAccumulator } from '../src/lib/quarters';
 import { RunAccumulator } from '../src/lib/runs';
 import { HotHandAccumulator } from '../src/lib/hotHand';
+import { SituationAccumulator } from '../src/lib/situations';
 import { WpaAccumulator } from '../src/lib/wpa';
 import { nightlyBest } from '../src/lib/gameLines';
 import { countsInStandings } from '../src/lib/league';
@@ -43,6 +44,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
   const wpa = new WpaAccumulator();
   const runs = new RunAccumulator();
   const hotHand = new HotHandAccumulator();
+  const situations = new SituationAccumulator();
   const teamStatSums = new Map<string, { gp: number; sums: Record<string, number> }>();
   const lines = new Map<string, { home: boolean; starter: boolean; id: string; v: number[] }[]>();
   let failed = 0;
@@ -89,7 +91,9 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
       homeId: s.game.home.team.id,
       awayId: s.game.away.team.id,
       feed: s.pbp.feed,
+      shots: s.pbp.shots,
     };
+    situations.add(s.pbp.feed, s.game.home.team.id, input.teamOf);
     if (Object.values(input.starters).every((ids) => ids.length === 5)) {
       const r = gameLineups(input);
       lineups.add(input, r);
@@ -120,7 +124,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     players: Object.fromEntries(top.map(([id, p]) => [id, { name: names[id] ?? id, team: p.team, attempts: p.bins.attempts, bins: p.bins.rows() }])),
   };
   console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
-  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums), garbage: garbage.result(), quarters: quarters.result(), wpa: wpa.result(), runs: runs.result(), hotHand: hotHand.result() };
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums), garbage: garbage.result(), quarters: quarters.result(), wpa: wpa.result(), runs: runs.result(), hotHand: hotHand.result(), situations: situations.result() };
 }
 
 const SORTS = [
@@ -178,6 +182,10 @@ async function build(year: number): Promise<SeasonSnapshot> {
     snap.runs[type] = pbp.runs;
     snap.hotHand ??= {};
     snap.hotHand[type] = pbp.hotHand;
+    snap.situations ??= {};
+    snap.situations[type] = pbp.situations;
+    const anyTeam = Object.values(pbp.lineups)[0];
+    console.log(`  situations: ${Object.keys(pbp.situations.players).length} players; rotation rows ${anyTeam?.rotation?.length}, clutch lineups ${anyTeam?.clutchLineups?.length}, defense rows ${anyTeam?.defense?.length}`);
     console.log(`  hot hand: ${Object.keys(pbp.hotHand.players).length} players`);
     console.log(`  wpa: ${pbp.wpa.players.length} players, top game ${JSON.stringify(pbp.wpa.games[0])}; runs: ${pbp.runs.teams.length} teams, biggest ${JSON.stringify(pbp.runs.biggest[0])}`);
     console.log(`  garbage time: ${pbp.garbage.teams.length} teams, ${pbp.garbage.players.length} players; quarters: ${Object.keys(pbp.quarters).length} teams`);

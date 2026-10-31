@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { fetchSummary } from '../api/espn';
 import { aggregateAssists } from '../api/normalize';
 import type { Competitor, TeamBox } from '../api/types';
@@ -8,6 +8,8 @@ import { GameFlow, ShotChart } from '../components/GameCharts';
 import { PlayFeed } from '../components/PlayFeed';
 import { GamePreview } from '../components/TeamBits';
 import { GameFactors } from '../components/TeamAnalytics';
+import { MatchupNumbers } from '../components/MatchupNumbers';
+import { RecapCard } from '../components/RecapCard';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
@@ -19,8 +21,17 @@ const seasonOf = (iso: string) => {
   return d.getUTCFullYear() + (d.getUTCMonth() >= 7 ? 1 : 0);
 };
 
+const GAME_TABS = [
+  { id: 'box', label: 'Box score' },
+  { id: 'charts', label: 'Charts' },
+  { id: 'plays', label: 'Play-by-play' },
+  { id: 'recap', label: 'Recap card' },
+] as const;
+type GameTab = (typeof GAME_TABS)[number]['id'];
+
 export function Game() {
   const { id = '' } = useParams();
+  const [params, setParams] = useSearchParams();
   const { data, error, loading } = useAsync(
     (fresh) => fetchSummary(id, fresh),
     [id],
@@ -36,6 +47,8 @@ export function Game() {
   const assists = aggregateAssists(pbp.assists, pbp.names);
   const periods = Math.max(game.home.linescores.length, game.away.linescores.length);
   const day = game.date ? toISODate(new Date(game.date)) : '';
+  const asked = GAME_TABS.find((t) => t.id === params.get('tab'))?.id ?? 'box';
+  const tab: GameTab = asked === 'recap' && game.state !== 'post' ? 'box' : asked;
 
   return (
     <section>
@@ -82,37 +95,52 @@ export function Game() {
         </div>
       )}
 
-      {game.state === 'pre' && <GamePreview game={game} season={seasonOf(game.date)} />}
-
-      {teams.length === 2 && teams[0].teamStats.length > 0 && <TeamComparison a={teams[0]} b={teams[1]} />}
-
-      <GameFlow game={game} pbp={pbp} />
-
-      {game.state === 'post' && <GameFactors season={seasonOf(game.date)} gameId={game.id} />}
-
-      {Object.keys(assists).length > 0 && (
+      {game.state === 'pre' ? (
         <>
-          <h2>Who assisted whom</h2>
-          <div className="two-col">
-            {[game.away.team, game.home.team].map((t) =>
-              assists[t.id] ? (
-                <div key={t.id} className="card">
-                  <AssistNetwork data={assists[t.id]} title={t.name} />
-                </div>
-              ) : null,
-            )}
+          <GamePreview game={game} season={seasonOf(game.date)} />
+          <MatchupNumbers game={game} season={seasonOf(game.date)} />
+          <p className="muted">Box score will appear once the game tips off.</p>
+        </>
+      ) : (
+        <>
+          <div className="tabs game-tabs">
+            {GAME_TABS.filter((t) => t.id !== 'recap' || game.state === 'post').map((t) => (
+              <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParams(t.id === 'box' ? {} : { tab: t.id }, { replace: true })}>{t.label}</button>
+            ))}
           </div>
+          {tab === 'box' && (
+            <>
+              {teams.map((t) => (
+                <BoxScore key={t.team.id} box={t} />
+              ))}
+              {teams.length === 2 && teams[0].teamStats.length > 0 && <TeamComparison a={teams[0]} b={teams[1]} />}
+            </>
+          )}
+          {tab === 'charts' && (
+            <>
+              <GameFlow game={game} pbp={pbp} />
+              {game.state === 'post' && <GameFactors season={seasonOf(game.date)} gameId={game.id} />}
+              <ShotChart game={game} pbp={pbp} />
+              {Object.keys(assists).length > 0 && (
+                <>
+                  <h2>Who assisted whom</h2>
+                  <div className="two-col">
+                    {[game.away.team, game.home.team].map((t) =>
+                      assists[t.id] ? (
+                        <div key={t.id} className="card">
+                          <AssistNetwork data={assists[t.id]} title={t.name} />
+                        </div>
+                      ) : null,
+                    )}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+          {tab === 'plays' && <PlayFeed game={game} feed={pbp.feed} />}
+          {tab === 'recap' && game.state === 'post' && <RecapCard summary={data} />}
         </>
       )}
-
-      <ShotChart game={game} pbp={pbp} />
-
-      <PlayFeed game={game} feed={pbp.feed} />
-
-      {teams.map((t) => (
-        <BoxScore key={t.team.id} box={t} />
-      ))}
-      {teams.length === 0 && game.state === 'pre' && <p className="muted">Box score will appear once the game tips off.</p>}
     </section>
   );
 }
