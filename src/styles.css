@@ -861,3 +861,4 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
 main:focus { outline: none; }
+.rotation-scroll, .rotation th { position: relative; }
