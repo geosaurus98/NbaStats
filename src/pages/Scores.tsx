@@ -4,7 +4,7 @@ import { GameCard } from '../components/GameCard';
 import { MyTeamCard } from '../components/MyTeamCard';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { useAsync } from '../hooks/useAsync';
-import { addDays, formatDay } from '../lib/dates';
+import { addDays, slateLabel } from '../lib/dates';
 import { defaultDate } from '../lib/seasons';
 import { useFavourite } from '../FavouriteContext';
 import { useSeason } from '../SeasonContext';
@@ -42,7 +42,7 @@ export function Scores() {
         </div>
       </div>
       <p className="muted">
-        {formatDay(date)}
+        {slateLabel(date, (data ?? []).map((g) => g.date))}
         {(date < season.start || date > season.end) && ` · outside the ${season.label} season`}
         {' · '}
         <button className="link" onClick={() => setDate(season.start)}>Opening night</button>

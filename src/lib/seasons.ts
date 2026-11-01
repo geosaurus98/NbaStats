@@ -1,4 +1,4 @@
-import { toISODate } from './dates';
+import { toISODate, usDate } from './dates';
 
 // ESPN identifies a season by the year it ends in: 2026 = the 2025-26 season.
 export interface Season {
@@ -44,7 +44,8 @@ export function getSeason(year: number): Season {
 }
 
 /** The date the scores page opens on for a season. */
-export function defaultDate(season: Season, today = toISODate(new Date())): string {
+/** Today's NBA game day (US Eastern), so viewers ahead of the US see the games being played now. */
+export function defaultDate(season: Season, today = usDate()): string {
   if (today >= season.start && today <= season.end) return today;
   return today > season.end ? season.regularEnd : season.start;
 }
