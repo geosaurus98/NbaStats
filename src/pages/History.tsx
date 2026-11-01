@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { GroupedTabs, type TabGroup } from '../components/GroupedTabs';
+import { EraCompare, HallOfFameOdds, LotteryHistory, OnThisDate } from '../components/HistoryExtras';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AllTimeLeaders, Awards } from '../components/AllTime';
 import { CareerArc, CareerStatsTable } from '../components/CareerStats';
@@ -28,8 +30,17 @@ const TABS = [
   { id: 'teams', label: 'Team vs team' },
   { id: 'greatest', label: 'Greatest teams' },
   { id: 'continuity', label: 'Roster continuity' },
+  { id: 'eras', label: 'Across eras' },
+  { id: 'hof', label: 'Hall of Fame odds' },
+  { id: 'lottery', label: 'Lottery history' },
+  { id: 'thisdate', label: 'On this date' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
+const GROUPS: TabGroup<Tab>[] = [
+  { label: 'Players', tabs: TABS.filter((t) => (['careers', 'compare', 'similar', 'eras', 'hof', 'leaders', 'awards'] as Tab[]).includes(t.id)) },
+  { label: 'Teams', tabs: TABS.filter((t) => (['teams', 'greatest', 'continuity', 'movement', 'thisdate'] as Tab[]).includes(t.id)) },
+  { label: 'Draft', tabs: TABS.filter((t) => (['draft', 'lottery'] as Tab[]).includes(t.id)) },
+];
 
 export function History() {
   const graph = useTeammateGraph();
@@ -54,11 +65,7 @@ function HistoryPage({ graph }: { graph: Graph }) {
       <PlayerDatalist graph={graph} />
       <h1>NBA history</h1>
       <p className="muted">Every roster since 1946-47, grouped into today's 30 franchises (Seattle counts as OKC, New Jersey as Brooklyn, and so on).</p>
-      <div className="tabs">
-        {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParam({ tab: t.id })}>{t.label}</button>
-        ))}
-      </div>
+      <GroupedTabs groups={GROUPS} active={tab} onChange={(t) => setParam({ tab: t })} />
       {tab === 'movement' && <Movement graph={graph} />}
       {tab === 'careers' && <Careers graph={graph} params={params} setParam={setParam} />}
       {tab === 'compare' && <Compare graph={graph} params={params} setParam={setParam} />}
@@ -69,9 +76,13 @@ function HistoryPage({ graph }: { graph: Graph }) {
       {tab === 'greatest' && <GreatestTeams graph={graph} />}
       {tab === 'similar' && <SimilarPlayers graph={graph} params={params} setParam={setParam} />}
       {tab === 'continuity' && <Continuity graph={graph} />}
+      {tab === 'eras' && <EraCompare graph={graph} />}
+      {tab === 'hof' && <HallOfFameOdds graph={graph} />}
+      {tab === 'lottery' && <LotteryHistory />}
+      {tab === 'thisdate' && <OnThisDate />}
       <p className="muted small">
         Rosters from Basketball-Reference via the open bball-reference-datasets project. The source doesn't say in which order a player
-        traded mid-season played for his teams, so it's inferred from the seasons either side and can be off for some trades.
+        traded mid-season played for their teams, so it's inferred from the seasons either side and can be off for some trades.
       </p>
     </section>
   );

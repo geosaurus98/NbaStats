@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { CompareReport } from '../components/CompareReport';
 import { Link, useSearchParams } from 'react-router-dom';
 import { allSnapshotPlayers, fetchAthlete, fetchGameLog, seasonShots } from '../api/espn';
 import type { GameLogEntry, LogSeasonType, PlayerProfile } from '../api/types';
@@ -207,6 +208,7 @@ export function Compare() {
           )}
         </>
       )}
+      <CompareReport ids={ids} season={season.year} names={dirName} />
     </section>
   );
 }

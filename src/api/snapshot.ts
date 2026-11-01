@@ -13,6 +13,7 @@ import type { TeamQuarters } from '../lib/quarters';
 import type { RunTotals } from '../lib/runs';
 import type { WpaTotals } from '../lib/wpa';
 import type { HotHand } from '../lib/hotHand';
+import type { Situations } from '../lib/situations';
 import type { NightBest } from '../lib/gameLines';
 import type { TeamLineupSeason } from '../lib/lineups';
 import type { DramaRow, ShotBins } from '../lib/pbpStats';
@@ -61,6 +62,8 @@ export interface SeasonSnapshot {
   runs?: Record<string, RunTotals>;
   /** Per season type: shooting after makes and after misses, by shot type. */
   hotHand?: Record<string, HotHand>;
+  /** Per season type: shots by time into the possession, after timeouts and by score. */
+  situations?: Record<string, Situations>;
   /** Regular season: rookies' draft [year, round, overall pick], null = undrafted. */
   rookieDraft?: Record<string, [number, number, number] | null>;
   /** Regular season: the best three lines of each of the last 14 nights, newest first. */

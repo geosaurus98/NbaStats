@@ -6,8 +6,9 @@ let graph: Graph | undefined;
 let pending: Promise<Graph> | undefined;
 
 export function loadTeammateGraph(): Promise<Graph> {
-  pending ??= import('../data/teammates.json').then((m) => {
-    graph = buildGraph((m.default ?? m) as unknown as TeammateData);
+  // The standalone file's data arrives as a promise (it's unpacked on demand), so await it either way.
+  pending ??= import('../data/teammates.json').then((m) => (m.default ?? m) as unknown).then((d) => {
+    graph = buildGraph(d as TeammateData);
     return graph;
   });
   return pending;

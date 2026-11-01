@@ -1,26 +1,8 @@
-import { Fragment, useEffect } from 'react';
-import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { Awards } from './pages/Awards';
-import { Compare } from './pages/Compare';
-import { Degrees } from './pages/Degrees';
-import { Franchise } from './pages/Franchise';
-import { Game } from './pages/Game';
-import { Games } from './pages/Games';
-import { HeadToHead } from './pages/HeadToHead';
-import { History } from './pages/History';
+import { Fragment, lazy, Suspense, useEffect } from 'react';
 import { Home } from './pages/Home';
-import { Insights } from './pages/Insights';
-import { MyTeam } from './pages/MyTeam';
-import { Leaders } from './pages/Leaders';
-import { Player } from './pages/Player';
-import { Playoffs } from './pages/Playoffs';
-import { Projections } from './pages/Projections';
-import { Rankings } from './pages/Rankings';
-import { Salaries } from './pages/Salaries';
 import { Scores } from './pages/Scores';
-import { Standings } from './pages/Standings';
-import { Team } from './pages/Team';
-import { Teams } from './pages/Teams';
+
+import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { LiveBar } from './components/LiveBar';
 import { ShareButton } from './components/ShareButton';
 import { SnapshotGate } from './components/SnapshotGate';
@@ -28,11 +10,38 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { SearchBox } from './components/SearchBox';
 import { SEASONS } from './lib/seasons';
 import { useSeason } from './SeasonContext';
+import { Loading } from './components/Status';
+import { OfflineBar } from './components/AppStatus';
+
+// Pages load their code the first time they're opened (the home page and scores are in the main bundle).
+const Awards = lazy(() => import('./pages/Awards').then((m) => ({ default: m.Awards })));
+const Compare = lazy(() => import('./pages/Compare').then((m) => ({ default: m.Compare })));
+const Degrees = lazy(() => import('./pages/Degrees').then((m) => ({ default: m.Degrees })));
+const Franchise = lazy(() => import('./pages/Franchise').then((m) => ({ default: m.Franchise })));
+const Game = lazy(() => import('./pages/Game').then((m) => ({ default: m.Game })));
+const Games = lazy(() => import('./pages/Games').then((m) => ({ default: m.Games })));
+const HeadToHead = lazy(() => import('./pages/HeadToHead').then((m) => ({ default: m.HeadToHead })));
+const History = lazy(() => import('./pages/History').then((m) => ({ default: m.History })));
+const Insights = lazy(() => import('./pages/Insights').then((m) => ({ default: m.Insights })));
+const MyTeam = lazy(() => import('./pages/MyTeam').then((m) => ({ default: m.MyTeam })));
+const Leaders = lazy(() => import('./pages/Leaders').then((m) => ({ default: m.Leaders })));
+const Player = lazy(() => import('./pages/Player').then((m) => ({ default: m.Player })));
+const Playoffs = lazy(() => import('./pages/Playoffs').then((m) => ({ default: m.Playoffs })));
+const Projections = lazy(() => import('./pages/Projections').then((m) => ({ default: m.Projections })));
+const Rankings = lazy(() => import('./pages/Rankings').then((m) => ({ default: m.Rankings })));
+const Salaries = lazy(() => import('./pages/Salaries').then((m) => ({ default: m.Salaries })));
+const Standings = lazy(() => import('./pages/Standings').then((m) => ({ default: m.Standings })));
+const Team = lazy(() => import('./pages/Team').then((m) => ({ default: m.Team })));
+const Teams = lazy(() => import('./pages/Teams').then((m) => ({ default: m.Teams })));
+const Fantasy = lazy(() => import('./pages/Fantasy').then((m) => ({ default: m.Fantasy })));
+const Guide = lazy(() => import('./pages/Guide').then((m) => ({ default: m.Guide })));
+const Alerts = lazy(() => import('./pages/Alerts').then((m) => ({ default: m.Alerts })));
+const TeamReport = lazy(() => import('./pages/TeamReport').then((m) => ({ default: m.TeamReport })));
 
 // Grouped: this season · stats · teams & players · history & fun.
 const NAV: [string, string][][] = [
   [['/', 'Home'], ['/scores', 'Scores'], ['/standings', 'Standings'], ['/playoffs', 'Playoffs'], ['/projections', 'Projections']],
-  [['/leaders', 'Leaders'], ['/awards', 'Awards'], ['/rankings', 'Rankings'], ['/insights', 'Insights']],
+  [['/leaders', 'Leaders'], ['/awards', 'Awards'], ['/rankings', 'Rankings'], ['/insights', 'Insights'], ['/fantasy', 'Fantasy']],
   [['/teams', 'Teams'], ['/salaries', 'Salaries'], ['/h2h', 'H2H'], ['/compare', 'Compare']],
   [['/history', 'History'], ['/degrees', '6 Degrees'], ['/games', 'Games']],
 ];
@@ -56,6 +65,8 @@ export function App() {
         <div className="topbar-inner">
           <NavLink to="/" className="brand">🏀 NBA Stats Hub</NavLink>
           <SearchBox />
+          <NavLink to="/alerts" className="icon-link" title="Alerts: your team and followed players" aria-label="Alerts">🔔</NavLink>
+          <NavLink to="/guide" className="icon-link" title="What's on this site" aria-label="Guide">?</NavLink>
           <ShareButton compact />
           <ThemeToggle />
           <label className="season-select">
@@ -78,9 +89,11 @@ export function App() {
           ))}
         </nav>
       </header>
+      <OfflineBar />
       <LiveBar />
       <main key={season.year}>
         <SnapshotGate season={season.year}>
+        <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/scores" element={<Scores />} />
@@ -103,7 +116,12 @@ export function App() {
           <Route path="/salaries" element={<Salaries />} />
           <Route path="/team/:id" element={<Team />} />
           <Route path="/game/:id" element={<Game />} />
+          <Route path="/team/:id/report" element={<TeamReport />} />
+          <Route path="/fantasy" element={<Fantasy />} />
+          <Route path="/guide" element={<Guide />} />
+          <Route path="/alerts" element={<Alerts />} />
         </Routes>
+        </Suspense>
         </SnapshotGate>
       </main>
       <footer className="muted small">Data from ESPN's public API. Times shown in your local time zone.</footer>
