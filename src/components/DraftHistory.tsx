@@ -73,8 +73,8 @@ export function DraftHistory({ graph }: { graph: Graph }) {
         </div>
       </div>
       <div className="chips tight">
-        <button className={!redraft ? 'chip active' : 'chip'} onClick={() => set('view', '')}>As drafted</button>
-        <button className={redraft ? 'chip active' : 'chip'} onClick={() => set('view', 'redraft')}>Redraft by career</button>
+        <button className={!redraft ? 'chip active' : 'chip'} aria-pressed={!redraft} onClick={() => set('view', '')}>As drafted</button>
+        <button className={redraft ? 'chip active' : 'chip'} aria-pressed={redraft} onClick={() => set('view', 'redraft')}>Redraft by career</button>
       </div>
       {redraft && <Redraft picks={model.picks.filter((p) => p.season === year)} year={year} link={link} />}
       {!redraft && (

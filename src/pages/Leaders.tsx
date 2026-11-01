@@ -62,7 +62,7 @@ function Averages({ season, type }: { season: number; type: SeasonType }) {
     <>
       <div className="chips">
         {SORTS.map((s) => (
-          <button key={s.key} className={s.key === sort ? 'chip active' : 'chip'} onClick={() => setSort(s.key)}>
+          <button key={s.key} className={s.key === sort ? 'chip active' : 'chip'} aria-pressed={s.key === sort} onClick={() => setSort(s.key)}>
             {s.label}
           </button>
         ))}

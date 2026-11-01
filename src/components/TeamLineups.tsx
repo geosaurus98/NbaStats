@@ -52,7 +52,7 @@ export function TeamLineups({ teamId, season, seasonType }: { teamId: string; se
                 <th className="left">Five on court</th>
                 <th>Min</th>
                 <th title="Point margin per 48 minutes together">+/- per 48</th>
-                <th />
+                <td />
               </tr>
             </thead>
             <tbody>
@@ -80,7 +80,7 @@ export function TeamLineups({ teamId, season, seasonType }: { teamId: string; se
                 <th title="Team point margin per 48 while they're on court">On</th>
                 <th title="…and while they're on the bench (in games he played)">Off</th>
                 <th title="On minus off">Swing</th>
-                <th />
+                <td />
               </tr>
             </thead>
             <tbody>

@@ -47,8 +47,8 @@ export function OnOffLeaders({ season, type }: { season: number; type: SeasonTyp
         How much better each team does with a player on the floor than with them on the bench, in games they played: point margin per 48 minutes. It captures things the box score misses (spacing, defence) but also who a player shares the floor with.
       </p>
       <div className="segmented">
-        <button className={!worst ? 'active' : ''} onClick={() => setWorst(false)}>Biggest positive swings</button>
-        <button className={worst ? 'active' : ''} onClick={() => setWorst(true)}>Biggest negative swings</button>
+        <button className={!worst ? 'active' : ''} aria-pressed={!worst} onClick={() => setWorst(false)}>Biggest positive swings</button>
+        <button className={worst ? 'active' : ''} aria-pressed={worst} onClick={() => setWorst(true)}>Biggest negative swings</button>
       </div>
       <div className="table-wrap">
         <table>
@@ -59,7 +59,7 @@ export function OnOffLeaders({ season, type }: { season: number; type: SeasonTyp
               <th title="Team margin per 48 with them on court">On</th>
               <th title="…with them on the bench">Off</th>
               <th title="On minus off">Swing</th>
-              <th />
+              <td />
             </tr>
           </thead>
           <tbody>
@@ -339,7 +339,7 @@ export function BuildYourOwn({ season }: { season: number }) {
                 <th>#</th>
                 <th className="left">Player</th>
                 <th title="Weighted average of the stats' standard scores">Score</th>
-                <th />
+                <td />
                 <th>PTS</th>
                 <th>REB</th>
                 <th>AST</th>
@@ -423,7 +423,7 @@ export function AgingCurve({ playerId, season }: { playerId: string; season: num
         <h3>Aging curve</h3>
         <div className="chips tight">
           {AGE_STATS.map((s) => (
-            <button key={s.id} className={s.id === stat ? 'chip active' : 'chip'} onClick={() => setStat(s.id)}>{s.label}</button>
+            <button key={s.id} className={s.id === stat ? 'chip active' : 'chip'} aria-pressed={s.id === stat} onClick={() => setStat(s.id)}>{s.label}</button>
           ))}
         </div>
       </div>

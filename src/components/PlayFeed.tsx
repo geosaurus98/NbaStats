@@ -20,10 +20,10 @@ export function PlayFeed({ game, feed }: { game: Game; feed: FeedItem[] }) {
       <div className="page-head">
         <h3>Play-by-play{live ? ' (latest first)' : ''}</h3>
         <div className="chips tight">
-          <button className={scoringOnly ? 'chip active' : 'chip'} onClick={() => setScoringOnly(!scoringOnly)}>Scoring plays</button>
-          <button className={period === 'all' ? 'chip active' : 'chip'} onClick={() => setPeriod('all')}>All</button>
+          <button className={scoringOnly ? 'chip active' : 'chip'} aria-pressed={scoringOnly} onClick={() => setScoringOnly(!scoringOnly)}>Scoring plays</button>
+          <button className={period === 'all' ? 'chip active' : 'chip'} aria-pressed={period === 'all'} onClick={() => setPeriod('all')}>All</button>
           {periods.map((p) => (
-            <button key={p} className={period === p ? 'chip active' : 'chip'} onClick={() => setPeriod(p)}>{periodName(p)}</button>
+            <button key={p} className={period === p ? 'chip active' : 'chip'} aria-pressed={period === p} onClick={() => setPeriod(p)}>{periodName(p)}</button>
           ))}
         </div>
       </div>

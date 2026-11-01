@@ -313,7 +313,7 @@ export function HallOfFameOdds({ graph }: { graph: Graph }) {
           <tr>
             <th className="left">Player</th>
             <th>Odds</th>
-            <th />
+            <td />
             <th title="All-Star selections">AS</th>
             <th title="All-NBA teams (1st, 2nd and 3rd)">All-NBA</th>
             <th title="MVPs">MVP</th>

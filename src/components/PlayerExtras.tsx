@@ -11,7 +11,7 @@ import { playerAdvanced } from '../lib/advanced';
 import { gameScore, P } from '../lib/boxTotals';
 import { C } from '../lib/clutch';
 import { formatShortDate } from '../lib/dates';
-import { ARCHETYPES, archetypes, comboTotals, STREAKS, streaks, type ArchetypeId, type StreakId } from '../lib/playerExtras';
+import { ARCHETYPES, archetypes, comboTotals, STREAKS, streaks, styleTwins, type ArchetypeId, type StreakId } from '../lib/playerExtras';
 import { money } from '../lib/salaryCap';
 import { SHOT_TYPES } from '../lib/shotTypes';
 import { ScatterPlot, type ScatterPoint } from './ScatterPlot';
@@ -209,8 +209,8 @@ export function WpaLeaders({ season, type }: { season: number; type: SeasonType 
         Win probability added: every play moves ESPN's win probability, and the players in it get the credit (or blame). A made shot goes to the shooter (a third to the passer on an assist); a steal or block is split between the two players. Totals are in wins: +1.0 means plays worth one extra win. Misses, turnovers and fouls are always charged to someone while the matching gain often has no name on it, so totals lean negative: compare players with each other rather than with zero.
       </p>
       <div className="segmented">
-        <button className={!worst ? 'active' : ''} onClick={() => setWorst(false)}>Most added</button>
-        <button className={worst ? 'active' : ''} onClick={() => setWorst(true)}>Most lost</button>
+        <button className={!worst ? 'active' : ''} aria-pressed={!worst} onClick={() => setWorst(false)}>Most added</button>
+        <button className={worst ? 'active' : ''} aria-pressed={worst} onClick={() => setWorst(true)}>Most lost</button>
       </div>
       <div className="two-col">
         <div className="table-wrap">
@@ -220,7 +220,7 @@ export function WpaLeaders({ season, type }: { season: number; type: SeasonType 
                 <th className="left">Player</th>
                 <th>G</th>
                 <th title="Wins added over the season">WPA</th>
-                <th />
+                <td />
                 <th title="Per game, in percentage points of win probability">Per game</th>
                 <th className="left" title="Biggest single game">Best game</th>
               </tr>
@@ -342,7 +342,7 @@ export function FreeThrowPressure({ season, type }: { season: number; type: Seas
             <th>Clutch %</th>
             <th title="Free-throw % the rest of the time">Other %</th>
             <th>Diff</th>
-            <th />
+            <td />
           </tr>
         </thead>
         <tbody>
@@ -380,7 +380,7 @@ export function StreaksView({ season }: { season: number }) {
       <p className="muted">Consecutive games each player has hit the mark, counting the games they played.</p>
       <div className="chips tight">
         {STREAKS.map((s) => (
-          <button key={s.id} className={s.id === which ? 'chip active' : 'chip'} onClick={() => setWhich(s.id)}>{s.label}</button>
+          <button key={s.id} className={s.id === which ? 'chip active' : 'chip'} aria-pressed={s.id === which} onClick={() => setWhich(s.id)}>{s.label}</button>
         ))}
       </div>
       <div className="two-col">
@@ -513,10 +513,10 @@ export function SeasonVsLast({ playerId, season }: { playerId: string; season: n
       <table>
         <thead>
           <tr>
-            <th className="left" />
+            <td className="left" />
             <th>Last</th>
             <th>This</th>
-            <th />
+            <td />
           </tr>
         </thead>
         <tbody>
@@ -566,4 +566,30 @@ function ArchetypeLine({ a, also, inline }: { a: ArchetypeId; also: ArchetypeId;
     </p>
   );
   return inline ? line : <div className="card">{line}</div>;
+}
+
+/** Player page: the current players whose style is closest (similarity 2.0). */
+export function StyleTwins({ playerId, season }: { playerId: string; season: number }) {
+  const snap = seasonSnapshot(season);
+  const twins = useMemo(() => (snap?.box?.['2'] ? styleTwins(snap.box['2'], snap.shotSplits?.['2'], playerId) : []), [snap, playerId]);
+  if (!twins.length || !snap) return null;
+  const abbr = new Map(snap.teams.map((t) => [t.id, t.abbr]));
+  return (
+    <div className="card">
+      <h3>Plays most like</h3>
+      <p className="muted small">This season's players with the closest style: usage, passing, rebounding, steals and blocks, where they shoot from, free throws, how many shots they create themselves and their shot-type mix.</p>
+      <ol className="twins">
+        {twins.map((t) => (
+          <li key={t.id}>
+            <div className="twin-head">
+              <span><Link to={`/player/${t.id}`}>{snap.players?.[t.id] ?? t.id}</Link> <span className="muted small">{abbr.get(t.team)}</span></span>
+              <span className="twin-score" title="Style match">{t.similarity}%</span>
+            </div>
+            {t.shared.length > 0 && <div className="muted small">Both: {t.shared.join(', ')}</div>}
+          </li>
+        ))}
+      </ol>
+      <p className="small"><Link to={`/compare?p=${playerId},${twins[0].id}`}>Compare with {snap.players?.[twins[0].id]} →</Link> · <Link to="/history?tab=similar">Similar seasons in history →</Link></p>
+    </div>
+  );
 }

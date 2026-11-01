@@ -102,8 +102,8 @@ export function TeamStyles({ season }: { season: number }) {
     <>
       <p className="muted">Every team since {from - 1}-{String(from).slice(2)} by pace (possessions per game) and how many of its shots were threes. This season's teams are labelled; the grey cloud shows how the league has moved up and to the right.</p>
       <div className="chips tight">
-        <button className={era === 'all' ? 'chip active' : 'chip'} onClick={() => setEra('all')}>Since 1979-80</button>
-        <button className={era === 'recent' ? 'chip active' : 'chip'} onClick={() => setEra('recent')}>Since 2009-10</button>
+        <button className={era === 'all' ? 'chip active' : 'chip'} aria-pressed={era === 'all'} onClick={() => setEra('all')}>Since 1979-80</button>
+        <button className={era === 'recent' ? 'chip active' : 'chip'} aria-pressed={era === 'recent'} onClick={() => setEra('recent')}>Since 2009-10</button>
       </div>
       <div className="card">
         <ScatterPlot
@@ -260,11 +260,11 @@ export function PlayerTimeline({ playerId, season }: { playerId: string; season:
         <h3>Season timeline</h3>
         <div className="chips tight">
           {(['pts', 'gmsc', 'pm', 'min'] as const).map((k) => (
-            <button key={k} className={k === stat ? 'chip active' : 'chip'} onClick={() => setStat(k)}>{{ pts: 'Points', gmsc: 'Game Score', pm: '+/-', min: 'Minutes' }[k]}</button>
+            <button key={k} className={k === stat ? 'chip active' : 'chip'} aria-pressed={k === stat} onClick={() => setStat(k)}>{{ pts: 'Points', gmsc: 'Game Score', pm: '+/-', min: 'Minutes' }[k]}</button>
           ))}
         </div>
       </div>
-      <div className="tl-strip">
+      <div className="tl-strip" tabIndex={0} role="img" aria-label="Season timeline: one bar per team game">
         {model.map((m, i) => {
           const v = vals[i];
           const h = m.line ? Math.max(2, (Math.abs(v) / max) * (stat === 'pm' ? H / 2 - 8 : H - 20)) : 0;

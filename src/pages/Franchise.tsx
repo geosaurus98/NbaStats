@@ -144,7 +144,7 @@ export function Franchise() {
           <h3>Franchise leaders: {STAT_LABELS[stat].toLowerCase()}</h3>
           <div className="chips tight">
             {LEADER_STATS.map((k) => (
-              <button key={k} className={k === stat ? 'chip active' : 'chip'} onClick={() => setStat(k)}>{STAT_LABELS[k]}</button>
+              <button key={k} className={k === stat ? 'chip active' : 'chip'} aria-pressed={k === stat} onClick={() => setStat(k)}>{STAT_LABELS[k]}</button>
             ))}
           </div>
           <div className="partner-bars">

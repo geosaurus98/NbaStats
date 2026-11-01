@@ -69,7 +69,7 @@ export function CompareReport({ ids, season, names }: { ids: string[]; season: n
         <table>
           <thead>
             <tr>
-              <th className="left" />
+              <td className="left" />
               {rows.map((r) => (
                 <th key={r.id}><i className="key-line" style={{ background: COLORS[r.i] }} /> {names(r.id)}</th>
               ))}

@@ -71,7 +71,7 @@ export function MatchupNumbers({ game, season }: { game: Game; season: number })
         <thead>
           <tr>
             <th>{game.away.team.abbr}</th>
-            <th className="center" />
+            <td className="center" />
             <th>{game.home.team.abbr}</th>
           </tr>
         </thead>

@@ -87,6 +87,7 @@ function Hub({ teamId }: { teamId: string }) {
         <h1 className="team-title">
           <TeamLogo team={team} size={44} /> {team.name} <span className="muted">{season.label}</span>
         </h1>
+        <h2 className="sr-only">Your team</h2>
         <div className="actions">
           <Link className="chip" to={`/team/${teamId}`}>Team page →</Link>
           {franchise && <Link className="chip" to={`/franchise/${franchise.id}`}>History →</Link>}

@@ -74,10 +74,19 @@ export interface Archetyped {
 
 const RIM = ['dunk', 'layup', 'tip'] as const;
 
-/** Assigns each rotation player (15+ minutes a game, 5+ games) the archetype nearest their profile. */
-export function archetypes(box: BoxTotals, splits?: ShotSplits): Archetyped[] {
+interface RawProfile {
+  id: string;
+  team: string;
+  minutes: number;
+  f: Record<Feature, number>;
+  /** Share of field-goal attempts by shot type. */
+  mix: Record<string, number>;
+}
+
+/** Style features for each rotation player (15+ minutes a game, 5+ games). */
+function rawProfiles(box: BoxTotals, splits?: ShotSplits): RawProfile[] {
   const teams = new Map(box.teams.map((t) => [t[0], t]));
-  const raw = box.players.flatMap((r) => {
+  return box.players.flatMap((r) => {
     const v = (k: keyof typeof P) => r[P[k]] as number;
     const g = v('gp');
     const min = v('min');
@@ -110,8 +119,64 @@ export function archetypes(box: BoxTotals, splits?: ShotSplits): Archetyped[] {
       ftr: v('fta') / v('fga'),
       selfMade: made ? 1 - assisted / made : 0.5,
     };
-    return [{ id: r[0], team: r[1], minutes: min, f }];
+    const mix: Record<string, number> = {};
+    if (s && att) for (const [type, c] of Object.entries(s.types)) if (c) mix[type] = c[0] / att;
+    return [{ id: r[0], team: r[1], minutes: min, f, mix }];
   });
+}
+
+const zScorer = (xs: number[]) => {
+  const m = xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
+  const sd = Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length || 1)) || 1;
+  return (x: number) => (x - m) / sd;
+};
+
+export interface StyleTwin {
+  id: string;
+  team: string;
+  /** 0-100: how close the two players' styles are. */
+  similarity: number;
+  /** The features the two share most strongly. */
+  shared: string[];
+}
+
+const FEATURE_LABELS: Record<Feature, string> = { usg: 'usage', ast: 'passing', reb: 'rebounding', stl: 'steals', blk: 'shot blocking', par3: 'three-point rate', rim: 'rim attempts', ftr: 'free-throw rate', selfMade: 'self-created shots' };
+
+/**
+ * Current players with the most similar style to `playerId`: box-score
+ * profile (usage, passing, rebounding, defence, shot locations, free throws,
+ * self-created shots) plus their shot-type mix, all as league z-scores.
+ */
+export function styleTwins(box: BoxTotals, splits: ShotSplits | undefined, playerId: string, n = 6): StyleTwin[] {
+  const raw = rawProfiles(box, splits);
+  const me = raw.find((p) => p.id === playerId);
+  if (!me || raw.length < 10) return [];
+  const types = [...new Set(raw.flatMap((p) => Object.keys(p.mix)))];
+  const zf = Object.fromEntries(FEATURES.map((k) => [k, zScorer(raw.map((p) => p.f[k]))])) as Record<Feature, (x: number) => number>;
+  const zt = Object.fromEntries(types.map((t) => [t, zScorer(raw.map((p) => p.mix[t] ?? 0))]));
+  const vec = (p: RawProfile) => [...FEATURES.map((k) => zf[k](p.f[k])), ...types.map((t) => 0.5 * zt[t](p.mix[t] ?? 0))];
+  const mine = vec(me);
+  const dim = mine.length;
+  return raw
+    .filter((p) => p.id !== playerId)
+    .map((p) => {
+      const v = vec(p);
+      const d = Math.sqrt(v.reduce((a, x, i) => a + (x - mine[i]) ** 2, 0) / dim);
+      // Strengths they share: both well above the league on the same feature.
+      const shared = FEATURES.map((k, i) => ({ k, s: Math.min(mine[i], v[i]) }))
+        .filter((x) => x.s > 0.6)
+        .sort((a, b) => b.s - a.s)
+        .slice(0, 2)
+        .map((x) => FEATURE_LABELS[x.k]);
+      return { id: p.id, team: p.team, similarity: Math.round(100 * Math.exp(-d)), shared };
+    })
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, n);
+}
+
+/** Assigns each rotation player (15+ minutes a game, 5+ games) the archetype nearest their profile. */
+export function archetypes(box: BoxTotals, splits?: ShotSplits): Archetyped[] {
+  const raw = rawProfiles(box, splits);
   if (raw.length < 10) return [];
   const stats = Object.fromEntries(
     FEATURES.map((k) => {

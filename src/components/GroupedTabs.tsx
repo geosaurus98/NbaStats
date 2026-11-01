@@ -39,14 +39,14 @@ export function GroupedTabs<T extends string>({ groups, active, onChange }: { gr
   }
   return (
     <div className="grouped-tabs">
-      <div className="tab-groups" role="tablist" aria-label="Sections">
+      <div className="tab-groups" role="group" aria-label="Sections">
         {groups.map((g) => (
-          <button key={g.label} className={g === current ? 'active' : ''} onClick={() => g !== current && onChange(g.tabs[0].id)}>{g.label}</button>
+          <button key={g.label} className={g === current ? 'active' : ''} aria-pressed={g === current} onClick={() => g !== current && onChange(g.tabs[0].id)}>{g.label}</button>
         ))}
       </div>
       <div className="tabs">
         {current.tabs.map((t) => (
-          <button key={t.id} className={t.id === active ? 'active' : ''} onClick={() => onChange(t.id)}>{t.label}</button>
+          <button key={t.id} className={t.id === active ? 'active' : ''} aria-pressed={t.id === active} onClick={() => onChange(t.id)}>{t.label}</button>
         ))}
       </div>
     </div>

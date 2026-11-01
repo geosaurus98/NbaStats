@@ -3,7 +3,7 @@ import type { SeasonSnapshot } from '../api/snapshot';
 import lines2026 from '../data/lines-2026.json';
 import season2026 from '../data/season-2026.json';
 import type { SeasonLines } from './boxTotals';
-import { archetypes, comboTotals, streaks } from './playerExtras';
+import { archetypes, comboTotals, streaks, styleTwins } from './playerExtras';
 
 const snap = season2026 as unknown as SeasonSnapshot;
 const lines = lines2026 as unknown as SeasonLines;
@@ -26,6 +26,16 @@ describe('player extras on 2025-26', () => {
     expect(of('Rudy Gobert')).toMatch(/protector|roller/);
     expect(of('Trae Young')).toBe('playmaker');
     expect(counts.size).toBe(8);
+  });
+
+  it('finds players with a similar style', () => {
+    const a = archetypes(snap.box!['2'], snap.shotSplits?.['2']);
+    const arch = new Map(a.map((x) => [x.id, x.archetype]));
+    const twins = styleTwins(snap.box!['2'], snap.shotSplits?.['2'], byName('Rudy Gobert'));
+    expect(twins).toHaveLength(6);
+    expect(twins[0].similarity).toBeGreaterThanOrEqual(twins[5].similarity);
+    // A rim-protecting centre's closest matches are bigs.
+    expect(twins.filter((t) => /protector|roller|stretch/.test(arch.get(t.id) ?? '')).length).toBeGreaterThanOrEqual(5);
   });
 
   it('sums lineup minutes for any group', () => {

@@ -55,7 +55,7 @@ export function WhatIf({ model, season }: { model: Model; season: number }) {
       <p className="muted">Tap the team you think wins each game. The standings below update with your picks (unpicked games are left out). Your picks are saved on this device.</p>
       <div className="actions">
         {RANGES.map((d) => (
-          <button key={d} className={d === days ? 'chip active' : 'chip'} onClick={() => setDays(d)}>Next {d} days</button>
+          <button key={d} className={d === days ? 'chip active' : 'chip'} aria-pressed={d === days} onClick={() => setDays(d)}>Next {d} days</button>
         ))}
         <button className="chip" onClick={() => setPicks((p) => ({ ...p, ...Object.fromEntries(upcoming.map((g) => [g.id, prob(g) >= 0.5 ? g.home.team.id : g.away.team.id])) }))}>Pick all favourites</button>
         <button className="chip" onClick={() => setPicks({})}>Clear picks</button>

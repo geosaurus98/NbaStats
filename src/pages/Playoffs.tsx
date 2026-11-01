@@ -127,7 +127,7 @@ function SeriesCard({ s }: { s: Series }) {
         <div className="chips tight pick-row">
           <span className="small muted">Pick ({roundPoints(s.round)} pt{s.round > 1 ? 's' : ''}):</span>
           {s.teams.map((t) => (
-            <button key={t.id} className={picked === t.id ? 'chip active' : 'chip'} onClick={() => setPicks({ ...picks, series: { ...picks.series, [s.key]: t.id } })}>{t.abbr}</button>
+            <button key={t.id} className={picked === t.id ? 'chip active' : 'chip'} aria-pressed={picked === t.id} onClick={() => setPicks({ ...picks, series: { ...picks.series, [s.key]: t.id } })}>{t.abbr}</button>
           ))}
         </div>
       )}

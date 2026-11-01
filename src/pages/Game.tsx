@@ -109,7 +109,7 @@ export function Game() {
         <>
           <div className="tabs game-tabs">
             {GAME_TABS.filter((t) => (t.id !== 'recap' || game.state === 'post') && (t.id !== 'live' || game.state === 'in')).map((t) => (
-              <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParams(t.id === home ? {} : { tab: t.id }, { replace: true })}>{t.label}</button>
+              <button key={t.id} className={tab === t.id ? 'active' : ''} aria-pressed={tab === t.id} onClick={() => setParams(t.id === home ? {} : { tab: t.id }, { replace: true })}>{t.label}</button>
             ))}
           </div>
           {tab === 'live' && <LiveCentre summary={data} />}
@@ -177,7 +177,7 @@ function TeamComparison({ a, b }: { a: TeamBox; b: TeamBox }) {
           <thead>
             <tr>
               <th>{a.team.abbr}</th>
-              <th />
+              <td />
               <th>{b.team.abbr}</th>
             </tr>
           </thead>

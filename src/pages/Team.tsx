@@ -65,6 +65,7 @@ export function Team() {
           {team?.name ?? 'Team'} <span className="muted">{season.label}</span>
           {team && <FavouriteStar teamId={team.id} teamName={team.name} />}
         </h1>
+      <h2 className="sr-only">Team details</h2>
         <SeasonTypeToggle value={type} onChange={setType} />
       </div>
       <div className="actions">
@@ -144,8 +145,8 @@ export function Team() {
         <div className="page-head">
           <h2>Schedule</h2>
           <div className="segmented">
-            <button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}>List</button>
-            <button className={view === 'calendar' ? 'active' : ''} onClick={() => setView('calendar')}>Calendar</button>
+            <button className={view === 'list' ? 'active' : ''} aria-pressed={view === 'list'} onClick={() => setView('list')}>List</button>
+            <button className={view === 'calendar' ? 'active' : ''} aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}>Calendar</button>
           </div>
         </div>
       )}

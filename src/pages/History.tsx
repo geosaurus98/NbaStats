@@ -64,6 +64,7 @@ function HistoryPage({ graph }: { graph: Graph }) {
     <section>
       <PlayerDatalist graph={graph} />
       <h1>NBA history</h1>
+      <h2 className="sr-only">History</h2>
       <p className="muted">Every roster since 1946-47, grouped into today's 30 franchises (Seattle counts as OKC, New Jersey as Brooklyn, and so on).</p>
       <GroupedTabs groups={GROUPS} active={tab} onChange={(t) => setParam({ tab: t })} />
       {tab === 'movement' && <Movement graph={graph} />}
@@ -120,7 +121,7 @@ function Movement({ graph }: { graph: Graph }) {
     <>
       <div className="chips">
         {ERAS.map((x) => (
-          <button key={x.id} className={x.id === era ? 'chip active' : 'chip'} onClick={() => { setEra(x.id); setPair(undefined); }}>{x.label}</button>
+          <button key={x.id} className={x.id === era ? 'chip active' : 'chip'} aria-pressed={x.id === era} onClick={() => { setEra(x.id); setPair(undefined); }}>{x.label}</button>
         ))}
       </div>
       <div className="degrees-main">
@@ -353,8 +354,8 @@ function Continuity({ graph }: { graph: Graph }) {
       <div className="page-head">
         <p className="muted">How much of each team's roster was with the franchise the season before.</p>
         <div className="segmented">
-          <button className={!allHistory ? 'active' : ''} onClick={() => setAllHistory(false)}>Since 1980</button>
-          <button className={allHistory ? 'active' : ''} onClick={() => setAllHistory(true)}>All history</button>
+          <button className={!allHistory ? 'active' : ''} aria-pressed={!allHistory} onClick={() => setAllHistory(false)}>Since 1980</button>
+          <button className={allHistory ? 'active' : ''} aria-pressed={allHistory} onClick={() => setAllHistory(true)}>All history</button>
         </div>
       </div>
       <div className="card">

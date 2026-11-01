@@ -37,7 +37,7 @@ export function Scores() {
         <h1>Scores &amp; fixtures</h1>
         <div className="date-nav">
           <button onClick={() => setDate(addDays(date, -1))} aria-label="Previous day">‹</button>
-          <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
+          <input type="date" aria-label="Date (US game day)" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
           <button onClick={() => setDate(addDays(date, 1))} aria-label="Next day">›</button>
         </div>
       </div>

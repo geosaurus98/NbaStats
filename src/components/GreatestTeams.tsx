@@ -55,9 +55,9 @@ export function GreatestTeams({ graph }: { graph: Graph }) {
       <p className="muted">Every NBA and BAA team-season ranked by SRS: average winning margin adjusted for schedule strength, measured against its own league, so a 1960s team and a 2020s team can sit on the same list.</p>
       <div className="chips tight">
         {ERAS.map((e) => (
-          <button key={e.id} className={e.id === era.id ? 'chip active' : 'chip'} onClick={() => set('era', e.id === 'all' ? undefined : e.id)}>{e.label}</button>
+          <button key={e.id} className={e.id === era.id ? 'chip active' : 'chip'} aria-pressed={e.id === era.id} onClick={() => set('era', e.id === 'all' ? undefined : e.id)}>{e.label}</button>
         ))}
-        <button className={champsOnly ? 'chip active' : 'chip'} onClick={() => set('champs', champsOnly ? undefined : '1')}>🏆 Champions only</button>
+        <button className={champsOnly ? 'chip active' : 'chip'} aria-pressed={champsOnly} onClick={() => set('champs', champsOnly ? undefined : '1')}>🏆 Champions only</button>
       </div>
       <div className="table-wrap">
         <table>

@@ -162,7 +162,7 @@ export function HotCold({ season }: { season: number }) {
       </p>
       <div className="chips tight">
         {[5, 10, 15].map((k) => (
-          <button key={k} className={k === n ? 'chip active' : 'chip'} onClick={() => setN(k)}>Last {k}</button>
+          <button key={k} className={k === n ? 'chip active' : 'chip'} aria-pressed={k === n} onClick={() => setN(k)}>Last {k}</button>
         ))}
       </div>
       <div className="two-col">
@@ -220,9 +220,9 @@ export function Clutch({ season, type }: { season: number; type: SeasonType }) {
     <>
       <p className="muted">Clutch time is the NBA's definition: the last five minutes of the fourth quarter or overtime with the score within five.</p>
       <div className="chips tight">
-        <button className={sort === 'pts' ? 'chip active' : 'chip'} onClick={() => setSort('pts')}>Most clutch points</button>
-        <button className={sort === 'fg' ? 'chip active' : 'chip'} onClick={() => setSort('fg')}>Best FG% ({minFga}+ shots)</button>
-        <button className={sort === 'ts' ? 'chip active' : 'chip'} onClick={() => setSort('ts')}>Best true shooting ({minFga}+ shots)</button>
+        <button className={sort === 'pts' ? 'chip active' : 'chip'} aria-pressed={sort === 'pts'} onClick={() => setSort('pts')}>Most clutch points</button>
+        <button className={sort === 'fg' ? 'chip active' : 'chip'} aria-pressed={sort === 'fg'} onClick={() => setSort('fg')}>Best FG% ({minFga}+ shots)</button>
+        <button className={sort === 'ts' ? 'chip active' : 'chip'} aria-pressed={sort === 'ts'} onClick={() => setSort('ts')}>Best true shooting ({minFga}+ shots)</button>
       </div>
       <div className="two-col">
         <div className="table-wrap">
@@ -311,10 +311,10 @@ export function Combos({ season, type }: { season: number; type: SeasonType }) {
     <>
       <p className="muted">The two- and three-man combinations that outscore opponents by the most per 48 minutes together, from every substitution in the play-by-play. At least {Math.round(minSec / 60)} minutes together.</p>
       <div className="actions">
-        <button className={size === 2 ? 'chip active' : 'chip'} onClick={() => setSize(2)}>Duos</button>
-        <button className={size === 3 ? 'chip active' : 'chip'} onClick={() => setSize(3)}>Trios</button>
-        <button className={!worst ? 'chip active' : 'chip'} onClick={() => setWorst(false)}>Best</button>
-        <button className={worst ? 'chip active' : 'chip'} onClick={() => setWorst(true)}>Worst</button>
+        <button className={size === 2 ? 'chip active' : 'chip'} aria-pressed={size === 2} onClick={() => setSize(2)}>Duos</button>
+        <button className={size === 3 ? 'chip active' : 'chip'} aria-pressed={size === 3} onClick={() => setSize(3)}>Trios</button>
+        <button className={!worst ? 'chip active' : 'chip'} aria-pressed={!worst} onClick={() => setWorst(false)}>Best</button>
+        <button className={worst ? 'chip active' : 'chip'} aria-pressed={worst} onClick={() => setWorst(true)}>Worst</button>
         <select value={team} onChange={(e) => setTeam(e.target.value)} aria-label="Team">
           <option value="">All teams</option>
           {[...teams.values()].sort((a, b) => a.name.localeCompare(b.name)).map((t) => (
@@ -395,7 +395,7 @@ export function ScheduleAheadTab({ season, start, end }: { season: number; start
           <input type="date" value={date} min={start} max={end} onChange={(e) => setAsOf(e.target.value)} />
         </label>
         {SCHEDULE_SORTS.map((s) => (
-          <button key={s.id} className={s.id === sort.id ? 'chip active' : 'chip'} onClick={() => setSort(s)}>{s.label}</button>
+          <button key={s.id} className={s.id === sort.id ? 'chip active' : 'chip'} aria-pressed={s.id === sort.id} onClick={() => setSort(s)}>{s.label}</button>
         ))}
       </div>
       {rows.length === 0 ? (

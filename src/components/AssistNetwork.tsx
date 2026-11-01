@@ -269,12 +269,13 @@ export function AssistMatrix({ data }: { data: AssistPairs }) {
                 {ids.map((s) => {
                   const e = cell.get(`${p}>${s}`);
                   if (p === s) return <td key={s} className="diag" />;
-                  const pct = e ? Math.round(12 + 78 * (e.count / max)) : 0;
+                  // Capped so the count stays readable on the shading (WCAG AA in both themes).
+                  const pct = e ? Math.round(10 + 45 * (e.count / max)) : 0;
                   return (
                     <td
                       key={s}
                       title={e ? `${names.get(p)} → ${names.get(s)}: ${e.count} assists, ${e.points} pts` : undefined}
-                      style={e ? { background: `color-mix(in srgb, var(--series-1) ${pct}%, transparent)`, color: pct > 55 ? '#fff' : undefined } : undefined}
+                      style={e ? { background: `color-mix(in srgb, var(--series-1) ${pct}%, transparent)` } : undefined}
                     >
                       {e?.count ?? ''}
                     </td>

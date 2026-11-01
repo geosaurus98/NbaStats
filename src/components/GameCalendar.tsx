@@ -87,7 +87,7 @@ export function GameCalendar({ playerId, season }: { playerId: string; season: n
         <h3>Season calendar</h3>
         <div className="chips tight">
           {(Object.keys(METRICS) as Metric[]).map((k) => (
-            <button key={k} className={k === metric ? 'chip active' : 'chip'} onClick={() => setMetric(k)}>{METRICS[k].label}</button>
+            <button key={k} className={k === metric ? 'chip active' : 'chip'} aria-pressed={k === metric} onClick={() => setMetric(k)}>{METRICS[k].label}</button>
           ))}
         </div>
       </div>

@@ -33,7 +33,7 @@ export function RotationChart({ season, type, teamId }: { season: number; type: 
             <tr>
               <th className="left">Player</th>
               {Array.from({ length: SEGMENTS - 1 }, (_, i) => (
-                <th key={i} className={i % 4 === 0 ? 'q-start' : undefined}>{i % 4 === 0 ? `Q${i / 4 + 1}` : ''}</th>
+                <th key={i} className={i % 4 === 0 ? 'q-start' : undefined}>{i % 4 === 0 ? `Q${i / 4 + 1}` : <span className="sr-only">{`Q${Math.floor(i / 4) + 1}, ${(i % 4) * 3}-${(i % 4) * 3 + 3} min`}</span>}</th>
               ))}
               <th className="q-start">OT</th>
               <th title="Minutes per game">MPG</th>
@@ -78,7 +78,7 @@ export function ClutchLineups({ season, type, teamId }: { season: number; type: 
               <th>Min</th>
               <th title="Points for and against">Score</th>
               <th title="Point margin per 48 minutes">+/- per 48</th>
-              <th />
+              <td />
             </tr>
           </thead>
           <tbody>

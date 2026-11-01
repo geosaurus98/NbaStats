@@ -17,6 +17,8 @@ const PAGES: { to: string; name: string; what: string }[] = [
   { to: '/fantasy', name: 'Fantasy', what: 'Fantasy points in ESPN, Yahoo and DraftKings scoring or nine-category value, hot pickups and games per team this week and next.' },
   { to: '/teams', name: 'Teams', what: 'Each team: results, Elo, style profile, rotation, lineups, on/off, defence by zone, payroll, shot map and a printable season report.' },
   { to: '/salaries', name: 'Salaries', what: 'Payrolls against the cap, tax and aprons, salary vs production and Win Shares per $10M.' },
+  { to: '/draft', name: 'Draft hub', what: "This year's projected order and lottery odds, every team's draft classes graded against their slots, steals and busts, and which franchises draft best." },
+  { to: '/trade', name: 'Trade machine', what: 'Build a two-team trade: does the salary match under the aprons, what happens to both payrolls and the Win Shares that move.' },
   { to: '/compare', name: 'Compare', what: 'Up to three current players side by side, with a full report: advanced stats, shot diet, archetype and contract value.' },
   { to: '/history', name: 'History', what: 'Every season since 1946-47: careers, comparisons across eras, Hall of Fame odds, all-time leaders, awards, greatest teams, the draft and lottery history.' },
   { to: '/degrees', name: '6 Degrees', what: 'How any two players connect through teammates.' },
@@ -56,6 +58,7 @@ export function Guide() {
   return (
     <section className="guide">
       <h1>What's on this site</h1>
+      <h2 className="sr-only">Pages</h2>
       <p className="muted">A quick tour of every page and what the numbers mean. Data comes from ESPN (live) and Basketball-Reference (history and salaries), refreshed every day. Search (top of the page, or press /) finds any player, team or page.</p>
       <div className="guide-grid">
         {PAGES.map((p) => (

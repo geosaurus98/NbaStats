@@ -55,11 +55,12 @@ export function Fantasy() {
     <section>
       <div className="page-head">
         <h1>{season.label} fantasy hub</h1>
+      <h2 className="sr-only">Fantasy rankings</h2>
         <div className="chips tight">
           {(Object.keys(FORMATS) as FormatId[]).map((f) => (
-            <button key={f} className={mode === f ? 'chip active' : 'chip'} onClick={() => setMode(f)}>{FORMATS[f].label}</button>
+            <button key={f} className={mode === f ? 'chip active' : 'chip'} aria-pressed={mode === f} onClick={() => setMode(f)}>{FORMATS[f].label}</button>
           ))}
-          <button className={mode === 'nine' ? 'chip active' : 'chip'} onClick={() => setMode('nine')}>9-category</button>
+          <button className={mode === 'nine' ? 'chip active' : 'chip'} aria-pressed={mode === 'nine'} onClick={() => setMode('nine')}>9-category</button>
         </div>
       </div>
       <p className="muted">

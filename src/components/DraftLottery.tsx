@@ -78,8 +78,8 @@ export function DraftLottery({ model, season }: { model: Model; season: number }
       <div className="actions">
         {remaining > 0 && (
           <>
-            <button className={mode === 'current' ? 'chip active' : 'chip'} onClick={() => setMode('current')}>Current standings</button>
-            <button className={mode === 'projected' ? 'chip active' : 'chip'} onClick={() => setMode('projected')}>Projected final records</button>
+            <button className={mode === 'current' ? 'chip active' : 'chip'} aria-pressed={mode === 'current'} onClick={() => setMode('current')}>Current standings</button>
+            <button className={mode === 'projected' ? 'chip active' : 'chip'} aria-pressed={mode === 'projected'} onClick={() => setMode('projected')}>Projected final records</button>
           </>
         )}
         <button className="chip active" onClick={() => setDraw(drawLottery(weights, Math.random))}>🎲 Simulate the lottery</button>

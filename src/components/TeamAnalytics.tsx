@@ -86,10 +86,10 @@ export function FourFactorsTable({ season, type }: { season: number; type: Seaso
         <table className="factors">
           <thead>
             <tr>
-              <th />
+              <td />
               <th colSpan={2} />
               <th colSpan={4} className="group">Offence</th>
-              <th />
+              <td />
               <th colSpan={4} className="group">Defence (opponents)</th>
             </tr>
             <tr>
@@ -245,7 +245,7 @@ export function LuckMeter({ season }: { season: number }) {
                 <th>W</th>
                 <th title="Expected wins from points scored and allowed">xW</th>
                 <th title="Wins minus expected wins">Luck</th>
-                <th />
+                <td />
                 <th title="Record in games decided by 5 or fewer">Close</th>
                 <th title={`Opponents' three-point % (league ${pct1(lgOpp3)})`}>Opp 3P%</th>
                 <th title={`Opponents' free-throw % (league ${pct1(lgOppFt)})`}>Opp FT%</th>
@@ -403,7 +403,7 @@ export function GarbageTime({ season, type }: { season: number; type: SeasonType
                 <th title="Point margin per 100 possessions, all minutes">All</th>
                 <th title="…without garbage time">Without</th>
                 <th title="Without minus all">Change</th>
-                <th />
+                <td />
                 <th title="Games with garbage time / its minutes">Games · min</th>
               </tr>
             </thead>

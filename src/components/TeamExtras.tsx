@@ -54,7 +54,7 @@ export function SrsTable({ season }: { season: number }) {
               <th>#</th>
               <th className="left">Team</th>
               <th title="Simple Rating System">SRS</th>
-              <th />
+              <td />
               <th title="Average margin of victory">MOV</th>
               <th title="Strength of schedule: average opponent SRS">SOS</th>
               <th className="left" title="The most similar champion since 1980">Plays like</th>
@@ -168,7 +168,7 @@ export function ScoringRuns({ season, type }: { season: number; type: 2 | 3 }) {
                 <th title="10-0 runs or bigger">Made</th>
                 <th>Allowed</th>
                 <th>Diff</th>
-                <th />
+                <td />
                 <th title="Biggest run made / allowed">Biggest</th>
               </tr>
             </thead>
@@ -280,7 +280,7 @@ export function WithWithoutCard({ season, teamId }: { season: number; teamId: st
             <th title="Team record when they played">With</th>
             <th title="Team record when they missed (while on the team)">Without</th>
             <th title="Average margin with minus without">Margin swing</th>
-            <th />
+            <td />
           </tr>
         </thead>
         <tbody>

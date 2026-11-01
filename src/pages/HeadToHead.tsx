@@ -42,9 +42,9 @@ export function HeadToHead() {
       <h1>{season.label} head-to-head</h1>
       {teams.error && <ErrorBox error={teams.error} />}
       <div className="h2h-pickers">
-        <TeamSelect teams={teams.data ?? []} value={a} onChange={(v) => set('a', v)} />
+        <TeamSelect teams={teams.data ?? []} value={a} onChange={(v) => set('a', v)} label="First team" />
         <span className="muted">vs</span>
-        <TeamSelect teams={teams.data ?? []} value={b} onChange={(v) => set('b', v)} />
+        <TeamSelect teams={teams.data ?? []} value={b} onChange={(v) => set('b', v)} label="Second team" />
       </div>
 
       {(!a || !b) && <Empty>Pick two teams to compare.</Empty>}
@@ -56,9 +56,9 @@ export function HeadToHead() {
   );
 }
 
-function TeamSelect({ teams, value, onChange }: { teams: TeamRef[]; value: string; onChange: (v: string) => void }) {
+function TeamSelect({ teams, value, onChange, label = 'Team' }: { teams: TeamRef[]; value: string; onChange: (v: string) => void; label?: string }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)}>
+    <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}>
       <option value="">Choose a team…</option>
       {teams.map((t) => (
         <option key={t.id} value={t.id}>{t.name}</option>
@@ -108,7 +108,7 @@ function Comparison({ a, b, meetings, seasonA, seasonB }: { a: TeamRef; b: TeamR
           <thead>
             <tr>
               <th>{a.abbr}</th>
-              <th />
+              <td />
               <th>{b.abbr}</th>
             </tr>
           </thead>

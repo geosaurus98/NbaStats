@@ -17,9 +17,10 @@ export function Standings() {
     <section>
       <div className="page-head">
         <h1>{season.label} {view === 'cup' ? 'NBA Cup' : 'standings'}</h1>
+      <h2 className="sr-only">Tables</h2>
         <div className="segmented">
-          <button className={view === 'table' ? 'active' : ''} onClick={() => setParams({}, { replace: true })}>Standings</button>
-          <button className={view === 'cup' ? 'active' : ''} onClick={() => setParams({ view: 'cup' }, { replace: true })}>NBA Cup</button>
+          <button className={view === 'table' ? 'active' : ''} aria-pressed={view === 'table'} onClick={() => setParams({}, { replace: true })}>Standings</button>
+          <button className={view === 'cup' ? 'active' : ''} aria-pressed={view === 'cup'} onClick={() => setParams({ view: 'cup' }, { replace: true })}>NBA Cup</button>
         </div>
       </div>
       {loading && <Loading />}

@@ -124,7 +124,7 @@ export function ShotChart({ game, pbp }: { game: Game; pbp: PlayByPlay }) {
         <h3>Shot chart</h3>
         <div className="segmented">
           {[game.away.team, game.home.team].map((t) => (
-            <button key={t.id} className={t.id === teamId ? 'active' : ''} onClick={() => setTeamId(t.id)}>{t.abbr}</button>
+            <button key={t.id} className={t.id === teamId ? 'active' : ''} aria-pressed={t.id === teamId} onClick={() => setTeamId(t.id)}>{t.abbr}</button>
           ))}
         </div>
       </div>
