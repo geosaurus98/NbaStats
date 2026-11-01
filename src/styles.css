@@ -873,3 +873,4 @@ main:focus { outline: none; }
 ul.recap-list { list-style: none; padding-left: 0; }
 .season-note { border: 1px dashed var(--border); border-radius: 8px; padding: .45rem .7rem; color: var(--muted); }
 table.zones td.left { white-space: normal; } table.zones { max-width: 100%; }
+.winner-row.active .muted { color: var(--text); }

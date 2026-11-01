@@ -138,7 +138,7 @@ export function Awards({ graph }: { graph: Graph }) {
         <div className="card">
           <div className="page-head">
             <h3>{seasonLabel(year)} {name} voting</h3>
-            <select value={year} onChange={(e) => setSeason(Number(e.target.value))}>
+            <select aria-label="Season" value={year} onChange={(e) => setSeason(Number(e.target.value))}>
               {seasons.map((y) => (
                 <option key={y} value={y}>{seasonLabel(y)}</option>
               ))}

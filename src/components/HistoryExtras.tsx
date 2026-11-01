@@ -61,7 +61,7 @@ export function EraCompare({ graph }: { graph: Graph }) {
         ))}
         <label className="player-input">
           <span className="muted small">Adjust to</span>
-          <select value={year} onChange={(e) => setRefYear(Number(e.target.value))}>
+          <select aria-label="Season to compare with" value={year} onChange={(e) => setRefYear(Number(e.target.value))}>
             {[...years].reverse().map((y) => (
               <option key={y} value={y}>{seasonLabel(y)}</option>
             ))}
@@ -162,7 +162,7 @@ export function OnThisDate() {
       <p className="muted">Every {team?.name ?? 'team'} game played on {label} since 2001-02, and the best scoring nights on this date, from ESPN's scoreboards. Needs an internet connection.</p>
       <label className="player-input">
         <span className="muted small">Team</span>
-        <select value={teamId} onChange={(e) => setTeamId(e.target.value)}>
+        <select aria-label="Team" value={teamId} onChange={(e) => setTeamId(e.target.value)}>
           {FRANCHISES.map((f) => (
             <option key={f.espnId} value={f.espnId}>{f.name}</option>
           ))}
