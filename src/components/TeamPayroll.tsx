@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { loadSnapshot } from '../api/espn';
 import { useAsync } from '../hooks/useAsync';
 import type { PayrollPlayer, SalaryFlag } from '../lib/brefContracts';
-import { CAP_LEVELS, capZone, money, nextLevel, ZONE_LABELS } from '../lib/salaryCap';
+import { capLevels, capZone, money, nextLevel, ZONE_LABELS } from '../lib/salaryCap';
 import { DEFAULT_SEASON } from '../lib/seasons';
 import { ColumnChart } from './Charts';
 import { PayrollChart, payrollRows } from './PayrollChart';
@@ -16,7 +16,7 @@ export const playerLink = (p: PayrollPlayer) => (p.espn ? `/player/${p.espn}` : 
 
 export function TeamPayroll({ teamId }: { teamId: string }) {
   const snap = useAsync(() => loadSnapshot(DEFAULT_SEASON), []);
-  const levels = CAP_LEVELS[DEFAULT_SEASON];
+  const levels = capLevels(DEFAULT_SEASON);
   const s = snap.data;
   if (!s?.payroll?.[teamId] || !levels) return null;
   const [row] = payrollRows(s.teams.filter((t) => t.id === teamId), s.payroll);
@@ -81,7 +81,7 @@ export function SalaryHistory({ playerId }: { playerId: string }) {
   const past = (s?.salaryHistory?.[playerId] ?? []).filter(([y]) => y < DEFAULT_SEASON);
   const future: [number, number, SalaryFlag][] = contract ? contract.salaries.flatMap((v, i) => (v ? [[DEFAULT_SEASON + i, v, contract.flags[i]] as [number, number, SalaryFlag]] : [])) : [];
   if (!future.length && !past.length) return null;
-  const levels = CAP_LEVELS[DEFAULT_SEASON];
+  const levels = capLevels(DEFAULT_SEASON);
   const rows = [...past.map(([y, v]) => [y, v, ''] as [number, number, SalaryFlag]).reverse(), ...future];
   const now = contract?.salaries[0];
   return (

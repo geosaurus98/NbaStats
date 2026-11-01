@@ -59,7 +59,7 @@ export function Insights() {
         {!REGULAR_ONLY.has(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
       <GroupedTabs groups={GROUPS} active={tab} onChange={(t) => setParams({ tab: t }, { replace: true })} />
-      {!hasData && tab !== 'schedule' && <Empty>These are built from every game's play-by-play once a season is finished. Pick 2025-26 or 2024-25.</Empty>}
+      {!hasData && tab !== 'schedule' && <Empty>These are built from every game's play-by-play in the daily data, which this season doesn't have yet. Pick another season.</Empty>}
       {hasData && tab === 'drama' && <Drama season={season.year} type={type} />}
       {hasData && tab === 'duos' && <Duos season={season.year} type={type} />}
       {hasData && tab === 'shots' && <ShotTypeLeaders season={season.year} type={type} />}

@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
     inputs:
       seasons:
-        description: Season end-years, space separated
-        default: '2027 2026 2025'
+        description: Season end-years, space separated (blank = the current season and the two before it)
+        default: ''
   # Daily refresh of the season in progress (scheduled runs only fire on the default branch).
   schedule:
     - cron: '17 9 * * *'
@@ -26,7 +26,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx --yes tsx scripts/snapshot.ts ${{ github.event_name == 'schedule' && '2027' || github.event.inputs.seasons || '2027 2026 2025' }}
+      - run: npx --yes tsx scripts/snapshot.ts ${{ github.event_name == 'schedule' && 'current' || github.event.inputs.seasons || '' }}
       # Daily too: the teammate graph adds the current season's rosters from the snapshot above,
       # and careers/franchises are keyed by its player indexes, so all three are rebuilt together.
       - run: npx --yes tsx scripts/teammates.ts && npx --yes tsx scripts/careers.ts && npx --yes tsx scripts/franchises.ts

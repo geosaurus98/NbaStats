@@ -8,6 +8,7 @@ import { GameFlow, ShotChart } from '../components/GameCharts';
 import { PlayFeed } from '../components/PlayFeed';
 import { GamePreview } from '../components/TeamBits';
 import { GameFactors } from '../components/TeamAnalytics';
+import { LiveCentre } from '../components/LiveCentre';
 import { MatchupNumbers } from '../components/MatchupNumbers';
 import { RecapCard } from '../components/RecapCard';
 import { ErrorBox, Loading } from '../components/Status';
@@ -22,6 +23,7 @@ const seasonOf = (iso: string) => {
 };
 
 const GAME_TABS = [
+  { id: 'live', label: 'Live centre' },
   { id: 'box', label: 'Box score' },
   { id: 'charts', label: 'Charts' },
   { id: 'plays', label: 'Play-by-play' },
@@ -47,8 +49,10 @@ export function Game() {
   const assists = aggregateAssists(pbp.assists, pbp.names);
   const periods = Math.max(game.home.linescores.length, game.away.linescores.length);
   const day = game.date ? toISODate(new Date(game.date)) : '';
-  const asked = GAME_TABS.find((t) => t.id === params.get('tab'))?.id ?? 'box';
-  const tab: GameTab = asked === 'recap' && game.state !== 'post' ? 'box' : asked;
+  // While a game is on, the live centre comes first; afterwards the box score does.
+  const home: GameTab = game.state === 'in' ? 'live' : 'box';
+  const asked = GAME_TABS.find((t) => t.id === params.get('tab'))?.id ?? home;
+  const tab: GameTab = (asked === 'recap' && game.state !== 'post') || (asked === 'live' && game.state !== 'in') ? 'box' : asked;
 
   return (
     <section>
@@ -104,10 +108,11 @@ export function Game() {
       ) : (
         <>
           <div className="tabs game-tabs">
-            {GAME_TABS.filter((t) => t.id !== 'recap' || game.state === 'post').map((t) => (
-              <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParams(t.id === 'box' ? {} : { tab: t.id }, { replace: true })}>{t.label}</button>
+            {GAME_TABS.filter((t) => (t.id !== 'recap' || game.state === 'post') && (t.id !== 'live' || game.state === 'in')).map((t) => (
+              <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParams(t.id === home ? {} : { tab: t.id }, { replace: true })}>{t.label}</button>
             ))}
           </div>
+          {tab === 'live' && <LiveCentre summary={data} />}
           {tab === 'box' && (
             <>
               {teams.map((t) => (

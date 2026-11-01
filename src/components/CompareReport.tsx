@@ -2,6 +2,7 @@
 // season data: advanced stats, shot diet, archetype, career arc by age and
 // contract value. Works offline, unlike the live game logs above it.
 import { useMemo } from 'react';
+import { DEFAULT_SEASON } from '../lib/seasons';
 import { seasonSnapshot } from '../api/espn';
 import { loadSnapshot } from '../api/snapshotStore';
 import { useAsync } from '../hooks/useAsync';
@@ -9,7 +10,7 @@ import { playerAdvanced } from '../lib/advanced';
 import { byAge } from '../lib/aging';
 import { loadCareers } from '../lib/careers';
 import { ARCHETYPES, archetypes } from '../lib/playerExtras';
-import { CAP_LEVELS, money } from '../lib/salaryCap';
+import { money } from '../lib/salaryCap';
 import { SHOT_TYPES } from '../lib/shotTypes';
 import { loadTeammateGraph } from '../lib/teammateStore';
 import { LineChart } from './Charts';
@@ -22,7 +23,7 @@ const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
 export function CompareReport({ ids, season, names }: { ids: string[]; season: number; names: (id: string) => string }) {
   const snap = seasonSnapshot(season);
   const teams = useTeamSeasons(season, 2);
-  const capYear = Math.max(...Object.keys(CAP_LEVELS).map(Number));
+  const capYear = DEFAULT_SEASON;
   const extra = useAsync(async () => {
     const [careers, graph, current] = await Promise.all([loadCareers(), loadTeammateGraph(), loadSnapshot(capYear)]);
     return { careers, graph, current };

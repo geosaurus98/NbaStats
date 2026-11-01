@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { CupTable } from '../components/CupTable';
 import { fetchStandings } from '../api/espn';
 import { RaceChart } from '../components/RaceChart';
 import { ErrorBox, Loading } from '../components/Status';
@@ -9,11 +10,22 @@ import { useSeason } from '../SeasonContext';
 export function Standings() {
   const { season } = useSeason();
   const { data, error, loading } = useAsync(() => fetchStandings(season.year), [season.year]);
+  const [params, setParams] = useSearchParams();
+  const view = params.get('view') === 'cup' ? 'cup' : 'table';
 
   return (
     <section>
-      <h1>{season.label} standings</h1>
+      <div className="page-head">
+        <h1>{season.label} {view === 'cup' ? 'NBA Cup' : 'standings'}</h1>
+        <div className="segmented">
+          <button className={view === 'table' ? 'active' : ''} onClick={() => setParams({}, { replace: true })}>Standings</button>
+          <button className={view === 'cup' ? 'active' : ''} onClick={() => setParams({ view: 'cup' }, { replace: true })}>NBA Cup</button>
+        </div>
+      </div>
       {loading && <Loading />}
+      {view === 'cup' && data && <CupTable season={season.year} conferences={data} />}
+      {view === 'table' && (
+      <>
       {error && <ErrorBox error={error} />}
       <div className="two-col">
         {data?.map((conf) => (
@@ -65,6 +77,8 @@ export function Standings() {
       </div>
       <p className="muted small">Line after 6th: guaranteed playoff spots. Line after 10th: play-in cut-off.</p>
       {data && data.length > 0 && <RaceChart season={season.year} conferences={data} />}
+      </>
+      )}
     </section>
   );
 }

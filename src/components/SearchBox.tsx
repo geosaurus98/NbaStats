@@ -46,6 +46,8 @@ const PAGES = [
   { label: 'Win probability added', to: '/leaders?tab=wpa', words: 'wpa win probability added clutch impact' },
   { label: 'Streaks', to: '/leaders?tab=streaks', words: 'streak consecutive games 20 points double double' },
   { label: 'Fantasy hub', to: '/fantasy', words: 'fantasy points espn yahoo draftkings nine category 9-cat pickups waiver streamers schedule' },
+  { label: 'Data health', to: '/status', words: 'data health status freshness updated refreshed stale job snapshot' },
+  { label: 'NBA Cup', to: '/standings?view=cup', words: 'nba cup in season tournament group stage knockout wildcard' },
   { label: 'Alerts', to: '/alerts', words: 'alerts notifications follow my team since last visit injuries' },
   { label: "What's on this site (guide)", to: '/guide', words: 'guide help glossary explain per srs wpa what does mean' },
   { label: 'Shot situations (shot clock, second chances)', to: '/insights?tab=situations', words: 'shot clock transition late clock second chance after timeout situation' },
