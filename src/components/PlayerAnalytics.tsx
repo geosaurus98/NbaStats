@@ -16,8 +16,8 @@ import { ScatterPlot, type ScatterPoint } from './ScatterPlot';
 import { Empty, Loading } from './Status';
 import { useTeamSeasons } from './TeamAnalytics';
 import { NetBar, per48, signed } from './TeamLineups';
+import { pct1 } from '../lib/format';
 
-const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
 
 function useAbbr(season: number) {
   const snap = seasonSnapshot(season);

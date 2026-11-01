@@ -2,6 +2,7 @@
 // season plus this season's box scores) and the next round number or
 // all-time mark each is closing in on.
 import { P, type BoxTotals } from './boxTotals';
+import { ordinal } from './format';
 import { totals, type CareerData, type StatKey } from './careers';
 import type { Graph } from './teammates';
 
@@ -98,4 +99,4 @@ export function milestones(careers: CareerData, graph: Graph, box: BoxTotals, ma
   return out.sort((a, b) => a.gamesAway - b.gamesAway || b.total - a.total);
 }
 
-export const ordinal = (n: number) => `${n}${['th', 'st', 'nd', 'rd'][n % 100 >= 11 && n % 100 <= 13 ? 0 : n % 10] ?? 'th'}`;
+export { ordinal };

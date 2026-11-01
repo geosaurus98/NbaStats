@@ -4,6 +4,7 @@
 import { emptyBox, fourFactors, possessions, type Box, type TeamGame, type TeamSeason } from './advanced';
 import { L, type SeasonLines } from './boxTotals';
 import { CHAMPIONS, DETAIL, LEAGUE, type FranchiseData } from './franchiseData';
+import { pct1 } from './format';
 
 /**
  * Basketball-Reference's Simple Rating System: average margin adjusted for
@@ -175,7 +176,6 @@ export interface StyleRow {
   fmt: (v: number) => string;
 }
 
-const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
 
 /** A team's playing style against the league: pace, shot diet, ball movement, glass and turnovers. */
 export function styleProfile(teamId: string, seasons: Map<string, TeamSeason>, rimShare?: Map<string, number>): StyleRow[] {

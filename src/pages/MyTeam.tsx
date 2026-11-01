@@ -17,8 +17,8 @@ import { scheduleAhead } from '../lib/scheduleAhead';
 import { predict, results, seasonElo } from '../lib/teamContext';
 import { useSeason } from '../SeasonContext';
 import { buildModel } from './Projections';
+import { oddsPct } from '../lib/format';
 
-const pct = (v: number) => (v >= 0.995 ? '>99%' : v > 0 && v < 0.005 ? '<1%' : `${Math.round(v * 100)}%`);
 
 export function MyTeam() {
   const { favouriteId, toggleFavourite } = useFavourite();
@@ -99,8 +99,8 @@ function Hub({ teamId }: { teamId: string }) {
         <div className="tile"><div className="tile-value">{row ? `${row.wins}-${row.losses}` : '–'}</div><div className="tile-label">Record</div></div>
         <div className="tile"><div className="tile-value">{seed ? `${seed}${['th', 'st', 'nd', 'rd'][seed] ?? 'th'}` : '–'}</div><div className="tile-label">in the {conf?.name.replace(/ Conference$/, '') ?? 'conference'}</div></div>
         {odds && <div className="tile"><div className="tile-value">{odds.avgWins.toFixed(0)}</div><div className="tile-label">Projected wins</div></div>}
-        {odds && <div className="tile"><div className="tile-value">{pct(odds.playoffs)}</div><div className="tile-label">Playoff odds</div></div>}
-        {odds && <div className="tile"><div className="tile-value">{pct(odds.champion)}</div><div className="tile-label">Title odds</div></div>}
+        {odds && <div className="tile"><div className="tile-value">{oddsPct(odds.playoffs)}</div><div className="tile-label">Playoff odds</div></div>}
+        {odds && <div className="tile"><div className="tile-value">{oddsPct(odds.champion)}</div><div className="tile-label">Title odds</div></div>}
         {lottery && <div className="tile"><div className="tile-value">{(lottery[0] * 100).toFixed(1)}%</div><div className="tile-label">No. 1 pick odds today</div></div>}
       </div>
       <p className="small">Last 10: <FormStrip games={league.games} teamId={teamId} />{row?.streak ? <span className="muted"> · streak {row.streak}</span> : null}</p>
@@ -129,7 +129,7 @@ function Hub({ teamId }: { teamId: string }) {
           {ahead && (
             <p className="muted small">
               {ahead.left} games left · {ahead.home} home, {ahead.road} road · opponents' win % {ahead.oppPct.toFixed(3).replace(/^0/, '')} · {ahead.backToBacks} back-to-backs ·{' '}
-              <Link to="/insights?tab=schedule">compare →</Link>
+              <Link to="/rankings?tab=schedule">compare →</Link>
             </p>
           )}
         </div>

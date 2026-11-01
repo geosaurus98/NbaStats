@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { fetchLeagueGames, fetchStandings } from '../api/espn';
 import type { Conference, Game, TeamRef } from '../api/types';
 import { LineChart } from '../components/Charts';
-import { DraftLottery } from '../components/DraftLottery';
 import { WhatIf } from '../components/WhatIf';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
@@ -14,6 +13,7 @@ import { isFinal } from '../lib/league';
 import { carryOver, ELO_MEAN, ratingsAt, runElo, simulate, winProb, type EloRun, type TeamOdds } from '../lib/projections';
 import { SEASONS } from '../lib/seasons';
 import { useSeason } from '../SeasonContext';
+import { oddsPct } from '../lib/format';
 
 const SIMS = 2000;
 const HISTORY_SIMS = 300;
@@ -47,8 +47,10 @@ export async function buildModel(season: number, sims = SIMS): Promise<Model> {
 export function Projections() {
   const { season } = useSeason();
   const [params, setParams] = useSearchParams();
-  const tab = (['ratings', 'lottery', 'whatif'] as const).find((t) => t === params.get('tab')) ?? 'odds';
+  const tab = (['ratings', 'whatif'] as const).find((t) => t === params.get('tab')) ?? 'odds';
   const { data, error, loading } = useAsync(() => buildModel(season.year), [season.year]);
+  // The draft lottery moved to the Draft hub.
+  if (params.get('tab') === 'lottery') return <Navigate to="/draft" replace />;
 
   return (
     <section>
@@ -57,14 +59,12 @@ export function Projections() {
       <div className="tabs">
         <button className={tab === 'odds' ? 'active' : ''} aria-pressed={tab === 'odds'} onClick={() => setParams({ tab: 'odds' }, { replace: true })}>Playoff odds</button>
         <button className={tab === 'ratings' ? 'active' : ''} aria-pressed={tab === 'ratings'} onClick={() => setParams({ tab: 'ratings' }, { replace: true })}>Power ratings</button>
-        <button className={tab === 'lottery' ? 'active' : ''} aria-pressed={tab === 'lottery'} onClick={() => setParams({ tab: 'lottery' }, { replace: true })}>Draft lottery</button>
         <button className={tab === 'whatif' ? 'active' : ''} aria-pressed={tab === 'whatif'} onClick={() => setParams({ tab: 'whatif' }, { replace: true })}>What if</button>
       </div>
       {loading && <Loading label="Rating every team and simulating the season…" />}
       {error && <ErrorBox error={error} />}
       {data && tab === 'odds' && <Odds model={data} season={season.year} />}
       {data && tab === 'ratings' && <Ratings model={data} />}
-      {data && tab === 'lottery' && <DraftLottery model={data} season={season.year} />}
       {data && tab === 'whatif' && <WhatIf model={data} season={season.year} />}
       <p className="muted small">
         Elo ratings (FiveThirtyEight-style: margin of victory, 100-point home edge, last season carried over at 75%). Odds come from
@@ -75,13 +75,12 @@ export function Projections() {
   );
 }
 
-const pct = (v: number) => (v >= 0.995 ? '>99%' : v > 0 && v < 0.005 ? '<1%' : `${Math.round(v * 100)}%`);
 
 function OddsBar({ v }: { v: number }) {
   return (
     <span className="odds-cell">
       <span className="odds-bar" style={{ width: `${v * 100}%` }} />
-      <span className="odds-text">{pct(v)}</span>
+      <span className="odds-text">{oddsPct(v)}</span>
     </span>
   );
 }
@@ -128,7 +127,7 @@ function Odds({ model, season }: { model: Model; season: number }) {
                         <span className="muted small">{record(o.teamId)}</span>
                       </td>
                       <td>{o.avgWins.toFixed(1)}</td>
-                      <td title={`Top 6: ${pct(o.top6)} · via play-in: ${pct(o.playoffs - o.top6)}`}><OddsBar v={o.playoffs} /></td>
+                      <td title={`Top 6: ${oddsPct(o.top6)} · via play-in: ${oddsPct(o.playoffs - o.top6)}`}><OddsBar v={o.playoffs} /></td>
                       <td><OddsBar v={o.confFinals} /></td>
                       <td><OddsBar v={o.finals} /></td>
                       <td><OddsBar v={o.champion} /></td>

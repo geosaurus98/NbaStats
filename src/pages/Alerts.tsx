@@ -1,6 +1,7 @@
 // Alerts: what happened to your team and the players you follow since you
 // last looked: results, big games, streaks, milestones and injury news.
 import { useMemo, useState } from 'react';
+import { CurrentSeasonNote } from '../components/SeasonNote';
 import { Link } from 'react-router-dom';
 import { loadSnapshot } from '../api/snapshotStore';
 import { loadLines } from '../api/linesStore';
@@ -104,6 +105,7 @@ export function Alerts() {
         <h1>Alerts</h1>
         <button className="chip" onClick={() => { const d = toISODate(new Date()); markSeen(d); setSince(d); }}>Mark all as seen</button>
       </div>
+      <CurrentSeasonNote />
       <p className="muted">
         Since {formatDay(since)}: {teamName ? <>results and injuries for <b>{teamName}</b></> : 'no favourite team yet'}{followed.length ? <>, plus {followed.length} player{followed.length === 1 ? '' : 's'} you follow</> : ''}. Star a team on its page and follow players on theirs; it's all kept in this browser.
       </p>

@@ -5,8 +5,8 @@ import type { Game } from '../api/types';
 import { loadLines } from '../api/linesStore';
 import { fourFactors, possessions, teamGames, teamSeasons, type TeamSeason } from '../lib/advanced';
 import { usDay } from '../lib/gameLines';
+import { pct1 } from '../lib/format';
 
-const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
 
 /** Home court is worth about 3 points: half added to the home side, half taken from the road side. */
 const HOME_EDGE = 1.5;

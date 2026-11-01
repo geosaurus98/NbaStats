@@ -177,7 +177,7 @@ export function Franchise() {
               ))}
             </tbody>
           </table>
-          <p className="muted small">By career points (anywhere). <Link to={`/history?tab=draft&team=${f.id}`}>Full draft history →</Link></p>
+          <p className="muted small">By career points (anywhere). <Link to={`/draft?tab=classes&team=${f.id}`}>Full draft history →</Link></p>
         </div>
       </div>
 

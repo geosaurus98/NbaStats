@@ -16,9 +16,9 @@ import { seasonLabel } from '../lib/teammates';
 import { LineChart } from './Charts';
 import { ScatterPlot, type ScatterPoint } from './ScatterPlot';
 import { Empty, ErrorBox, Loading } from './Status';
+import { pct1 } from '../lib/format';
 
 const surname = (name: string) => name.split(' ').slice(1).join(' ') || name;
-const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
 
 /** Usage rate and true shooting for every regular (Basketball-Reference's usage formula). */
 export function usageRows(box: BoxTotals, names: Record<string, string>) {

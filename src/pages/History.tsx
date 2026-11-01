@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
 import { GroupedTabs, type TabGroup } from '../components/GroupedTabs';
-import { EraCompare, HallOfFameOdds, LotteryHistory, OnThisDate } from '../components/HistoryExtras';
-import { Link, useSearchParams } from 'react-router-dom';
-import { AllTimeLeaders, Awards } from '../components/AllTime';
+import { EraCompare, HallOfFameOdds, OnThisDate } from '../components/HistoryExtras';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import { AllTimeLeaders } from '../components/AllTime';
 import { CareerArc, CareerStatsTable } from '../components/CareerStats';
-import { DraftHistory } from '../components/DraftHistory';
 import { CareerTimeline } from '../components/CareerTimeline';
 import { ChordDiagram } from '../components/ChordDiagram';
 import { ContinuityHeatmap } from '../components/ContinuityHeatmap';
@@ -25,24 +24,39 @@ const TABS = [
   { id: 'compare', label: 'Compare two players' },
   { id: 'similar', label: 'Similar players' },
   { id: 'leaders', label: 'All-time leaders' },
-  { id: 'awards', label: 'Awards' },
-  { id: 'draft', label: 'Draft' },
   { id: 'teams', label: 'Team vs team' },
   { id: 'greatest', label: 'Greatest teams' },
   { id: 'continuity', label: 'Roster continuity' },
   { id: 'eras', label: 'Across eras' },
   { id: 'hof', label: 'Hall of Fame odds' },
-  { id: 'lottery', label: 'Lottery history' },
   { id: 'thisdate', label: 'On this date' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 const GROUPS: TabGroup<Tab>[] = [
-  { label: 'Players', tabs: TABS.filter((t) => (['careers', 'compare', 'similar', 'eras', 'hof', 'leaders', 'awards'] as Tab[]).includes(t.id)) },
+  { label: 'Players', tabs: TABS.filter((t) => (['careers', 'compare', 'similar', 'eras', 'hof', 'leaders'] as Tab[]).includes(t.id)) },
   { label: 'Teams', tabs: TABS.filter((t) => (['teams', 'greatest', 'continuity', 'movement', 'thisdate'] as Tab[]).includes(t.id)) },
-  { label: 'Draft', tabs: TABS.filter((t) => (['draft', 'lottery'] as Tab[]).includes(t.id)) },
 ];
 
+/** Tabs that moved: the draft to the Draft hub, awards to the Awards page. Old links still work. */
+function movedTo(params: URLSearchParams): string | undefined {
+  const tab = params.get('tab');
+  const rest = new URLSearchParams(params);
+  rest.delete('tab');
+  const q = rest.toString();
+  if (tab === 'draft') return `/draft?tab=classes${q ? `&${q}` : ''}`;
+  if (tab === 'lottery') return '/draft?tab=lotteries';
+  if (tab === 'awards') return '/awards?award=history';
+  return undefined;
+}
+
 export function History() {
+  const [params] = useSearchParams();
+  const moved = movedTo(params);
+  if (moved) return <Navigate to={moved} replace />;
+  return <HistoryLoaded />;
+}
+
+function HistoryLoaded() {
   const graph = useTeammateGraph();
   if (!graph) return <GraphLoading label="Loading every roster since 1946-47…" />;
   return <HistoryPage graph={graph} />;
@@ -71,15 +85,12 @@ function HistoryPage({ graph }: { graph: Graph }) {
       {tab === 'careers' && <Careers graph={graph} params={params} setParam={setParam} />}
       {tab === 'compare' && <Compare graph={graph} params={params} setParam={setParam} />}
       {tab === 'leaders' && <AllTimeLeaders graph={graph} />}
-      {tab === 'awards' && <Awards graph={graph} />}
-      {tab === 'draft' && <DraftHistory graph={graph} />}
       {tab === 'teams' && <TeamSeasonCompare graph={graph} />}
       {tab === 'greatest' && <GreatestTeams graph={graph} />}
       {tab === 'similar' && <SimilarPlayers graph={graph} params={params} setParam={setParam} />}
       {tab === 'continuity' && <Continuity graph={graph} />}
       {tab === 'eras' && <EraCompare graph={graph} />}
       {tab === 'hof' && <HallOfFameOdds graph={graph} />}
-      {tab === 'lottery' && <LotteryHistory />}
       {tab === 'thisdate' && <OnThisDate />}
       <p className="muted small">
         Rosters from Basketball-Reference via the open bball-reference-datasets project. The source doesn't say in which order a player

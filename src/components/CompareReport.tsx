@@ -16,9 +16,9 @@ import { loadTeammateGraph } from '../lib/teammateStore';
 import { LineChart } from './Charts';
 import { useTeamSeasons } from './TeamAnalytics';
 import { per48 } from './TeamLineups';
+import { pct1 } from '../lib/format';
 
 const COLORS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)'];
-const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
 
 export function CompareReport({ ids, season, names }: { ids: string[]; season: number; names: (id: string) => string }) {
   const snap = seasonSnapshot(season);

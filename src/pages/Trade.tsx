@@ -1,6 +1,7 @@
 // Trade machine: pick two teams and the players each sends; see whether the
 // salaries match, what happens to each payroll and the Win Shares that move.
 import { useMemo } from 'react';
+import { CurrentSeasonNote } from '../components/SeasonNote';
 import { Link, useSearchParams } from 'react-router-dom';
 import { loadSnapshot } from '../api/snapshotStore';
 import { Empty, Loading } from '../components/Status';
@@ -53,6 +54,7 @@ export function Trade() {
   return (
     <section>
       <h1>Trade machine</h1>
+      <CurrentSeasonNote />
       <p className="muted">Pick two teams and tick the players each one sends. It checks the salary-matching rules, shows both payrolls afterwards and the Win Shares that change hands this season.</p>
       <div className="two-col trade-grid">
         {sides.map((side, i) => (

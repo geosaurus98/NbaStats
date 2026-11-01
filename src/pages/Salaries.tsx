@@ -1,6 +1,7 @@
 // Salaries: every team's payroll against the cap, tax line and aprons, the
 // biggest contracts and the best value for money this season.
 import { Link, useNavigate } from 'react-router-dom';
+import { CurrentSeasonNote } from '../components/SeasonNote';
 import { loadSnapshot } from '../api/espn';
 import { SalaryScatter } from '../components/MoreGraphs';
 import { WinSharesValue } from '../components/PlayerExtras';
@@ -49,6 +50,7 @@ export function Salaries() {
   return (
     <section>
       <h1>{label} salaries</h1>
+      <CurrentSeasonNote />
       <h2 className="sr-only">Payrolls</h2>
       <p className="muted">
         Each team's player salaries this season against the minimum, the cap ({money(levels.cap)}), the tax line ({money(levels.tax)}), the first apron ({money(levels.firstApron)}) and the second apron ({money(levels.secondApron)}).{' '}

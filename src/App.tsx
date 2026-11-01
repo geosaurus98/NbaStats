@@ -1,4 +1,4 @@
-import { Fragment, lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense } from 'react';
 import { Home } from './pages/Home';
 import { Scores } from './pages/Scores';
 
@@ -12,6 +12,7 @@ import { SEASONS } from './lib/seasons';
 import { useSeason } from './SeasonContext';
 import { Loading } from './components/Status';
 import { OfflineBar } from './components/AppStatus';
+import { NavMenus } from './components/NavMenus';
 
 // Pages load their code the first time they're opened (the home page and scores are in the main bundle).
 const Awards = lazy(() => import('./pages/Awards').then((m) => ({ default: m.Awards })));
@@ -37,26 +38,16 @@ const Fantasy = lazy(() => import('./pages/Fantasy').then((m) => ({ default: m.F
 const Guide = lazy(() => import('./pages/Guide').then((m) => ({ default: m.Guide })));
 const Alerts = lazy(() => import('./pages/Alerts').then((m) => ({ default: m.Alerts })));
 const Draft = lazy(() => import('./pages/Draft').then((m) => ({ default: m.Draft })));
+const Recap = lazy(() => import('./pages/Recap').then((m) => ({ default: m.Recap })));
 const Trade = lazy(() => import('./pages/Trade').then((m) => ({ default: m.Trade })));
 const Status = lazy(() => import('./pages/Status').then((m) => ({ default: m.Status })));
 const TeamReport = lazy(() => import('./pages/TeamReport').then((m) => ({ default: m.TeamReport })));
 
-// Grouped: this season · stats · teams & players · history & fun.
-const NAV: [string, string][][] = [
-  [['/', 'Home'], ['/scores', 'Scores'], ['/standings', 'Standings'], ['/playoffs', 'Playoffs'], ['/projections', 'Projections']],
-  [['/leaders', 'Leaders'], ['/awards', 'Awards'], ['/rankings', 'Rankings'], ['/insights', 'Insights'], ['/fantasy', 'Fantasy']],
-  [['/teams', 'Teams'], ['/salaries', 'Salaries'], ['/trade', 'Trade'], ['/draft', 'Draft'], ['/compare', 'Compare']],
-  [['/history', 'History'], ['/degrees', '6 Degrees'], ['/games', 'Games']],
-];
 
 export function App() {
   const { season, setSeasonYear } = useSeason();
   const location = useLocation();
   const navigate = useNavigate();
-  // On narrow screens the menu scrolls: keep the current page's link in view.
-  useEffect(() => {
-    document.querySelector('.mainnav a.active')?.scrollIntoView({ block: 'nearest', inline: 'center' });
-  }, [location.pathname]);
   const changeSeason = (year: number) => {
     setSeasonYear(year);
     // A date picked for the old season makes no sense for the new one.
@@ -82,16 +73,7 @@ export function App() {
             </select>
           </label>
         </div>
-        <nav className="mainnav" aria-label="Main">
-          {NAV.map((group, i) => (
-            <Fragment key={i}>
-              {i > 0 && <span className="nav-sep" aria-hidden />}
-              {group.map(([to, label]) => (
-                <NavLink key={to} to={to} end={to === '/'}>{label}</NavLink>
-              ))}
-            </Fragment>
-          ))}
-        </nav>
+        <NavMenus />
       </header>
       <OfflineBar />
       <LiveBar />
@@ -126,6 +108,7 @@ export function App() {
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/status" element={<Status />} />
           <Route path="/trade" element={<Trade />} />
+          <Route path="/recap" element={<Recap />} />
           <Route path="/draft" element={<Draft />} />
         </Routes>
         </Suspense>

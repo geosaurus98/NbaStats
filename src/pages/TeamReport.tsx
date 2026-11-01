@@ -17,9 +17,8 @@ import { Empty, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useTeamSeasons } from '../components/TeamAnalytics';
 import { per48, signed } from '../components/TeamLineups';
+import { ordinal, pct1 } from '../lib/format';
 
-const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
-const ord = (n: number) => `${n}${['th', 'st', 'nd', 'rd'][n % 100 >= 11 && n % 100 <= 13 ? 0 : n % 10] ?? 'th'}`;
 
 export function TeamReport() {
   const { id = '' } = useParams();
@@ -68,7 +67,7 @@ export function TeamReport() {
         <TeamLogo team={team} size={56} />
         <div>
           <h1>{team.name}</h1>
-          <p className="muted">{season.label} season report · {me.wins}-{me.losses}{standing ? ` · ${ord(standing.rank)} in the ${standing.conf.replace(' Conference', '')}` : ''}</p>
+          <p className="muted">{season.label} season report · {me.wins}-{me.losses}{standing ? ` · ${ordinal(standing.rank)} in the ${standing.conf.replace(' Conference', '')}` : ''}</p>
         </div>
       </header>
       <div className="report-tiles">
@@ -82,7 +81,7 @@ export function TeamReport() {
         ].map(([label, v, r]) => (
           <div key={label as string} className="tile">
             <div className="tile-value">{v}</div>
-            <div className="tile-label">{label}{r ? ` · ${ord(r as number)}` : ''}</div>
+            <div className="tile-label">{label}{r ? ` · ${ordinal(r as number)}` : ''}</div>
           </div>
         ))}
       </div>
@@ -104,9 +103,9 @@ export function TeamReport() {
                 <tr key={k}>
                   <td className="left">{label}</td>
                   <td>{pct1(me.off[k])}</td>
-                  <td className="muted">{ord(rankBy((r) => r.off[k], high))}</td>
+                  <td className="muted">{ordinal(rankBy((r) => r.off[k], high))}</td>
                   <td>{pct1(me.def[k])}</td>
-                  <td className="muted">{ord(rankBy((r) => r.def[k], k === 'tov'))}</td>
+                  <td className="muted">{ordinal(rankBy((r) => r.def[k], k === 'tov'))}</td>
                 </tr>
               ))}
             </tbody>

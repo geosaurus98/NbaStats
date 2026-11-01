@@ -8,8 +8,8 @@ import { hotHandRow } from '../lib/hotHand';
 import { Empty } from './Status';
 import { Tile } from './Tile';
 import { NetBar } from './TeamLineups';
+import { pct1 } from '../lib/format';
 
-const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
 const pts = (v: number) => `${v > 0 ? '+' : ''}${(v * 100).toFixed(1)}`;
 
 export function HotHandView({ season, type }: { season: number; type: SeasonType }) {

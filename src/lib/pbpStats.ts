@@ -165,3 +165,38 @@ export function zoneTotals(bins: BinRow[], size: number): Record<ZoneId, { att: 
   }
   return out;
 }
+
+/**
+ * Merges neighbouring bins into squares `factor` times bigger (twos and
+ * threes kept apart), so each square holds enough shots for its FG% against
+ * the league to mean something. The league comparison is the shot-weighted
+ * average of the merged bins' own comparisons.
+ */
+export function coarsenCells(cells: ShotCell[], factor: number): ShotCell[] {
+  if (factor <= 1 || !cells.length) return cells;
+  const groups = new Map<string, ShotCell[]>();
+  for (const c of cells) {
+    const big = c.size * factor;
+    const key = `${Math.floor((c.x - c.size / 2) / big)}|${Math.floor((c.y - c.size / 2) / big)}|${c.value}`;
+    groups.set(key, [...(groups.get(key) ?? []), c]);
+  }
+  return [...groups.entries()].map(([key, g]) => {
+    const [ix, iy] = key.split('|').map(Number);
+    const big = g[0].size * factor;
+    const att = g.reduce((s, c) => s + c.att, 0);
+    const made = g.reduce((s, c) => s + c.made, 0);
+    const expected = g.reduce((s, c) => s + c.att * (c.pct - c.diff), 0) / att;
+    const pct = made / att;
+    return {
+      // The centre of the big square, so squares tile without overlapping.
+      x: ix * big + big / 2,
+      y: iy * big + big / 2,
+      size: big,
+      value: g[0].value,
+      att,
+      made,
+      pct,
+      diff: pct - expected,
+    };
+  });
+}

@@ -20,17 +20,30 @@ import { LineupExplorer } from '../components/PlayerExtras';
 import { ClutchLineups, DefenseByZone, RotationChart } from '../components/TeamRotation';
 import { InjuryList } from '../components/TeamBits';
 import { TeamPayroll } from '../components/TeamPayroll';
-import { DEFAULT_SEASON } from '../lib/seasons';
+import { DEFAULT_SEASON, seasonInfo } from '../lib/seasons';
+import { PageTabs, usePageTab, type PageTab } from '../components/PageTabs';
 import { formatShortDate, formatTime, parseISODate, toISODate } from '../lib/dates';
 import { downloadFile, gamesToICS } from '../lib/ics';
 import { countsInStandings, isFinal, raceSeries, sides, won } from '../lib/league';
 import { FRANCHISES } from '../lib/franchises';
 import { useSeason } from '../SeasonContext';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
+import { signed } from '../lib/format';
+
+const TEAM_TABS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'lineups', label: 'Lineups & rotation' },
+  { id: 'shooting', label: 'Shooting & passing' },
+  { id: 'schedule', label: 'Schedule' },
+  { id: 'payroll', label: 'Payroll' },
+] as const;
+type TeamTab = (typeof TEAM_TABS)[number]['id'];
 
 export function Team() {
   const { id = '' } = useParams();
-  const { season } = useSeason();
+  const { season, setSeasonYear } = useSeason();
+  const tabs: readonly PageTab<TeamTab>[] = TEAM_TABS;
+  const [tab, setTab] = usePageTab(tabs);
   const navigate = useNavigate();
   const [type, setType] = useState<SeasonType>(2);
   const [view, setView] = useState<'list' | 'calendar'>('list');
@@ -94,83 +107,81 @@ export function Team() {
         </div>
       )}
 
-      {results.length > 1 && <TeamCharts id={id} results={results} onSelect={(g) => navigate(`/game/${g.id}`)} />}
+      <PageTabs tabs={tabs} active={tab} onChange={setTab} label="Team sections" />
 
-      {type === 2 && results.length > 0 && <SeasonPace teamId={id} season={season.year} />}
-
-      {type === 2 && results.length > 0 && <EloHistory teamId={id} season={season.year} />}
-
-      {season.year === DEFAULT_SEASON && <TeamPayroll teamId={id} />}
-
-      {season.year === DEFAULT_SEASON && (
-        <div className="card">
-          <h3>Injury report</h3>
-          <InjuryList teamId={id} />
-        </div>
-      )}
-
-      {results.length > 0 && <TeamAssists teamId={id} season={season.year} seasonType={type} />}
-
-      {results.length > 0 && <TeamLineups teamId={id} season={season.year} seasonType={type} />}
-
-      <LineupExplorer teamId={id} season={season.year} type={type} />
-
-      <RotationChart teamId={id} season={season.year} type={type} />
-
-      <DefenseByZone teamId={id} season={season.year} type={type} />
-
-      <ClutchLineups teamId={id} season={season.year} type={type} />
-
-      <PairHeatmap teamId={id} season={season.year} type={type} />
-
-      {type === 2 && <PointsBySource teamId={id} season={season.year} />}
-
-      <QuarterSplits teamId={id} season={season.year} type={type} />
-
-      {type === 2 && (
-        <div className="two-col">
-          <TeamStyleCard teamId={id} season={season.year} />
-          <WithWithoutCard teamId={id} season={season.year} />
-        </div>
-      )}
-
-      {shots?.teams[id] && (
+      {tab === 'overview' && (
         <>
-          <h2>Where they shoot from</h2>
-          <SeasonShotMap bins={shots.teams[id]} size={shots.teamSize} league={shots.league} leagueSize={shots.teamSize} />
+          {results.length > 1 && <TeamCharts id={id} results={results} onSelect={(g) => navigate(`/game/${g.id}`)} />}
+          {type === 2 && results.length > 0 && <SeasonPace teamId={id} season={season.year} />}
+          {type === 2 && results.length > 0 && <EloHistory teamId={id} season={season.year} />}
+          {season.year === DEFAULT_SEASON && (
+            <div className="card">
+              <h3>Injury report</h3>
+              <InjuryList teamId={id} />
+            </div>
+          )}
+          {type === 2 && (
+            <div className="two-col">
+              <TeamStyleCard teamId={id} season={season.year} />
+              <WithWithoutCard teamId={id} season={season.year} />
+            </div>
+          )}
+          <QuarterSplits teamId={id} season={season.year} type={type} />
         </>
       )}
 
-      {games.length > 0 && (
-        <div className="page-head">
-          <h2>Schedule</h2>
-          <div className="segmented">
-            <button className={view === 'list' ? 'active' : ''} aria-pressed={view === 'list'} onClick={() => setView('list')}>List</button>
-            <button className={view === 'calendar' ? 'active' : ''} aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}>Calendar</button>
+      {tab === 'lineups' && (
+        <>
+          {results.length > 0 && <TeamLineups teamId={id} season={season.year} seasonType={type} />}
+          <LineupExplorer teamId={id} season={season.year} type={type} />
+          <RotationChart teamId={id} season={season.year} type={type} />
+          <ClutchLineups teamId={id} season={season.year} type={type} />
+          <PairHeatmap teamId={id} season={season.year} type={type} />
+        </>
+      )}
+
+      {tab === 'shooting' && (
+        <>
+          {shots?.teams[id] && (
+            <>
+              <h2>Where they shoot from</h2>
+              <SeasonShotMap bins={shots.teams[id]} size={shots.teamSize} league={shots.league} leagueSize={shots.teamSize} />
+            </>
+          )}
+          {type === 2 && <PointsBySource teamId={id} season={season.year} />}
+          <DefenseByZone teamId={id} season={season.year} type={type} />
+          {results.length > 0 && <TeamAssists teamId={id} season={season.year} seasonType={type} />}
+        </>
+      )}
+
+      {tab === 'payroll' && (season.year === DEFAULT_SEASON ? <TeamPayroll teamId={id} /> : <Empty>Payrolls are for the current season ({seasonInfo(DEFAULT_SEASON).label}) only. <Link to={`/team/${id}?tab=payroll`} onClick={() => setSeasonYear(DEFAULT_SEASON)}>Switch to it →</Link></Empty>)}
+
+      {tab === 'schedule' && games.length > 0 && (
+        <>
+          <div className="page-head">
+            <h2>Schedule</h2>
+            <div className="segmented">
+              <button className={view === 'list' ? 'active' : ''} aria-pressed={view === 'list'} onClick={() => setView('list')}>List</button>
+              <button className={view === 'calendar' ? 'active' : ''} aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}>Calendar</button>
+            </div>
           </div>
-        </div>
-      )}
-
-      {view === 'calendar' && games.length > 0 && <TeamCalendar id={id} games={games} />}
-
-      {view === 'list' && fixtures.length > 0 && (
-        <>
-          <h3>Fixtures ({fixtures.length})</h3>
-          <ScheduleTable games={fixtures} id={id} />
-        </>
-      )}
-      {view === 'list' && results.length > 0 && (
-        <>
-          <h3>Results ({results.length})</h3>
-          <ScheduleTable games={[...results].reverse()} id={id} />
+          {view === 'calendar' && <TeamCalendar id={id} games={games} />}
+          {view === 'list' && fixtures.length > 0 && (
+            <>
+              <h3>Fixtures ({fixtures.length})</h3>
+              <ScheduleTable games={fixtures} id={id} />
+            </>
+          )}
+          {view === 'list' && results.length > 0 && (
+            <>
+              <h3>Results ({results.length})</h3>
+              <ScheduleTable games={[...results].reverse()} id={id} />
+            </>
+          )}
         </>
       )}
     </section>
   );
-}
-
-function signed(n: number) {
-  return `${n > 0 ? '+' : ''}${n.toFixed(1)}`;
 }
 
 function TeamCharts({ id, results, onSelect }: { id: string; results: Game[]; onSelect: (g: Game) => void }) {

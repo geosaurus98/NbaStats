@@ -10,6 +10,9 @@ import { useSeason } from '../SeasonContext';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 import { FourFactorsTable, GarbageTime, LuckMeter, QuarterSplits } from '../components/TeamAnalytics';
 import { RestTravel, ScoringRuns, SrsTable } from '../components/TeamExtras';
+import { ScheduleAheadTab } from '../components/InsightsMore';
+import { TeamStyles } from '../components/MoreGraphs';
+import { PointsBySource } from '../components/ShotGraphs';
 
 interface Col {
   key: string;
@@ -52,11 +55,15 @@ const TABS = [
   { id: 'garbage', label: 'Garbage time' },
   { id: 'runs', label: 'Scoring runs' },
   { id: 'rest', label: 'Rest & travel' },
+  { id: 'styles', label: 'Team styles' },
+  { id: 'sources', label: 'Points by source' },
+  { id: 'schedule', label: 'Schedule ahead' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 const GROUPS: TabGroup<Tab>[] = [
   { label: 'Ratings', tabs: TABS.filter((t) => (['table', 'srs', 'factors', 'luck'] as Tab[]).includes(t.id)) },
   { label: 'Situations', tabs: TABS.filter((t) => (['quarters', 'runs', 'garbage', 'rest'] as Tab[]).includes(t.id)) },
+  { label: 'Style & schedule', tabs: TABS.filter((t) => (['styles', 'sources', 'schedule'] as Tab[]).includes(t.id)) },
 ];
 
 export function Rankings() {
@@ -68,7 +75,7 @@ export function Rankings() {
     <section>
       <div className="page-head">
         <h1>{season.label} team rankings</h1>
-        {!['luck', 'srs', 'rest'].includes(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
+        {!['luck', 'srs', 'rest', 'styles', 'sources', 'schedule'].includes(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
       <GroupedTabs groups={GROUPS} active={tab} onChange={(t) => setParams(t === 'table' ? {} : { tab: t }, { replace: true })} />
       {tab === 'table' && <RankingTable season={season.year} type={type} />}
@@ -79,6 +86,9 @@ export function Rankings() {
       {tab === 'srs' && <SrsTable season={season.year} />}
       {tab === 'runs' && <ScoringRuns season={season.year} type={type} />}
       {tab === 'rest' && <RestTravel season={season.year} />}
+      {tab === 'styles' && <TeamStyles season={season.year} />}
+      {tab === 'sources' && <PointsBySource season={season.year} />}
+      {tab === 'schedule' && <ScheduleAheadTab season={season.year} start={season.start} end={season.regularEnd} />}
     </section>
   );
 }
