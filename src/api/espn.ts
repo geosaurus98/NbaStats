@@ -1,6 +1,6 @@
 // The data API pages use. Completed seasons are served from the bundled
 // snapshot (instant, works offline); anything else comes from ESPN live.
-import { addDays, toISODate } from '../lib/dates';
+import { addDays, toISODate, usDate } from '../lib/dates';
 import { leadersFromBox, teamStatsFromBox } from '../lib/boxTotals';
 import { involves, isFinal, mergeResults } from '../lib/league';
 import * as live from './live';
@@ -166,7 +166,8 @@ export async function fetchScoreboard(isoDate: string, fresh = false): Promise<G
   } catch (e) {
     const year = Number(isoDate.slice(0, 4)) + (Number(isoDate.slice(5, 7)) >= 8 ? 1 : 0);
     await loadSnapshot(year);
-    const day = [2, 3].flatMap((t) => snapshotGames(year, t as SeasonType) ?? []).filter((g) => toISODate(new Date(g.date)) === isoDate);
+    // The scoreboard is keyed by the US date of each game, not the viewer's.
+    const day = [2, 3].flatMap((t) => snapshotGames(year, t as SeasonType) ?? []).filter((g) => usDate(new Date(g.date)) === isoDate);
     if (getSnapshot(year)) return day;
     throw e;
   }

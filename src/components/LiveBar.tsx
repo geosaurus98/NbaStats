@@ -2,14 +2,15 @@
 import { Link } from 'react-router-dom';
 import { fetchScoreboard } from '../api/espn';
 import { useAsync } from '../hooks/useAsync';
-import { toISODate } from '../lib/dates';
+import { usDate } from '../lib/dates';
 
 // Every minute while games are on, otherwise every ten.
 const LIVE_POLL_MS = 60_000;
 const IDLE_POLL_MS = 10 * 60_000;
 
 export function LiveBar() {
-  const today = toISODate(new Date());
+  // ESPN keys games by the US date, which is behind for viewers in Asia and Oceania.
+  const today = usDate();
   // Fresh every poll; errors (offline, blocked) just hide the bar.
   const { data } = useAsync(
     () => fetchScoreboard(today, true).catch(() => []),

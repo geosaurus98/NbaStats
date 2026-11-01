@@ -14,7 +14,7 @@ import { RecapCard } from '../components/RecapCard';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
-import { formatDay, formatTime, toISODate } from '../lib/dates';
+import { formatDay, formatTime, toISODate, usDate } from '../lib/dates';
 
 /** ESPN names a season by the year it ends: games from August on belong to the next one. */
 const seasonOf = (iso: string) => {
@@ -48,7 +48,7 @@ export function Game() {
   const { game, teams, pbp } = data;
   const assists = aggregateAssists(pbp.assists, pbp.names);
   const periods = Math.max(game.home.linescores.length, game.away.linescores.length);
-  const day = game.date ? toISODate(new Date(game.date)) : '';
+  const day = game.date ? usDate(new Date(game.date)) : '';
   // While a game is on, the live centre comes first; afterwards the box score does.
   const home: GameTab = game.state === 'in' ? 'live' : 'box';
   const asked = GAME_TABS.find((t) => t.id === params.get('tab'))?.id ?? home;
@@ -57,7 +57,7 @@ export function Game() {
   return (
     <section>
       <p className="muted">
-        <Link to={day ? `/scores?date=${day}` : '/scores'}>← {day ? formatDay(day) : 'Scores'}</Link>
+        <Link to={day ? `/scores?date=${day}` : '/scores'}>← {day ? formatDay(toISODate(new Date(game.date))) : 'Scores'}</Link>
         {game.venue && ` · ${game.venue}`}
         {game.note && ` · ${game.note}`}
       </p>

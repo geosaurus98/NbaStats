@@ -10,7 +10,7 @@ import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useFavourite } from '../FavouriteContext';
 import { useAsync } from '../hooks/useAsync';
-import { addDays, formatDay, formatTime, toISODate } from '../lib/dates';
+import { addDays, formatDay, formatTime, slateLabel, toISODate } from '../lib/dates';
 import { loadOnThisDay } from '../lib/careers';
 import { CHAMPIONS } from '../lib/franchiseData';
 import { espnLogo, franchiseOf, FRANCHISES } from '../lib/franchises';
@@ -103,7 +103,7 @@ function TodayGames({ date }: { date: string }) {
   const games = [...(data ?? [])].sort((a, b) => order[a.state] - order[b.state] || a.date.localeCompare(b.date));
   return (
     <div className="card home-row">
-      <h3>Games · {formatDay(date)}</h3>
+      <h3>Games · {slateLabel(date, games.map((g) => g.date))}</h3>
       {loading && !data && <Loading />}
       {error && <ErrorBox error={error} />}
       {data && games.length === 0 && <Empty>No games on this date. <Link to={`/scores?date=${date}`}>Browse other days →</Link></Empty>}
