@@ -15,11 +15,22 @@ import { franchiseValue } from '../lib/franchiseHistory';
 import { franchiseById, franchiseOf } from '../lib/franchises';
 import { useSeason } from '../SeasonContext';
 import { buildModel } from './Projections';
+import { DraftHistory } from '../components/DraftHistory';
+import { LotteryHistory } from '../components/HistoryExtras';
+import { useTeammateGraph } from '../lib/teammateStore';
+
+/** Every draft class since 1947 (moved here from History). */
+function Classes() {
+  const graph = useTeammateGraph();
+  return graph ? <DraftHistory graph={graph} /> : <Loading label="Loading every draft since 1947…" />;
+}
 
 const TABS = [
   { id: 'order', label: 'Lottery & order' },
   { id: 'grades', label: 'Class grades' },
   { id: 'teams', label: 'Best drafting teams' },
+  { id: 'classes', label: 'Every draft class' },
+  { id: 'lotteries', label: 'Lottery history' },
 ] as const;
 
 const logoTeam = (id: string) => {
@@ -43,7 +54,9 @@ export function Draft() {
         ))}
       </div>
       {tab === 'order' && <Order season={season.year} />}
-      {tab !== 'order' && <Grades tab={tab} params={params} set={set} />}
+      {(tab === 'grades' || tab === 'teams') && <Grades tab={tab} params={params} set={set} />}
+      {tab === 'classes' && <Classes />}
+      {tab === 'lotteries' && <LotteryHistory />}
     </section>
   );
 }
@@ -55,7 +68,7 @@ function Order({ season }: { season: number }) {
   return (
     <>
       <DraftLottery model={model.data} season={season} />
-      <p className="small"><Link to="/history?tab=lottery">Every lottery since 1985 →</Link> · <Link to="/history?tab=draft">Every draft class →</Link></p>
+      <p className="small"><Link to="/draft?tab=lotteries">Every lottery since 1985 →</Link> · <Link to="/draft?tab=classes">Every draft class →</Link></p>
     </>
   );
 }

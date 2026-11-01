@@ -33,7 +33,7 @@ export function SimilarPlayers({ graph, params, setParam }: { graph: Graph; para
         {mine.length > 0 && (
           <label className="small">
             Season{' '}
-            <select value={target?.season} onChange={(e) => setParam({ s: e.target.value })}>
+            <select aria-label="Season" value={target?.season} onChange={(e) => setParam({ s: e.target.value })}>
               {mine.map((x) => (
                 <option key={x.season} value={x.season}>{seasonLabel(x.season)}</option>
               ))}

@@ -14,8 +14,8 @@ import { ScatterPlot, type ScatterPoint } from './ScatterPlot';
 import { Empty, Loading } from './Status';
 import { TeamLogo } from './TeamLogo';
 import { NetBar, signed } from './TeamLineups';
+import { pct1 } from '../lib/format';
 
-const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
 const rating = (pts: number, poss: number) => (poss > 0 ? (100 * pts) / poss : 0);
 
 /** Team and opponent totals for a season type, loaded from the per-game lines. */

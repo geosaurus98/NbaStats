@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
 import { GroupedTabs, type TabGroup } from '../components/GroupedTabs';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { seasonAssists, seasonDrama, seasonShots, snapshotGameMap, snapshotTeams, type SeasonType } from '../api/espn';
 import type { Game } from '../api/types';
 import { useWidth } from '../components/Charts';
-import { Clutch, Combos, HotCold, PlayerOfTheNight, ScheduleAheadTab } from '../components/InsightsMore';
+import { Clutch, Combos, HotCold, PlayerOfTheNight } from '../components/InsightsMore';
 import { SeasonTypeToggle } from '../components/SeasonTypeToggle';
 import { ShootingZones } from '../components/ShootingZones';
-import { TeamStyles, UsageEfficiency } from '../components/MoreGraphs';
-import { PointsBySource, ShotTypeLeaders } from '../components/ShotGraphs';
+import { UsageEfficiency } from '../components/MoreGraphs';
+import { ShotTypeLeaders } from '../components/ShotGraphs';
 import { ArchetypesView, FreeThrowPressure } from '../components/PlayerExtras';
 import { HotHandView } from '../components/HotHand';
 import { ShotSituations } from '../components/ShotSituations';
@@ -29,21 +29,19 @@ const TABS = [
   { id: 'shots', label: 'Shot types' },
   { id: 'hothand', label: 'Hot hand' },
   { id: 'situations', label: 'Shot situations' },
-  { id: 'sources', label: 'Points by source' },
   { id: 'usage', label: 'Usage vs efficiency' },
-  { id: 'styles', label: 'Team styles' },
   { id: 'archetypes', label: 'Player archetypes' },
-  { id: 'schedule', label: 'Schedule ahead' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 const GROUPS: TabGroup<Tab>[] = [
   { label: 'Games & form', tabs: TABS.filter((t) => (['drama', 'night', 'hot', 'clutch'] as Tab[]).includes(t.id)) },
   { label: 'Shooting', tabs: TABS.filter((t) => (['zones', 'shots', 'hothand', 'situations'] as Tab[]).includes(t.id)) },
   { label: 'Players', tabs: TABS.filter((t) => (['usage', 'archetypes', 'combos', 'duos'] as Tab[]).includes(t.id)) },
-  { label: 'Teams', tabs: TABS.filter((t) => (['sources', 'styles', 'schedule'] as Tab[]).includes(t.id)) },
 ];
 /** Tabs that only cover the regular season. */
-const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'schedule', 'usage', 'styles', 'sources', 'archetypes']);
+const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'usage', 'archetypes']);
+/** Team tabs that moved to Rankings: old links still work. */
+const MOVED = new Set(['sources', 'styles', 'schedule']);
 
 export function Insights() {
   const { season } = useSeason();
@@ -51,6 +49,7 @@ export function Insights() {
   const tab: Tab = TABS.find((t) => t.id === params.get('tab'))?.id ?? 'drama';
   const [type, setType] = useState<SeasonType>(2);
   const hasData = !!seasonDrama(season.year, 2);
+  if (MOVED.has(params.get('tab') ?? '')) return <Navigate to={`/rankings?tab=${params.get('tab')}`} replace />;
 
   return (
     <section>
@@ -60,13 +59,11 @@ export function Insights() {
         {!REGULAR_ONLY.has(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
       <GroupedTabs groups={GROUPS} active={tab} onChange={(t) => setParams({ tab: t }, { replace: true })} />
-      {!hasData && tab !== 'schedule' && <Empty>These are built from every game's play-by-play in the daily data, which this season doesn't have yet. Pick another season.</Empty>}
+      {!hasData && <Empty>These are built from every game's play-by-play in the daily data, which this season doesn't have yet. Pick another season.</Empty>}
       {hasData && tab === 'drama' && <Drama season={season.year} type={type} />}
       {hasData && tab === 'duos' && <Duos season={season.year} type={type} />}
       {hasData && tab === 'shots' && <ShotTypeLeaders season={season.year} type={type} />}
-      {hasData && tab === 'sources' && <PointsBySource season={season.year} />}
       {hasData && tab === 'usage' && <UsageEfficiency season={season.year} />}
-      {hasData && tab === 'styles' && <TeamStyles season={season.year} />}
       {hasData && tab === 'zones' && <ShootingZones season={season.year} type={type} />}
       {hasData && tab === 'night' && <PlayerOfTheNight season={season.year} />}
       {hasData && tab === 'hot' && <HotCold season={season.year} />}
@@ -80,7 +77,6 @@ export function Insights() {
       {hasData && tab === 'hothand' && <HotHandView season={season.year} type={type} />}
       {hasData && tab === 'situations' && <ShotSituations season={season.year} type={type} />}
       {hasData && tab === 'combos' && <Combos season={season.year} type={type} />}
-      {tab === 'schedule' && <ScheduleAheadTab season={season.year} start={season.start} end={season.regularEnd} />}
     </section>
   );
 }

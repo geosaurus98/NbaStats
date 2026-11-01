@@ -6,8 +6,8 @@ import { seasonSnapshot, snapshotPlayers, type SeasonType } from '../api/espn';
 import { SEGMENTS } from '../lib/lineups';
 import { ZONES } from '../lib/pbpStats';
 import { NetBar, per48, signed } from './TeamLineups';
+import { pct1 } from '../lib/format';
 
-const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
 
 function useTeamLineups(season: number, type: SeasonType, teamId: string) {
   const snap = seasonSnapshot(season);

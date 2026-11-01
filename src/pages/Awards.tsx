@@ -10,6 +10,15 @@ import { TeamLogo } from '../components/TeamLogo';
 import { ACTUAL, actualVotes, awardOdds, AWARDS, candidates, MIN_GAMES_SHARE, rankAward, type AwardId, type Ranked } from '../lib/awards';
 import { nameKey } from '../lib/boxTotals';
 import { useSeason } from '../SeasonContext';
+import { Awards as AwardsHistory } from '../components/AllTime';
+import { Loading } from '../components/Status';
+import { useTeammateGraph } from '../lib/teammateStore';
+
+/** Every season's award winners and MVP voting (moved here from History). */
+function PastAwards() {
+  const graph = useTeammateGraph();
+  return graph ? <AwardsHistory graph={graph} /> : <Loading label="Loading every award since 1946-47…" />;
+}
 
 const SHOW = 15;
 
@@ -24,6 +33,7 @@ export function Awards() {
   const { season } = useSeason();
   const [params, setParams] = useSearchParams();
   const award = (AWARDS.find((a) => a.id === params.get('award'))?.id ?? 'mvp') as AwardId;
+  const past = params.get('award') === 'history';
   const snap = seasonSnapshot(season.year);
   const model = useMemo(() => (snap ? candidates(snap) : undefined), [snap]);
   const ranked = useMemo(() => (model ? rankAward(award, model.list, model.leagueDrtg) : []), [model, award]);
@@ -52,10 +62,13 @@ export function Awards() {
       <h2 className="sr-only">Award races</h2>
       <div className="tabs">
         {AWARDS.map((a) => (
-          <button key={a.id} className={a.id === award ? 'active' : ''} aria-pressed={a.id === award} onClick={() => setParams({ award: a.id }, { replace: true })}>{a.name}</button>
+          <button key={a.id} className={a.id === award && !past ? 'active' : ''} aria-pressed={a.id === award && !past} onClick={() => setParams({ award: a.id }, { replace: true })}>{a.name}</button>
         ))}
+        <button className={past ? 'active' : ''} aria-pressed={past} onClick={() => setParams({ award: 'history' }, { replace: true })}>Past winners & voting</button>
       </div>
-      {!model?.list.length ? (
+      {past ? (
+        <PastAwards />
+      ) : !model?.list.length ? (
         <Empty>No box-score totals for this season yet.</Empty>
       ) : (
         <>

@@ -10,6 +10,7 @@ import { isFinal, teamRecords } from '../lib/league';
 import { drawLottery, pickOdds, shareTies } from '../lib/lottery';
 import type { Model } from '../pages/Projections';
 import { TeamLogo } from './TeamLogo';
+import { ordinal } from '../lib/format';
 
 interface Entry {
   team: TeamRef;
@@ -21,7 +22,6 @@ interface Entry {
 }
 
 const pct = (v: number) => (v === 0 ? '' : v >= 0.995 ? '>99' : v < 0.005 ? '<1' : String(Math.round(v * 100)));
-const ordinal = (n: number) => `${n}${['th', 'st', 'nd', 'rd'][n % 100 >= 11 && n % 100 <= 13 ? 0 : n % 10] ?? 'th'}`;
 
 export function DraftLottery({ model, season }: { model: Model; season: number }) {
   const playoffs = useAsync(() => fetchLeagueGames(season, 3).catch(() => undefined), [season]);

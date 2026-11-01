@@ -16,6 +16,7 @@ import { SeasonShotMap } from '../components/SeasonShotMap';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { Tile } from '../components/Tile';
+import { PageTabs, usePageTab } from '../components/PageTabs';
 import { useAsync } from '../hooks/useAsync';
 import { formatShortDate } from '../lib/dates';
 import { averages, statValue } from '../lib/playerStats';
@@ -31,12 +32,20 @@ const TREND_STATS = [
 
 const ROLLING = 10;
 
+const PLAYER_TABS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'shooting', label: 'Shooting & passing' },
+  { id: 'games', label: 'Game log' },
+  { id: 'career', label: 'Career & contract' },
+] as const;
+
 export function Player() {
   const { id = '' } = useParams();
   const { season } = useSeason();
   const navigate = useNavigate();
   const [type, setType] = useState<LogSeasonType>('regular');
   const [trend, setTrend] = useState('PTS');
+  const [tab, setTab] = usePageTab(PLAYER_TABS);
 
   const profile = useAsync(() => fetchAthlete(id), [id]);
   const log = useAsync(() => fetchGameLog(id, season.year), [id, season.year]);
@@ -92,106 +101,122 @@ export function Player() {
         )}
       </div>
 
-      {type === 'regular' && (p?.name || snapshotName) && (
-        <PlayerCard playerId={id} name={p?.name ?? snapshotName!} team={p?.team?.abbr} season={season.year} seasonLabel={season.label} />
+      <PageTabs tabs={PLAYER_TABS} active={tab} onChange={setTab} label="Player sections" />
+
+      {log.loading && (tab === 'overview' || tab === 'games') && <Loading label="Loading game log…" />}
+      {log.error && (tab === 'overview' || tab === 'games') && <ErrorBox error={log.error} />}
+      {log.data && games.length === 0 && (tab === 'overview' || tab === 'games') && <Empty>No {type === 'playoffs' ? 'playoff' : 'regular-season'} games in {season.label}.</Empty>}
+
+      {tab === 'overview' && (
+        <>
+          {type === 'regular' && (p?.name || snapshotName) && (
+            <PlayerCard playerId={id} name={p?.name ?? snapshotName!} team={p?.team?.abbr} season={season.year} seasonLabel={season.label} />
+          )}
+          {games.length > 0 && (
+            <>
+              <h2>{season.label} {type === 'playoffs' ? 'playoff' : 'season'} averages</h2>
+              <div className="stat-tiles">
+                <Tile label="Games" value={String(avg.gp)} />
+                <Tile label="Points" value={avg.pts.toFixed(1)} />
+                <Tile label="Rebounds" value={avg.reb.toFixed(1)} />
+                <Tile label="Assists" value={avg.ast.toFixed(1)} />
+                <Tile label="Steals" value={avg.stl.toFixed(1)} />
+                <Tile label="Blocks" value={avg.blk.toFixed(1)} />
+                <Tile label="FG%" value={pct(avg.fgPct)} />
+                <Tile label="3P%" value={pct(avg.threePct)} />
+                <Tile label="FT%" value={pct(avg.ftPct)} />
+                <Tile label="Minutes" value={avg.min.toFixed(1)} />
+              </div>
+              <div className="page-head">
+                <h2>{trendTitle} by game</h2>
+                <div className="chips tight">
+                  {TREND_STATS.map((t) => (
+                    <button key={t.label} className={t.label === trend ? 'chip active' : 'chip'} aria-pressed={t.label === trend} onClick={() => setTrend(t.label)}>
+                      {t.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="card">
+                <LineChart
+                  ariaLabel={`${trendTitle} per game with ${ROLLING}-game average`}
+                  series={[
+                    { id: 'game', label: `${trendTitle} that game`, values, color: 'var(--series-2)' },
+                    { id: 'avg', label: `${ROLLING}-game average`, values: rolling, color: 'var(--series-1)' },
+                  ]}
+                  xLabel={(i) => (games[i] ? `${formatShortDate(games[i].date)} ${games[i].atVs} ${games[i].opponent.abbr}` : '')}
+                  xTick={(i) => (games[i] ? formatShortDate(games[i].date) : '')}
+                  yFormat={(v) => (Number.isInteger(v) ? String(v) : v.toFixed(1))}
+                />
+              </div>
+            </>
+          )}
+          {type === 'regular' && <SeasonVsLast playerId={id} season={season.year} />}
+          {type === 'regular' && <StyleTwins playerId={id} season={season.year} />}
+        </>
       )}
 
-      {type === 'regular' && <PlayerTimeline playerId={id} season={season.year} />}
-
-      <GameCalendar playerId={id} season={season.year} />
-
-      <PlayerShotTypes playerId={id} season={season.year} type={type === 'playoffs' ? 3 : 2} />
-
-      {type === 'regular' && <SeasonVsLast playerId={id} season={season.year} />}
-      {type === 'regular' && <StyleTwins playerId={id} season={season.year} />}
-
-      {type === 'regular' && <AgingCurve playerId={id} season={season.year} />}
-
-      <SalaryHistory playerId={id} />
-
-      {log.loading && <Loading label="Loading game log…" />}
-      {log.error && <ErrorBox error={log.error} />}
-      {log.data && games.length === 0 && <Empty>No {type === 'playoffs' ? 'playoff' : 'regular-season'} games in {season.label}.</Empty>}
-
-      {games.length > 0 && (
+      {tab === 'shooting' && (
         <>
-          <h2>{season.label} {type === 'playoffs' ? 'playoff' : 'season'} averages</h2>
-          <div className="stat-tiles">
-            <Tile label="Games" value={String(avg.gp)} />
-            <Tile label="Points" value={avg.pts.toFixed(1)} />
-            <Tile label="Rebounds" value={avg.reb.toFixed(1)} />
-            <Tile label="Assists" value={avg.ast.toFixed(1)} />
-            <Tile label="Steals" value={avg.stl.toFixed(1)} />
-            <Tile label="Blocks" value={avg.blk.toFixed(1)} />
-            <Tile label="FG%" value={pct(avg.fgPct)} />
-            <Tile label="3P%" value={pct(avg.threePct)} />
-            <Tile label="FT%" value={pct(avg.ftPct)} />
-            <Tile label="Minutes" value={avg.min.toFixed(1)} />
-          </div>
-
-          <div className="page-head">
-            <h2>{trendTitle} by game</h2>
-            <div className="chips tight">
-              {TREND_STATS.map((t) => (
-                <button key={t.label} className={t.label === trend ? 'chip active' : 'chip'} aria-pressed={t.label === trend} onClick={() => setTrend(t.label)}>
-                  {t.title}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="card">
-            <LineChart
-              ariaLabel={`${trendTitle} per game with ${ROLLING}-game average`}
-              series={[
-                { id: 'game', label: `${trendTitle} that game`, values, color: 'var(--series-2)' },
-                { id: 'avg', label: `${ROLLING}-game average`, values: rolling, color: 'var(--series-1)' },
-              ]}
-              xLabel={(i) => (games[i] ? `${formatShortDate(games[i].date)} ${games[i].atVs} ${games[i].opponent.abbr}` : '')}
-              xTick={(i) => (games[i] ? formatShortDate(games[i].date) : '')}
-              yFormat={(v) => (Number.isInteger(v) ? String(v) : v.toFixed(1))}
-            />
-          </div>
-
-          {partners && <PassingPartners to={partners.to} from={partners.from} />}
-
           {shots && shotMap && (
             <>
               <h2>Shot map</h2>
               <SeasonShotMap bins={shotMap.bins} size={shots.playerSize} league={shots.league} leagueSize={shots.teamSize} minShare={0.008} />
             </>
           )}
+          <PlayerShotTypes playerId={id} season={season.year} type={type === 'playoffs' ? 3 : 2} />
+          {partners && <PassingPartners to={partners.to} from={partners.from} />}
+          {!shotMap && !partners && <Empty>No shot or passing data for this player in {season.label}.</Empty>}
+        </>
+      )}
 
-          <h2>Game log</h2>
-          <div className="table-wrap">
-            <table className="box">
-              <thead>
-                <tr>
-                  <th className="left">Date</th>
-                  <th className="left">Opp</th>
-                  <th className="left">Result</th>
-                  {columns.map((c) => (
-                    <th key={c}>{c}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[...games].reverse().map((g) => (
-                  <tr key={g.gameId} className="clickable" onClick={() => navigate(`/game/${g.gameId}`)}>
-                    <td className="left nowrap">{formatShortDate(g.date)}</td>
-                    <td className="left nowrap">
-                      <span className="muted">{g.atVs}</span> {g.opponent.abbr}
-                    </td>
-                    <td className="left nowrap">
-                      <b className={g.result === 'W' ? 'win' : 'loss'}>{g.result}</b> {g.score}
-                    </td>
-                    {columns.map((c) => (
-                      <td key={c} className={c === trend ? 'sorted' : undefined}>{g.stats[c]}</td>
+      {tab === 'games' && (
+        <>
+          {type === 'regular' && <PlayerTimeline playerId={id} season={season.year} />}
+          <GameCalendar playerId={id} season={season.year} />
+          {games.length > 0 && (
+            <>
+              <h2>Game log</h2>
+              <div className="table-wrap">
+                <table className="box">
+                  <thead>
+                    <tr>
+                      <th className="left">Date</th>
+                      <th className="left">Opp</th>
+                      <th className="left">Result</th>
+                      {columns.map((c) => (
+                        <th key={c}>{c}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...games].reverse().map((g) => (
+                      <tr key={g.gameId} className="clickable" onClick={() => navigate(`/game/${g.gameId}`)}>
+                        <td className="left nowrap">{formatShortDate(g.date)}</td>
+                        <td className="left nowrap">
+                          <span className="muted">{g.atVs}</span> {g.opponent.abbr}
+                        </td>
+                        <td className="left nowrap">
+                          <b className={g.result === 'W' ? 'win' : 'loss'}>{g.result}</b> {g.score}
+                        </td>
+                        {columns.map((c) => (
+                          <td key={c} className={c === trend ? 'sorted' : undefined}>{g.stats[c]}</td>
+                        ))}
+                      </tr>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {tab === 'career' && (
+        <>
+          {type === 'regular' && <AgingCurve playerId={id} season={season.year} />}
+          <SalaryHistory playerId={id} />
+          {p?.name && <p className="small"><Link to={`/history?tab=careers&p=${encodeURIComponent(p.name)}`}>Full career, season by season →</Link></p>}
         </>
       )}
     </section>

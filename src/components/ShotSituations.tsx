@@ -6,8 +6,8 @@ import { Link } from 'react-router-dom';
 import { seasonSnapshot, snapshotPlayers, type SeasonType } from '../api/espn';
 import { situationEfg, SITUATIONS, type SituationId } from '../lib/situations';
 import { Empty } from './Status';
+import { pct1 } from '../lib/format';
 
-const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
 
 export function ShotSituations({ season, type }: { season: number; type: SeasonType }) {
   const snap = seasonSnapshot(season);
