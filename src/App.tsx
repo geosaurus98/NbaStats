@@ -36,6 +36,8 @@ const Teams = lazy(() => import('./pages/Teams').then((m) => ({ default: m.Teams
 const Fantasy = lazy(() => import('./pages/Fantasy').then((m) => ({ default: m.Fantasy })));
 const Guide = lazy(() => import('./pages/Guide').then((m) => ({ default: m.Guide })));
 const Alerts = lazy(() => import('./pages/Alerts').then((m) => ({ default: m.Alerts })));
+const Draft = lazy(() => import('./pages/Draft').then((m) => ({ default: m.Draft })));
+const Trade = lazy(() => import('./pages/Trade').then((m) => ({ default: m.Trade })));
 const Status = lazy(() => import('./pages/Status').then((m) => ({ default: m.Status })));
 const TeamReport = lazy(() => import('./pages/TeamReport').then((m) => ({ default: m.TeamReport })));
 
@@ -43,7 +45,7 @@ const TeamReport = lazy(() => import('./pages/TeamReport').then((m) => ({ defaul
 const NAV: [string, string][][] = [
   [['/', 'Home'], ['/scores', 'Scores'], ['/standings', 'Standings'], ['/playoffs', 'Playoffs'], ['/projections', 'Projections']],
   [['/leaders', 'Leaders'], ['/awards', 'Awards'], ['/rankings', 'Rankings'], ['/insights', 'Insights'], ['/fantasy', 'Fantasy']],
-  [['/teams', 'Teams'], ['/salaries', 'Salaries'], ['/h2h', 'H2H'], ['/compare', 'Compare']],
+  [['/teams', 'Teams'], ['/salaries', 'Salaries'], ['/trade', 'Trade'], ['/draft', 'Draft'], ['/compare', 'Compare']],
   [['/history', 'History'], ['/degrees', '6 Degrees'], ['/games', 'Games']],
 ];
 
@@ -62,6 +64,7 @@ export function App() {
   };
   return (
     <>
+      <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>Skip to content</a>
       <header className="topbar">
         <div className="topbar-inner">
           <NavLink to="/" className="brand">🏀 NBA Stats Hub</NavLink>
@@ -92,7 +95,7 @@ export function App() {
       </header>
       <OfflineBar />
       <LiveBar />
-      <main key={season.year}>
+      <main key={season.year} id="main" tabIndex={-1}>
         <SnapshotGate season={season.year}>
         <Suspense fallback={<Loading />}>
         <Routes>
@@ -122,6 +125,8 @@ export function App() {
           <Route path="/guide" element={<Guide />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/status" element={<Status />} />
+          <Route path="/trade" element={<Trade />} />
+          <Route path="/draft" element={<Draft />} />
         </Routes>
         </Suspense>
         </SnapshotGate>

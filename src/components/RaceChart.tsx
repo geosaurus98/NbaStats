@@ -62,12 +62,12 @@ export function RaceChart({ season, conferences }: { season: number; conferences
       <div className="page-head">
         <h2>{mode === 'race' ? 'The race: games above .500' : 'Standings over time'}</h2>
         <div className="segmented">
-          <button className={mode === 'race' ? 'active' : ''} onClick={() => setMode('race')}>Above .500</button>
-          <button className={mode === 'rank' ? 'active' : ''} onClick={() => setMode('rank')}>Seed by week</button>
+          <button className={mode === 'race' ? 'active' : ''} aria-pressed={mode === 'race'} onClick={() => setMode('race')}>Above .500</button>
+          <button className={mode === 'rank' ? 'active' : ''} aria-pressed={mode === 'rank'} onClick={() => setMode('rank')}>Seed by week</button>
         </div>
         <div className="segmented">
           {conferences.map((c) => (
-            <button key={c.name} className={c.name === conf.name ? 'active' : ''} onClick={() => setConfName(c.name)}>
+            <button key={c.name} className={c.name === conf.name ? 'active' : ''} aria-pressed={c.name === conf.name} onClick={() => setConfName(c.name)}>
               {c.name.replace(' Conference', '')}
             </button>
           ))}

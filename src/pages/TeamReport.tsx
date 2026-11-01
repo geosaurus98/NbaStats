@@ -92,7 +92,7 @@ export function TeamReport() {
           <div className="table-wrap flush"><table>
             <thead>
               <tr>
-                <th className="left" />
+                <td className="left" />
                 <th>Offence</th>
                 <th>Rank</th>
                 <th>Defence</th>

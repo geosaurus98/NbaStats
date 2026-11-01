@@ -133,7 +133,7 @@ export function CareerArc({ graph, players }: { graph: Graph; players: number[] 
         <h3>Career arc: {labels[stat].toLowerCase()} per game by age</h3>
         <div className="chips tight">
           {ARC_STATS.map((k) => (
-            <button key={k} className={k === stat ? 'chip active' : 'chip'} onClick={() => setStat(k)}>{labels[k]}</button>
+            <button key={k} className={k === stat ? 'chip active' : 'chip'} aria-pressed={k === stat} onClick={() => setStat(k)}>{labels[k]}</button>
           ))}
         </div>
       </div>

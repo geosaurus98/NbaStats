@@ -105,10 +105,11 @@ export function Compare() {
       <div className="page-head">
         <h1>Compare players · {season.label}</h1>
         <div className="segmented">
-          <button className={type === 'regular' ? 'active' : ''} onClick={() => setType('regular')}>Regular season</button>
-          <button className={type === 'playoffs' ? 'active' : ''} onClick={() => setType('playoffs')}>Playoffs</button>
+          <button className={type === 'regular' ? 'active' : ''} aria-pressed={type === 'regular'} onClick={() => setType('regular')}>Regular season</button>
+          <button className={type === 'playoffs' ? 'active' : ''} aria-pressed={type === 'playoffs'} onClick={() => setType('playoffs')}>Playoffs</button>
         </div>
       </div>
+      <p className="small muted">Comparing teams? <Link to="/h2h">Team head-to-head →</Link></p>
       <div className="actions">
         {ids.map((id, i) => (
           <span key={id} className="chip picked">
@@ -179,7 +180,7 @@ export function Compare() {
               <h3>{TRENDS.find((t) => t.label === trend)?.title}: {ROLLING}-game rolling average</h3>
               <div className="chips tight">
                 {TRENDS.map((t) => (
-                  <button key={t.label} className={t.label === trend ? 'chip active' : 'chip'} onClick={() => setTrend(t.label)}>{t.title}</button>
+                  <button key={t.label} className={t.label === trend ? 'chip active' : 'chip'} aria-pressed={t.label === trend} onClick={() => setTrend(t.label)}>{t.title}</button>
                 ))}
               </div>
             </div>

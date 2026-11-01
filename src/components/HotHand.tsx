@@ -50,8 +50,8 @@ export function HotHandView({ season, type }: { season: number; type: SeasonType
         <Tile label="Share of threes after a make / after a miss" value={`${Math.round(lg.make.threeShare * 100)}% / ${Math.round(lg.miss.threeShare * 100)}%`} />
       </div>
       <div className="segmented">
-        <button className={sort === 'adj' ? 'active' : ''} onClick={() => setSort('adj')}>Allowing for shot difficulty</button>
-        <button className={sort === 'raw' ? 'active' : ''} onClick={() => setSort('raw')}>Raw FG%</button>
+        <button className={sort === 'adj' ? 'active' : ''} aria-pressed={sort === 'adj'} onClick={() => setSort('adj')}>Allowing for shot difficulty</button>
+        <button className={sort === 'raw' ? 'active' : ''} aria-pressed={sort === 'raw'} onClick={() => setSort('raw')}>Raw FG%</button>
       </div>
       <div className="table-wrap">
         <table>
@@ -62,7 +62,7 @@ export function HotHandView({ season, type }: { season: number; type: SeasonType
               <th title="FG% on shots right after a miss (attempts)">After miss</th>
               <th title="After make minus after miss">Raw</th>
               <th title="The same gap, after allowing for the types of shot taken">Adjusted</th>
-              <th />
+              <td />
               <th title="Change in the share of shots that are threes after a make (percentage points)">Heat check</th>
             </tr>
           </thead>

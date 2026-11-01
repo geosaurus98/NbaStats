@@ -110,15 +110,15 @@ export function ShotTypeLeaders({ season, type }: { season: number; type: Season
       <p className="muted">Every field-goal attempt classified from its play-by-play description. "Other threes" are mostly catch-and-shoot.</p>
       <div className="chips tight">
         {SHOT_TYPES.map((t) => (
-          <button key={t.id} className={t.id === shot ? 'chip active' : 'chip'} onClick={() => setShot(t.id)}>{t.label}</button>
+          <button key={t.id} className={t.id === shot ? 'chip active' : 'chip'} aria-pressed={t.id === shot} onClick={() => setShot(t.id)}>{t.label}</button>
         ))}
       </div>
       <div className="two-col">
         <div className="table-wrap">
           <h3 className="table-title">{typeLabel(shot)} · league {lg ? pct(lg[1], lg[0]) : '–'}</h3>
           <div className="actions" style={{ padding: '0 .9rem' }}>
-            <button className={sort === 'att' ? 'chip active' : 'chip'} onClick={() => setSort('att')}>Most attempts</button>
-            <button className={sort === 'pct' ? 'chip active' : 'chip'} onClick={() => setSort('pct')}>Best % ({minAtt}+)</button>
+            <button className={sort === 'att' ? 'chip active' : 'chip'} aria-pressed={sort === 'att'} onClick={() => setSort('att')}>Most attempts</button>
+            <button className={sort === 'pct' ? 'chip active' : 'chip'} aria-pressed={sort === 'pct'} onClick={() => setSort('pct')}>Best % ({minAtt}+)</button>
           </div>
           <table>
             <thead>
@@ -304,7 +304,7 @@ export function PairHeatmap({ season, teamId, type }: { season: number; teamId: 
         <table className="heat">
           <thead>
             <tr>
-              <th />
+              <td />
               {ids.map((id) => (
                 <th key={id} className="heat-col"><span>{name(id)}</span></th>
               ))}
@@ -318,12 +318,13 @@ export function PairHeatmap({ season, teamId, type }: { season: number; teamId: 
                   const key = [a, b].sort().join(',');
                   const cell = a === b ? { sec: own.get(a) ?? 0, net: undefined } : pair.get(key);
                   const min = Math.round((cell?.sec ?? 0) / 60);
-                  const shade = a === b ? 0 : Math.round(((cell?.sec ?? 0) / maxSec) * 85);
+                  // Capped so the minutes stay readable on the shading (WCAG AA in both themes).
+                  const shade = a === b ? 0 : Math.round(((cell?.sec ?? 0) / maxSec) * 55);
                   return (
                     <td
                       key={b}
                       className={`heat-cell${a === b ? ' self' : ''}${hover === key ? ' hot' : ''}`}
-                      style={a === b ? undefined : { background: `color-mix(in srgb, var(--series-1) ${shade}%, var(--surface))`, color: shade > 55 ? '#fff' : undefined }}
+                      style={a === b ? undefined : { background: `color-mix(in srgb, var(--series-1) ${shade}%, var(--surface))` }}
                       onMouseEnter={() => setHover(key)}
                       title={a === b ? `${name(a)}: ${min} minutes in all` : `${name(a)} + ${name(b)}: ${min} minutes together${cell?.net != null ? `, ${cell.net >= 0 ? '+' : ''}${cell.net.toFixed(1)} per 48` : ''}`}
                     >

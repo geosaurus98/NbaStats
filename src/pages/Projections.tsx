@@ -53,11 +53,12 @@ export function Projections() {
   return (
     <section>
       <h1>{season.label} projections</h1>
+      <h2 className="sr-only">Projections</h2>
       <div className="tabs">
-        <button className={tab === 'odds' ? 'active' : ''} onClick={() => setParams({ tab: 'odds' }, { replace: true })}>Playoff odds</button>
-        <button className={tab === 'ratings' ? 'active' : ''} onClick={() => setParams({ tab: 'ratings' }, { replace: true })}>Power ratings</button>
-        <button className={tab === 'lottery' ? 'active' : ''} onClick={() => setParams({ tab: 'lottery' }, { replace: true })}>Draft lottery</button>
-        <button className={tab === 'whatif' ? 'active' : ''} onClick={() => setParams({ tab: 'whatif' }, { replace: true })}>What if</button>
+        <button className={tab === 'odds' ? 'active' : ''} aria-pressed={tab === 'odds'} onClick={() => setParams({ tab: 'odds' }, { replace: true })}>Playoff odds</button>
+        <button className={tab === 'ratings' ? 'active' : ''} aria-pressed={tab === 'ratings'} onClick={() => setParams({ tab: 'ratings' }, { replace: true })}>Power ratings</button>
+        <button className={tab === 'lottery' ? 'active' : ''} aria-pressed={tab === 'lottery'} onClick={() => setParams({ tab: 'lottery' }, { replace: true })}>Draft lottery</button>
+        <button className={tab === 'whatif' ? 'active' : ''} aria-pressed={tab === 'whatif'} onClick={() => setParams({ tab: 'whatif' }, { replace: true })}>What if</button>
       </div>
       {loading && <Loading label="Rating every team and simulating the season…" />}
       {error && <ErrorBox error={error} />}
@@ -175,8 +176,8 @@ function OddsOverTime({ model, season }: { model: Model; season: number }) {
       <div className="page-head">
         <h3>How the odds moved</h3>
         <div className="segmented">
-          <button className={metric === 'champion' ? 'active' : ''} onClick={() => setMetric('champion')}>Title</button>
-          <button className={metric === 'playoffs' ? 'active' : ''} onClick={() => setMetric('playoffs')}>Make playoffs</button>
+          <button className={metric === 'champion' ? 'active' : ''} aria-pressed={metric === 'champion'} onClick={() => setMetric('champion')}>Title</button>
+          <button className={metric === 'playoffs' ? 'active' : ''} aria-pressed={metric === 'playoffs'} onClick={() => setMetric('playoffs')}>Make playoffs</button>
         </div>
       </div>
       <div className="chips tight">

@@ -66,6 +66,7 @@ function DegreesPage({ graph }: { graph: Graph }) {
       <PlayerDatalist graph={graph} />
 
       <h1>Six degrees of the NBA</h1>
+      <h2 className="sr-only">Connections</h2>
       <p className="muted">
         Every player since 1946-47, linked if they were ever on the same team in the same season. Like the Kevin Bacon game:
         how many teammate links does it take to get from one player to another?

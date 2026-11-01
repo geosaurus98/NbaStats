@@ -59,13 +59,13 @@ export function AllTimeLeaders({ graph }: { graph: Graph }) {
     <>
       <div className="chips">
         {LEADER_STATS.map((k) => (
-          <button key={k} className={k === stat ? 'chip active' : 'chip'} onClick={() => setStat(k)}>{STAT_LABELS[k]}</button>
+          <button key={k} className={k === stat ? 'chip active' : 'chip'} aria-pressed={k === stat} onClick={() => setStat(k)}>{STAT_LABELS[k]}</button>
         ))}
       </div>
       <div className="page-head">
         <div className="segmented">
           {MODES.map((m) => (
-            <button key={m.id} className={m.id === mode ? 'active' : ''} onClick={() => setMode(m.id)} disabled={m.id !== 'total' && !perGameStat}>{m.label}</button>
+            <button key={m.id} className={m.id === mode ? 'active' : ''} aria-pressed={m.id === mode} onClick={() => setMode(m.id)} disabled={m.id !== 'total' && !perGameStat}>{m.label}</button>
           ))}
         </div>
         {mode !== 'season' && (
@@ -131,7 +131,7 @@ export function Awards({ graph }: { graph: Graph }) {
     <>
       <div className="chips">
         {AWARD_ORDER.filter((a) => d.awards[a]).map((a) => (
-          <button key={a} className={a === award ? 'chip active' : 'chip'} onClick={() => { setAward(a); setSeason(undefined); }}>{AWARD_NAMES[a]}</button>
+          <button key={a} className={a === award ? 'chip active' : 'chip'} aria-pressed={a === award} onClick={() => { setAward(a); setSeason(undefined); }}>{AWARD_NAMES[a]}</button>
         ))}
       </div>
       <div className="degrees-main">

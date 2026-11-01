@@ -8,7 +8,7 @@ import { PlayerCard } from '../components/PlayerCard';
 import { PlayerTimeline } from '../components/MoreGraphs';
 import { PlayerShotTypes } from '../components/ShotGraphs';
 import { AgingCurve } from '../components/PlayerAnalytics';
-import { SeasonVsLast } from '../components/PlayerExtras';
+import { SeasonVsLast, StyleTwins } from '../components/PlayerExtras';
 import { GameCalendar } from '../components/GameCalendar';
 import { FollowButton } from '../components/FollowButton';
 import { SalaryHistory } from '../components/TeamPayroll';
@@ -66,6 +66,7 @@ export function Player() {
         {p?.headshot && <img className="headshot" src={p.headshot} alt="" width={96} height={70} />}
         <div>
           <h1>{p?.name ?? (profile.loading ? 'Loading…' : 'Player')} {(p?.name || snapshotName) && <FollowButton playerId={id} name={p?.name ?? snapshotName!} />}</h1>
+      <h2 className="sr-only">Season</h2>
           <p className="muted">
             {p?.team && (
               <Link to={`/team/${p.team.id}`} className="team-cell">
@@ -85,8 +86,8 @@ export function Player() {
         )}
         {hasPlayoffs && (
           <div className="segmented push-right">
-            <button className={type === 'regular' ? 'active' : ''} onClick={() => setType('regular')}>Regular season</button>
-            <button className={type === 'playoffs' ? 'active' : ''} onClick={() => setType('playoffs')}>Playoffs</button>
+            <button className={type === 'regular' ? 'active' : ''} aria-pressed={type === 'regular'} onClick={() => setType('regular')}>Regular season</button>
+            <button className={type === 'playoffs' ? 'active' : ''} aria-pressed={type === 'playoffs'} onClick={() => setType('playoffs')}>Playoffs</button>
           </div>
         )}
       </div>
@@ -102,6 +103,7 @@ export function Player() {
       <PlayerShotTypes playerId={id} season={season.year} type={type === 'playoffs' ? 3 : 2} />
 
       {type === 'regular' && <SeasonVsLast playerId={id} season={season.year} />}
+      {type === 'regular' && <StyleTwins playerId={id} season={season.year} />}
 
       {type === 'regular' && <AgingCurve playerId={id} season={season.year} />}
 
@@ -131,7 +133,7 @@ export function Player() {
             <h2>{trendTitle} by game</h2>
             <div className="chips tight">
               {TREND_STATS.map((t) => (
-                <button key={t.label} className={t.label === trend ? 'chip active' : 'chip'} onClick={() => setTrend(t.label)}>
+                <button key={t.label} className={t.label === trend ? 'chip active' : 'chip'} aria-pressed={t.label === trend} onClick={() => setTrend(t.label)}>
                   {t.title}
                 </button>
               ))}

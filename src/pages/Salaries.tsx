@@ -49,6 +49,7 @@ export function Salaries() {
   return (
     <section>
       <h1>{label} salaries</h1>
+      <h2 className="sr-only">Payrolls</h2>
       <p className="muted">
         Each team's player salaries this season against the minimum, the cap ({money(levels.cap)}), the tax line ({money(levels.tax)}), the first apron ({money(levels.firstApron)}) and the second apron ({money(levels.secondApron)}).{' '}
         {[...zones].map(([z, n]) => `${n} ${ZONE_LABELS[z].toLowerCase()}`).join(' · ')}.

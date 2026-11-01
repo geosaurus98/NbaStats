@@ -46,6 +46,9 @@ const PAGES = [
   { label: 'Win probability added', to: '/leaders?tab=wpa', words: 'wpa win probability added clutch impact' },
   { label: 'Streaks', to: '/leaders?tab=streaks', words: 'streak consecutive games 20 points double double' },
   { label: 'Fantasy hub', to: '/fantasy', words: 'fantasy points espn yahoo draftkings nine category 9-cat pickups waiver streamers schedule' },
+  { label: 'Draft hub', to: '/draft', words: 'draft hub order lottery picks grades class steals busts prospects' },
+  { label: 'Draft class grades', to: '/draft?tab=grades', words: 'draft grades class steals busts best drafting teams' },
+  { label: 'Trade machine', to: '/trade', words: 'trade machine salary matching deal swap aprons' },
   { label: 'Data health', to: '/status', words: 'data health status freshness updated refreshed stale job snapshot' },
   { label: 'NBA Cup', to: '/standings?view=cup', words: 'nba cup in season tournament group stage knockout wildcard' },
   { label: 'Alerts', to: '/alerts', words: 'alerts notifications follow my team since last visit injuries' },
@@ -201,7 +204,7 @@ export function SearchBox() {
             <ul className="search-results">
               {results.map((r, i) => (
                 <li key={`${r.kind}${r.to}`}>
-                  <button className={i === sel ? 'active' : ''} onMouseEnter={() => setSel(i)} onClick={() => go(r)}>
+                  <button className={i === sel ? 'active' : ''} aria-pressed={i === sel} onMouseEnter={() => setSel(i)} onClick={() => go(r)}>
                     <span className="search-kind">{r.kind}</span>
                     <b>{r.label}</b>
                     <span className="muted small">{r.detail}</span>

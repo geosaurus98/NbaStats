@@ -1,6 +1,6 @@
 // Home dashboard: today's games, the favourite team, a standings snapshot,
 // the title race (or champion), the scoring race and today's puzzles.
-import { useMemo } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchLeaders, fetchScoreboard, fetchStandings, seasonSnapshot } from '../api/espn';
 import type { Game } from '../api/types';
@@ -17,6 +17,7 @@ import { espnLogo, franchiseOf, FRANCHISES } from '../lib/franchises';
 import { AWARDS, candidates, rankAward } from '../lib/awards';
 import { L } from '../lib/boxTotals';
 import { todayKey } from '../lib/games';
+import { arrange, moveCard, useDashboard } from '../lib/dashboard';
 import { defaultDate, type Season } from '../lib/seasons';
 import { useSeason } from '../SeasonContext';
 import { buildModel } from './Projections';
@@ -30,64 +31,107 @@ export function Home() {
   const fav = FRANCHISES.find((f) => f.espnId === favouriteId);
   const champ = CHAMPIONS[season.year] ? franchiseOf(CHAMPIONS[season.year]) : undefined;
 
+  const [layout, setLayout] = useDashboard();
+  const [editing, setEditing] = useState(false);
+  const cards: { id: string; label: string; wide?: boolean; node: ReactNode }[] = [
+    { id: 'myteam', label: 'My team', wide: true, node: <MyTeamCard season={season.year} /> },
+    { id: 'games', label: "Today's games", wide: true, node: <TodayGames date={date} /> },
+    { id: 'lastnight', label: 'Last night in brief', wide: true, node: <LastNight season={season.year} /> },
+    { id: 'standings', label: 'Standings', node: <StandingsSnapshot season={season.year} /> },
+    {
+      id: 'title',
+      label: champ ? 'Champions' : 'Title odds',
+      node: champ ? (
+        <div className="card">
+          <h3>Champions</h3>
+          <Link to="/playoffs" className="home-champ">
+            <TeamLogo team={{ id: champ.espnId, name: champ.name, shortName: champ.name, abbr: champ.id, logo: espnLogo(champ) }} size={56} />
+            <div>
+              <div className="muted small">{season.label} NBA champions</div>
+              <div className="champion-name">{champ.name}</div>
+              <div className="small">See the bracket →</div>
+            </div>
+          </Link>
+        </div>
+      ) : (
+        <TitleOdds season={season} />
+      ),
+    },
+    { id: 'night', label: 'Player of the night', node: <NightCard season={season.year} /> },
+    { id: 'onthisday', label: 'On this day', node: <OnThisDayCard /> },
+    { id: 'scoring', label: 'Scoring race', node: <ScoringRace season={season.year} /> },
+    { id: 'awards', label: 'Awards race', node: <AwardRace season={season.year} /> },
+    { id: 'puzzles', label: "Today's puzzles", node: <Puzzles /> },
+    {
+      id: 'explore',
+      label: 'Explore',
+      node: (
+        <div className="card">
+          <h3>Explore</h3>
+          <div className="chips tight">
+            {fav && <Link className="chip" to={`/franchise/${fav.id}`}>{fav.name} history</Link>}
+            <Link className="chip" to="/projections">Playoff odds</Link>
+            <Link className="chip" to="/insights">Most exciting games</Link>
+            <Link className="chip" to="/degrees">6 Degrees</Link>
+            <Link className="chip" to="/history?tab=leaders">All-time leaders</Link>
+            <Link className="chip" to="/draft">Draft hub</Link>
+            <Link className="chip" to="/trade">Trade machine</Link>
+            <Link className="chip" to="/franchise/LAL">Franchise histories</Link>
+            <Link className="chip" to="/history?tab=teams">Team vs team across eras</Link>
+            <Link className="chip" to="/insights?tab=hot">Hot &amp; cold</Link>
+            <Link className="chip" to="/insights?tab=clutch">Clutch</Link>
+            <Link className="chip" to="/history?tab=greatest">Greatest teams</Link>
+            <Link className="chip" to="/history?tab=similar">Similar players</Link>
+          </div>
+        </div>
+      ),
+    },
+  ];
+  const order = arrange(cards.map((c) => c.id), layout);
+  const byId = new Map(cards.map((c) => [c.id, c]));
+  const shown = order.filter((id) => !layout.hidden.includes(id));
+
   return (
     <section>
       <div className="page-head">
         <h1>{season.label} at a glance</h1>
+      <h2 className="sr-only">Dashboard</h2>
         <div className="actions">
           <Link className="chip" to="/myteam">★ My team</Link>
           <Link className="chip" to={`/scores?date=${date}`}>All scores →</Link>
+          <button className={editing ? 'chip active' : 'chip'} aria-pressed={editing} onClick={() => setEditing(!editing)} aria-expanded={editing}>⚙ Customise</button>
         </div>
       </div>
-      <MyTeamCard season={season.year} />
-      <TodayGames date={date} />
-      <LastNight season={season.year} />
-      <div className="two-col home-row">
-        <StandingsSnapshot season={season.year} />
-        <div className="home-stack">
-        {champ ? (
-          <div className="card">
-            <h3>Champions</h3>
-            <Link to="/playoffs" className="home-champ">
-              <TeamLogo team={{ id: champ.espnId, name: champ.name, shortName: champ.name, abbr: champ.id, logo: espnLogo(champ) }} size={56} />
-              <div>
-                <div className="muted small">{season.label} NBA champions</div>
-                <div className="champion-name">{champ.name}</div>
-                <div className="small">See the bracket →</div>
-              </div>
-            </Link>
-          </div>
-        ) : (
-          <TitleOdds season={season} />
-        )}
-        <NightCard season={season.year} />
-        <OnThisDayCard />
+      {editing && (
+        <div className="card dash-edit">
+          <h3>Your dashboard</h3>
+          <p className="muted small">Pick the cards you want and put them in your order. Kept in this browser.</p>
+          <ol>
+            {order.map((id, i) => {
+              const c = byId.get(id)!;
+              const hidden = layout.hidden.includes(id);
+              return (
+                <li key={id}>
+                  <label>
+                    <input type="checkbox" checked={!hidden} onChange={() => setLayout({ order, hidden: hidden ? layout.hidden.filter((h) => h !== id) : [...layout.hidden, id] })} /> {c.label}
+                  </label>
+                  <span className="dash-move">
+                    <button className="chip" disabled={i === 0} onClick={() => setLayout({ ...layout, order: moveCard(order, id, -1) })} aria-label={`Move ${c.label} up`}>↑</button>
+                    <button className="chip" disabled={i === order.length - 1} onClick={() => setLayout({ ...layout, order: moveCard(order, id, 1) })} aria-label={`Move ${c.label} down`}>↓</button>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+          <p className="small">
+            <button className="link" onClick={() => setLayout({ order: [], hidden: [] })}>Reset to the default</button> · <button className="link" onClick={() => setEditing(false)}>Done</button>
+          </p>
         </div>
-      </div>
-      <div className="two-col home-row">
-        <ScoringRace season={season.year} />
-        <AwardRace season={season.year} />
-      </div>
-      <div className="two-col home-row">
-        <Puzzles />
-      <div className="card">
-        <h3>Explore</h3>
-        <div className="chips tight">
-          {fav && <Link className="chip" to={`/franchise/${fav.id}`}>{fav.name} history</Link>}
-          <Link className="chip" to="/projections">Playoff odds</Link>
-          <Link className="chip" to="/insights">Most exciting games</Link>
-          <Link className="chip" to="/degrees">6 Degrees</Link>
-          <Link className="chip" to="/history?tab=leaders">All-time leaders</Link>
-          <Link className="chip" to="/history?tab=draft">Draft history</Link>
-          <Link className="chip" to="/franchise/LAL">Franchise histories</Link>
-          <Link className="chip" to="/history?tab=teams">Team vs team across eras</Link>
-          <Link className="chip" to="/projections?tab=lottery">Draft lottery</Link>
-          <Link className="chip" to="/insights?tab=hot">Hot &amp; cold</Link>
-          <Link className="chip" to="/insights?tab=clutch">Clutch</Link>
-          <Link className="chip" to="/history?tab=greatest">Greatest teams</Link>
-          <Link className="chip" to="/history?tab=similar">Similar players</Link>
-        </div>
-      </div>
+      )}
+      <div className="dash">
+        {shown.map((id) => (
+          <div key={id} className={byId.get(id)!.wide ? 'dash-cell wide' : 'dash-cell'}>{byId.get(id)!.node}</div>
+        ))}
       </div>
     </section>
   );

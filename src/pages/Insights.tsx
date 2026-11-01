@@ -56,6 +56,7 @@ export function Insights() {
     <section>
       <div className="page-head">
         <h1>{season.label} insights</h1>
+      <h2 className="sr-only">Insights</h2>
         {!REGULAR_ONLY.has(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
       <GroupedTabs groups={GROUPS} active={tab} onChange={(t) => setParams({ tab: t }, { replace: true })} />
@@ -116,7 +117,7 @@ function Drama({ season, type }: { season: number; type: SeasonType }) {
     <>
       <div className="chips">
         {SORTS.map((s) => (
-          <button key={s.id} title={s.title} className={s.id === sort ? 'chip active' : 'chip'} onClick={() => setSort(s.id)}>{s.label}</button>
+          <button key={s.id} title={s.title} className={s.id === sort ? 'chip active' : 'chip'} aria-pressed={s.id === sort} onClick={() => setSort(s.id)}>{s.label}</button>
         ))}
       </div>
       <div className="card">

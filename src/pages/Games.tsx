@@ -62,7 +62,7 @@ function GamesPage({ graph }: { graph: Graph }) {
       <h1>Games</h1>
       <div className="tabs">
         {tabs.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setParams({ tab: t.id }, { replace: true })}>{t.label}</button>
+          <button key={t.id} className={tab === t.id ? 'active' : ''} aria-pressed={tab === t.id} onClick={() => setParams({ tab: t.id }, { replace: true })}>{t.label}</button>
         ))}
       </div>
       {tab === 'grid' && <GridGame graph={graph} />}

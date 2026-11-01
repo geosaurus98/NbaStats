@@ -39,14 +39,14 @@ export function ShootingZones({ season, type }: { season: number; type: SeasonTy
       </p>
       <div className="chips tight">
         {ZONES.map((z) => (
-          <button key={z.id} title={z.title} className={z.id === zone ? 'chip active' : 'chip'} onClick={() => setZone(z.id)}>{z.label}</button>
+          <button key={z.id} title={z.title} className={z.id === zone ? 'chip active' : 'chip'} aria-pressed={z.id === zone} onClick={() => setZone(z.id)}>{z.label}</button>
         ))}
       </div>
       <div className="actions">
-        <button className={who === 'players' ? 'chip active' : 'chip'} onClick={() => setWho('players')}>Players</button>
-        <button className={who === 'teams' ? 'chip active' : 'chip'} onClick={() => setWho('teams')}>Teams</button>
-        <button className={sort === 'pct' ? 'chip active' : 'chip'} onClick={() => setSort('pct')}>Best %</button>
-        <button className={sort === 'att' ? 'chip active' : 'chip'} onClick={() => setSort('att')}>Most attempts</button>
+        <button className={who === 'players' ? 'chip active' : 'chip'} aria-pressed={who === 'players'} onClick={() => setWho('players')}>Players</button>
+        <button className={who === 'teams' ? 'chip active' : 'chip'} aria-pressed={who === 'teams'} onClick={() => setWho('teams')}>Teams</button>
+        <button className={sort === 'pct' ? 'chip active' : 'chip'} aria-pressed={sort === 'pct'} onClick={() => setSort('pct')}>Best %</button>
+        <button className={sort === 'att' ? 'chip active' : 'chip'} aria-pressed={sort === 'att'} onClick={() => setSort('att')}>Most attempts</button>
       </div>
       <div className="table-wrap">
         <table>

@@ -49,9 +49,10 @@ export function Awards() {
   return (
     <section>
       <h1>{season.label} awards race</h1>
+      <h2 className="sr-only">Award races</h2>
       <div className="tabs">
         {AWARDS.map((a) => (
-          <button key={a.id} className={a.id === award ? 'active' : ''} onClick={() => setParams({ award: a.id }, { replace: true })}>{a.name}</button>
+          <button key={a.id} className={a.id === award ? 'active' : ''} aria-pressed={a.id === award} onClick={() => setParams({ award: a.id }, { replace: true })}>{a.name}</button>
         ))}
       </div>
       {!model?.list.length ? (

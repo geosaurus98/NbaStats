@@ -25,9 +25,9 @@ export function MilestoneWatch({ season }: { season: number }) {
     <>
       <p className="muted">Career totals (every season before this one plus this season's box scores) and what each player reaches next, with how many games it should take at this season's pace.</p>
       <div className="chips tight">
-        <button className={stat === 'all' ? 'chip active' : 'chip'} onClick={() => setStat('all')}>All</button>
+        <button className={stat === 'all' ? 'chip active' : 'chip'} aria-pressed={stat === 'all'} onClick={() => setStat('all')}>All</button>
         {MILESTONE_STATS.map((s) => (
-          <button key={s.key} className={stat === s.key ? 'chip active' : 'chip'} onClick={() => setStat(s.key)}>{s.label[0].toUpperCase() + s.label.slice(1)}</button>
+          <button key={s.key} className={stat === s.key ? 'chip active' : 'chip'} aria-pressed={stat === s.key} onClick={() => setStat(s.key)}>{s.label[0].toUpperCase() + s.label.slice(1)}</button>
         ))}
       </div>
       {rows.length === 0 ? (

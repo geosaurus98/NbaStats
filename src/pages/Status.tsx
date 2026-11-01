@@ -89,6 +89,7 @@ export function Status() {
   return (
     <section>
       <h1>Data health</h1>
+      <h2 className="sr-only">Checks</h2>
       <p className={problems ? 'loss' : 'win'}><b>{problems ? `${problems} thing${problems === 1 ? '' : 's'} need${problems === 1 ? 's' : ''} attention.` : 'Everything is up to date.'}</b></p>
       <p className="muted">The site bundles a daily snapshot of each season, built by a GitHub Action from ESPN and Basketball-Reference. Live scores, box scores and player pages always come straight from ESPN.</p>
       <div className="two-col">
