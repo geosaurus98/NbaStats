@@ -9,13 +9,35 @@ export interface Season {
   end: string; // after the Finals
 }
 
-export const SEASONS: Season[] = [
-  { year: 2027, label: '2026-27', start: '2026-10-20', regularEnd: '2027-04-11', end: '2027-06-30' },
-  { year: 2026, label: '2025-26', start: '2025-10-21', regularEnd: '2026-04-12', end: '2026-06-30' },
-  { year: 2025, label: '2024-25', start: '2024-10-22', regularEnd: '2025-04-13', end: '2025-06-30' },
-];
+/** Official dates where we have them; later seasons are estimated until added here. */
+const KNOWN: Record<number, Pick<Season, 'start' | 'regularEnd' | 'end'>> = {
+  2027: { start: '2026-10-20', regularEnd: '2027-04-11', end: '2027-06-30' },
+  2026: { start: '2025-10-21', regularEnd: '2026-04-12', end: '2026-06-30' },
+  2025: { start: '2024-10-22', regularEnd: '2025-04-13', end: '2025-06-30' },
+};
+const FIRST_SEASON = 2025;
 
-export const DEFAULT_SEASON = 2027;
+/** The season a date belongs to: from September on, it's the next one. */
+export function seasonYearFor(today: string): number {
+  const [y, m] = today.split('-').map(Number);
+  return m >= 9 ? y + 1 : y;
+}
+
+export function seasonInfo(year: number): Season {
+  const known = KNOWN[year];
+  return { year, label: `${year - 1}-${String(year).slice(2)}`, ...(known ?? { start: `${year - 1}-10-21`, regularEnd: `${year}-04-12`, end: `${year}-06-30` }) };
+}
+
+/** Every season the site covers, newest first, up to the one in progress on `today`. */
+export function seasonsFor(today: string): Season[] {
+  const latest = Math.max(FIRST_SEASON, ...Object.keys(KNOWN).map(Number), seasonYearFor(today));
+  return Array.from({ length: latest - FIRST_SEASON + 1 }, (_, i) => seasonInfo(latest - i));
+}
+
+export const SEASONS: Season[] = seasonsFor(toISODate(new Date()));
+
+/** The season in progress (or the one about to start). */
+export const DEFAULT_SEASON = SEASONS[0].year;
 
 export function getSeason(year: number): Season {
   return SEASONS.find((s) => s.year === year) ?? SEASONS.find((s) => s.year === DEFAULT_SEASON)!;

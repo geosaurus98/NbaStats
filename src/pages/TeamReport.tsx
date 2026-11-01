@@ -2,6 +2,7 @@
 // league ranks, the four factors, the players, best lineups, quarters, luck,
 // payroll and the champion it plays like.
 import { useMemo } from 'react';
+import { DEFAULT_SEASON } from '../lib/seasons';
 import { Link, useParams } from 'react-router-dom';
 import { seasonSnapshot } from '../api/espn';
 import { loadSnapshot } from '../api/snapshotStore';
@@ -9,7 +10,7 @@ import { useAsync } from '../hooks/useAsync';
 import { fourFactors, playerAdvanced, possessions, pythagWins } from '../lib/advanced';
 import { P } from '../lib/boxTotals';
 import { loadFranchiseData } from '../lib/franchiseData';
-import { CAP_LEVELS, capZone, money, ZONE_LABELS } from '../lib/salaryCap';
+import { capLevels, capZone, money, ZONE_LABELS } from '../lib/salaryCap';
 import { championDna, closestChampions, currentDna, srs } from '../lib/teamExtras';
 import { useSeason } from '../SeasonContext';
 import { Empty, Loading } from '../components/Status';
@@ -26,7 +27,7 @@ export function TeamReport() {
   const snap = seasonSnapshot(season.year);
   const data = useTeamSeasons(season.year, 2);
   const champs = useAsync(() => loadFranchiseData().then(championDna), []);
-  const current = useAsync(() => loadSnapshot(Math.max(...Object.keys(CAP_LEVELS).map(Number))), []);
+  const current = useAsync(() => loadSnapshot(DEFAULT_SEASON), []);
   const team = snap?.teams.find((t) => t.id === id);
   const model = useMemo(() => {
     if (!data.data || !data.data.seasons.has(id)) return undefined;
@@ -53,7 +54,7 @@ export function TeamReport() {
   const surname = (pid: string) => (names[pid] ?? pid).split(' ').slice(1).join(' ') || (names[pid] ?? pid);
   const q = snap?.quarters?.['2']?.[id];
   const payroll = current.data?.payroll?.[id];
-  const capYear = Math.max(...Object.keys(CAP_LEVELS).map(Number));
+  const capYear = DEFAULT_SEASON;
   const total = payroll?.reduce((s, p) => s + (p.salaries[0] ?? 0), 0) ?? 0;
   const match = champs.data && model.dna ? closestChampions(model.dna, champs.data.filter((c) => c.season < season.year), 1)[0] : undefined;
   const standing = snap?.standings.flatMap((c) => c.rows.map((r, i) => ({ conf: c.name, rank: r.seed ?? i + 1, id: r.team.id }))).find((r) => r.id === id);
@@ -121,7 +122,7 @@ export function TeamReport() {
           )}
           {match && <p className="small"><b>Plays like:</b> {match.season - 1}-{String(match.season).slice(2)} {match.name} ({match.similarity}% match)</p>}
           {payroll && season.year === capYear && (
-            <p className="small"><b>Payroll:</b> {money(total)} · {ZONE_LABELS[capZone(total, CAP_LEVELS[capYear])]}</p>
+            <p className="small"><b>Payroll:</b> {money(total)} · {ZONE_LABELS[capZone(total, capLevels(capYear))]}</p>
           )}
         </div>
         <div>

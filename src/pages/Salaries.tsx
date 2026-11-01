@@ -10,7 +10,7 @@ import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
 import { P } from '../lib/boxTotals';
-import { CAP_LEVELS, capZone, money, ZONE_LABELS, type CapZone } from '../lib/salaryCap';
+import { capLevels, capZone, money, ZONE_LABELS, type CapZone } from '../lib/salaryCap';
 import { DEFAULT_SEASON, getSeason } from '../lib/seasons';
 
 export function Salaries() {
@@ -19,7 +19,7 @@ export function Salaries() {
   if (snap.error) return <ErrorBox error={snap.error} />;
   if (snap.loading) return <Loading />;
   const s = snap.data;
-  const levels = CAP_LEVELS[DEFAULT_SEASON];
+  const levels = capLevels(DEFAULT_SEASON);
   const label = getSeason(DEFAULT_SEASON).label;
   if (!s?.payroll || !levels) return <Empty>Salaries aren't in today's data yet. They're refreshed with the daily snapshot.</Empty>;
 
@@ -151,7 +151,7 @@ export function Salaries() {
         </table>
       </div>
       <p className="muted small">
-        Payrolls from Basketball-Reference, refreshed daily. Totals are the players under contract; they don't include dead money or cap holds, so they can differ a little from official cap sheets. Thresholds: <a href={levels.source}>NBA</a>.
+        Payrolls from Basketball-Reference, refreshed daily. Totals are the players under contract; they don't include dead money or cap holds, so they can differ a little from official cap sheets. Thresholds: {levels.estimated ? 'estimated (the league hasn\'t published this season\'s yet)' : <a href={levels.source}>NBA</a>}.
       </p>
     </section>
   );

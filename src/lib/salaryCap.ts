@@ -15,6 +15,20 @@ export const CAP_LEVELS: Record<number, CapLevels> = {
   2027: { season: 2027, minimum: 148_465_000, cap: 164_961_000, tax: 200_428_000, firstApron: 209_015_000, secondApron: 221_686_000, source: 'https://pr.nba.com/2026-27-salary-cap/' },
 };
 
+/**
+ * The thresholds for a season: official where we have them, otherwise the
+ * latest official figures grown 7% a year (roughly the league's recent
+ * increases) and marked as an estimate.
+ */
+export function capLevels(season: number): CapLevels & { estimated?: boolean } {
+  if (CAP_LEVELS[season]) return CAP_LEVELS[season];
+  const latest = Math.max(...Object.keys(CAP_LEVELS).map(Number));
+  const base = CAP_LEVELS[latest];
+  const f = 1.07 ** (season - latest);
+  const r = (v: number) => Math.round((v * f) / 1000) * 1000;
+  return { season, minimum: r(base.minimum), cap: r(base.cap), tax: r(base.tax), firstApron: r(base.firstApron), secondApron: r(base.secondApron), source: base.source, estimated: true };
+}
+
 export const LEVEL_LINES: { key: keyof Omit<CapLevels, 'season' | 'source'>; label: string }[] = [
   { key: 'minimum', label: 'Minimum' },
   { key: 'cap', label: 'Cap' },

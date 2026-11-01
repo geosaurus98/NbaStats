@@ -36,6 +36,7 @@ const Teams = lazy(() => import('./pages/Teams').then((m) => ({ default: m.Teams
 const Fantasy = lazy(() => import('./pages/Fantasy').then((m) => ({ default: m.Fantasy })));
 const Guide = lazy(() => import('./pages/Guide').then((m) => ({ default: m.Guide })));
 const Alerts = lazy(() => import('./pages/Alerts').then((m) => ({ default: m.Alerts })));
+const Status = lazy(() => import('./pages/Status').then((m) => ({ default: m.Status })));
 const TeamReport = lazy(() => import('./pages/TeamReport').then((m) => ({ default: m.TeamReport })));
 
 // Grouped: this season · stats · teams & players · history & fun.
@@ -120,6 +121,7 @@ export function App() {
           <Route path="/fantasy" element={<Fantasy />} />
           <Route path="/guide" element={<Guide />} />
           <Route path="/alerts" element={<Alerts />} />
+          <Route path="/status" element={<Status />} />
         </Routes>
         </Suspense>
         </SnapshotGate>

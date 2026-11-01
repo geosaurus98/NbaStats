@@ -8,7 +8,7 @@ const PAGES: { to: string; name: string; what: string }[] = [
   { to: '/', name: 'Home', what: "Today's games, your team, last night in brief, the standings, title odds, the awards race and on this day." },
   { to: '/scores', name: 'Scores', what: 'Any day\'s games. Open one for the box score, charts, play-by-play and (after the final) a shareable recap card; before tip-off, a preview with a projected score.' },
   { to: '/myteam', name: 'My team', what: 'Everything about the team you star: next game, form, odds, injuries and payroll.' },
-  { to: '/standings', name: 'Standings', what: 'Conference tables, the race chart (games above .500) and seed by week.' },
+  { to: '/standings', name: 'Standings', what: 'Conference tables, the race chart (games above .500), seed by week and the NBA Cup groups and knockout bracket.' },
   { to: '/projections', name: 'Projections', what: 'Playoff and title odds from 2,000 simulated seasons, what-if standings and the draft lottery odds.' },
   { to: '/leaders', name: 'Leaders', what: 'Season averages and highs, streaks, milestone watch, advanced stats (PER, Win Shares), win probability added, on/off, shot quality and a build-your-own ranking.' },
   { to: '/awards', name: 'Awards', what: 'MVP, Defensive Player and Rookie of the Year ladders, win odds while the season is on, and the rookie ladder.' },
@@ -78,6 +78,8 @@ export function Guide() {
       <h2>Using it on your phone</h2>
       <p className="small">Open the site in your phone's browser and choose <b>Add to Home Screen</b> (Safari: the share button; Chrome: the ⋮ menu). It then opens like an app and keeps the last data it loaded for when you're offline.</p>
       <InstallButton />
+      <h2>Is the data up to date?</h2>
+      <p className="small">The <Link to="/status">data health</Link> page shows when each season was last refreshed, how complete it is and how the daily data job has been doing.</p>
     </section>
   );
 }

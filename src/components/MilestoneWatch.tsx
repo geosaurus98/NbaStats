@@ -1,6 +1,7 @@
 // Leaders → Milestone watch: active players about to reach a round number or
 // pass someone on an all-time list.
 import { useMemo, useState } from 'react';
+import { DEFAULT_SEASON, getSeason } from '../lib/seasons';
 import { Link } from 'react-router-dom';
 import { seasonSnapshot } from '../api/espn';
 import { milestones, MILESTONE_STATS } from '../lib/milestones';
@@ -16,7 +17,7 @@ export function MilestoneWatch({ season }: { season: number }) {
   const list = useMemo(() => (graph && careers.data && snap?.box?.['2'] ? milestones(careers.data, graph, snap.box['2']) : []), [graph, careers.data, snap]);
   if (careers.error) return <ErrorBox error={careers.error} />;
   if (!graph || !careers.data) return <Loading label="Loading every career…" />;
-  if (snap?.complete !== false) return <Empty>Milestone watch follows the season in progress. Pick 2026-27 in the season picker.</Empty>;
+  if (snap?.complete !== false) return <Empty>Milestone watch follows the season in progress. Pick {getSeason(DEFAULT_SEASON).label} in the season picker.</Empty>;
   const rows = list.filter((m) => stat === 'all' || m.stat === stat).slice(0, 40);
   const teams = new Map(snap.teams.map((t) => [t.id, t]));
   const teamOf = new Map(snap.box!['2'].players.map((r) => [r[0], r[1]]));

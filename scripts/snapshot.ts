@@ -2,6 +2,7 @@
 // Actions (ESPN isn't reachable from every environment):
 //   npx tsx scripts/snapshot.ts 2026 2025
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { seasonYearFor } from '../src/lib/seasons';
 import * as live from '../src/api/live';
 import { aggregateAssists } from '../src/api/normalize';
 import { compactGame, type SeasonSnapshot } from '../src/api/snapshot';
@@ -295,7 +296,12 @@ async function brefPayrolls(teamIds: string[], espnRosters: Record<string, Roste
   return Object.keys(out).length >= 28 ? out : undefined;
 }
 
-const years = process.argv.slice(2).map(Number).filter(Boolean);
+// Seasons to build: given years, "current" (the season in progress), or by
+// default the current season and the two before it. The season in progress is
+// worked out from today's date, so a new season needs no code change.
+const current = seasonYearFor(new Date().toISOString().slice(0, 10));
+const args = process.argv.slice(2);
+const years = args.length ? args.map((a: string) => (a === 'current' ? current : Number(a))).filter(Boolean) : [current, current - 1, current - 2];
 mkdirSync('src/data', { recursive: true });
 for (const year of years) {
   const snap = await build(year);
