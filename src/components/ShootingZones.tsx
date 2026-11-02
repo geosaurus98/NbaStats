@@ -74,7 +74,7 @@ export function ShootingZones({ season, type }: { season: number; type: SeasonTy
                   <td>{r.z[zone].made}</td>
                   <td className={sort === 'att' ? 'sorted' : undefined}>{r.att}</td>
                   <td className={sort === 'pct' ? 'sorted' : undefined}>{(r.pct * 100).toFixed(1)}</td>
-                  <td className={diff > 0 ? 'win' : 'loss'}>{diff > 0 ? '+' : ''}{diff.toFixed(1)}</td>
+                  <td className={diff > 0 ? 'fg-hot' : 'fg-cold'}>{diff > 0 ? '+' : ''}{diff.toFixed(1)}</td>
                 </tr>
               );
             })}

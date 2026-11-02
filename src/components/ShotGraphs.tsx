@@ -42,7 +42,7 @@ export function PlayerShotTypes({ playerId, season, type }: { playerId: string; 
               <span className="pbar-track"><span className="pbar-fill" style={{ width: `${((a / total) / maxShare) * 100}%`, background: 'var(--series-1)' }} /></span>
               <span className="st-share">{Math.round((a / total) * 100)}%</span>
               <span className="st-pct">{pct(m, a)}</span>
-              <span className={`st-diff small ${diff == null ? 'muted' : diff >= 0 ? 'win' : 'loss'}`}>{diff == null ? '' : `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}`}</span>
+              <span className={`st-diff small ${diff == null ? 'muted' : diff >= 0 ? 'fg-hot' : 'fg-cold'}`}>{diff == null ? '' : `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}`}</span>
             </div>
           );
         })}
@@ -53,7 +53,7 @@ export function PlayerShotTypes({ playerId, season, type }: { playerId: string; 
         {q.map(([a, m], i) => (
           <div key={i} className="q-cell" title={`${a} shots`}>
             <span className="muted small">{i < 4 ? `Q${i + 1}` : 'OT'}</span>
-            <b className={a >= 5 ? (m / a >= qAvg ? 'win' : 'loss') : 'muted'}>{a ? pct(m, a) : '–'}</b>
+            <b className={a >= 5 ? (m / a >= qAvg ? 'fg-hot' : 'fg-cold') : 'muted'}>{a ? pct(m, a) : '–'}</b>
             <span className="muted small">{m}/{a}</span>
           </div>
         ))}
