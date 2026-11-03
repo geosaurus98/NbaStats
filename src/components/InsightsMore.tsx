@@ -146,7 +146,7 @@ export function HotCold({ season }: { season: number }) {
               <td className="left nowrap"><Link to={`/player/${s.playerId}`}>{name(s.playerId)}</Link> <TeamTag team={teams.get(s.teamId)} /></td>
               <td>{s.season.pts.toFixed(1)}</td>
               <td>{s.recent.pts.toFixed(1)}</td>
-              <td className={diff(s) > 0 ? 'win' : 'loss'}>{sign(diff(s))}</td>
+              <td className={diff(s) > 0 ? 'fg-hot' : 'fg-cold'}>{sign(diff(s))}</td>
             </tr>
           ))}
         </tbody>
@@ -188,7 +188,7 @@ export function HotCold({ season }: { season: number }) {
                 <td>{t.w}-{n - t.w}</td>
                 <td>{sign(t.season)}</td>
                 <td>{sign(t.recent)}</td>
-                <td className={t.recent - t.season > 0 ? 'win' : 'loss'}>{sign(t.recent - t.season)}</td>
+                <td className={t.recent - t.season > 0 ? 'fg-hot' : 'fg-cold'}>{sign(t.recent - t.season)}</td>
               </tr>
             ))}
           </tbody>

@@ -20,6 +20,10 @@
   --series-8: #e34948;
   --pos: #2a78d6;
   --neg: #e34948;
+  --hot: #e34948;
+  --cold: #2a78d6;
+  --hot-ink: #c0302f;
+  --cold-ink: #1f63b8;
   --grid: #e1e0d9;
   --axis: #c3c2b7;
   --tick: #898781;
@@ -55,6 +59,10 @@
     --series-8: #e66767;
     --pos: #3987e5;
     --neg: #e66767;
+    --hot: #e66767;
+    --cold: #3987e5;
+    --hot-ink: #ff8f8a;
+    --cold-ink: #7db3f5;
     --grid: #2c2c2a;
     --axis: #383835;
     --context: rgba(137, 135, 129, 0.3);
@@ -85,6 +93,10 @@
   --series-8: #e66767;
   --pos: #3987e5;
   --neg: #e66767;
+  --hot: #e66767;
+  --cold: #3987e5;
+  --hot-ink: #ff8f8a;
+  --cold-ink: #7db3f5;
   --grid: #2c2c2a;
   --axis: #383835;
   --context: rgba(137, 135, 129, 0.3);
@@ -106,6 +118,9 @@ footer { text-align: center; padding: 1rem 16px 2rem; }
 .nowrap { white-space: nowrap; }
 .win { color: var(--win); }
 .loss { color: var(--loss); }
+/* Shooting against the league: red = hot (better), blue = cold (worse). */
+.fg-hot { color: var(--hot-ink); }
+.fg-cold { color: var(--cold-ink); }
 .live { color: var(--live); font-weight: 600; }
 
 button, select, input { font: inherit; color: inherit; }
@@ -874,3 +889,4 @@ ul.recap-list { list-style: none; padding-left: 0; }
 .season-note { border: 1px dashed var(--border); border-radius: 8px; padding: .45rem .7rem; color: var(--muted); }
 table.zones td.left { white-space: normal; } table.zones { max-width: 100%; }
 .winner-row.active .muted { color: var(--text); }
+.sit-row.active .small { color: var(--text); }

@@ -1,6 +1,6 @@
 // Season shot map: one square per area of the court, sized by how often they
 // shot from there and coloured by FG% against the league from the same
-// distance (blue = better, red = worse, grey = about average). Areas are big
+// distance (red = hot, better than the league; blue = cold, worse; grey = about average). Areas are big
 // by default so each holds enough shots to compare; finer detail is a click away.
 import { useState } from 'react';
 import { type BinRow, coarsenCells, COURT_H, COURT_W, leagueByDistance, shotCells, type ShotCell, zoneOf, ZONES } from '../lib/pbpStats';
@@ -45,7 +45,7 @@ export function SeasonShotMap({
 
   const colour = (diff: number) => {
     const t = Math.min(1, Math.abs(diff) / FULL_DIFF);
-    const pole = diff >= 0 ? 'var(--pos)' : 'var(--neg)';
+    const pole = diff >= 0 ? 'var(--hot)' : 'var(--cold)';
     return `color-mix(in srgb, ${pole} ${Math.round(15 + 85 * t)}%, var(--neutral))`;
   };
 
@@ -69,9 +69,9 @@ export function SeasonShotMap({
     <div className="card shotmap" ref={ref}>
       {title && <h3>{title}</h3>}
       <div className="legend">
-        <span><i className="swatch" style={{ background: 'var(--neg)' }} />Worse than league</span>
+        <span><i className="swatch" style={{ background: 'var(--hot)' }} />Hot: better than league</span>
         <span><i className="swatch" style={{ background: 'var(--neutral)' }} />About average</span>
-        <span><i className="swatch" style={{ background: 'var(--pos)' }} />Better than league</span>
+        <span><i className="swatch" style={{ background: 'var(--cold)' }} />Cold: worse than league</span>
         <span className="muted">Bigger square = more shots from there</span>
         <span className="chips tight shotmap-detail">
           <button className={!fine ? 'chip active' : 'chip'} aria-pressed={!fine} onClick={() => setFine(false)}>Bigger areas</button>
@@ -135,7 +135,7 @@ export function SeasonShotMap({
                 <td>
                   {Math.round((att / total) * 100)}% <span className="muted small">({Math.round((la / lgTotal) * 100)}%)</span>
                 </td>
-                <td className={pct > lpct ? 'win' : pct < lpct ? 'loss' : undefined}>{att ? `${(pct * 100).toFixed(1)}%` : '-'}</td>
+                <td className={pct > lpct ? 'fg-hot' : pct < lpct ? 'fg-cold' : undefined}>{att ? `${(pct * 100).toFixed(1)}%` : '-'}</td>
                 <td className="muted">{(lpct * 100).toFixed(1)}%</td>
               </tr>
             );

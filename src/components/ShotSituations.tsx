@@ -70,7 +70,7 @@ export function ShotSituations({ season, type }: { season: number; type: SeasonT
                   <td>{p.att}</td>
                   <td className="muted">{p.all ? `${Math.round((p.att / p.all) * 100)}%` : '–'}</td>
                   <td><b>{pct1(p.efg)}</b></td>
-                  <td className={p.efg >= lg.efg ? 'win' : 'loss'}>{p.efg >= lg.efg ? '+' : ''}{((p.efg - lg.efg) * 100).toFixed(1)}</td>
+                  <td className={p.efg >= lg.efg ? 'fg-hot' : 'fg-cold'}>{p.efg >= lg.efg ? '+' : ''}{((p.efg - lg.efg) * 100).toFixed(1)}</td>
                 </tr>
               ))}
             </tbody>
@@ -93,7 +93,7 @@ export function ShotSituations({ season, type }: { season: number; type: SeasonT
                 <tr key={t.id}>
                   <td className="left"><Link to={`/team/${t.id}`}>{abbr.get(t.id) ?? t.id}</Link></td>
                   <td>{t.att}</td>
-                  <td className={t.efg >= lg.efg ? 'win' : 'loss'}>{pct1(t.efg)}</td>
+                  <td className={t.efg >= lg.efg ? 'fg-hot' : 'fg-cold'}>{pct1(t.efg)}</td>
                   <td className="muted">{Math.round(t.threeShare * 100)}%</td>
                 </tr>
               ))}
