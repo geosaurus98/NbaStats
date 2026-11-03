@@ -12,7 +12,7 @@ import { useAsync } from '../hooks/useAsync';
 import { formatShortDate, formatTime } from '../lib/dates';
 import { FRANCHISES } from '../lib/franchises';
 import { isFinal } from '../lib/league';
-import { pickOdds, shareTies } from '../lib/lottery';
+import { lotteryField, lotteryFormat } from '../lib/lottery';
 import { scheduleAhead } from '../lib/scheduleAhead';
 import { predict, results, seasonElo } from '../lib/teamContext';
 import { useSeason } from '../SeasonContext';
@@ -73,13 +73,10 @@ function Hub({ teamId }: { teamId: string }) {
   const ahead = scheduleAhead(league.teams, league.games, new Date().toISOString()).find((r) => r.team.id === teamId);
   const franchise = FRANCHISES.find((f) => f.espnId === teamId);
 
-  // Lottery chance if the season ended today (outside the top eight in the conference).
-  const lotteryTeams = standings
-    .flatMap((c) => [...c.rows].sort((a, b) => b.pct - a.pct).slice(8))
-    .sort((a, b) => a.pct - b.pct)
-    .slice(0, 14);
-  const lotIndex = lotteryTeams.findIndex((r) => r.team.id === teamId);
-  const lottery = lotIndex >= 0 ? pickOdds(shareTies(lotteryTeams.map((r) => r.pct)))[lotIndex] : undefined;
+  // No. 1 pick odds if the season ended today, under this draft's lottery rules.
+  const field = lotteryField(standings.flatMap((c) => c.rows.map((r) => ({ id: r.team.id, conference: c.name, key: r.pct }))), lotteryFormat(season.year));
+  const slot = field.lottery.find((t) => t.id === teamId);
+  const lottery = slot ? [slot.weight / field.lottery.reduce((n, t) => n + t.weight, 0)] : undefined;
 
   return (
     <section>

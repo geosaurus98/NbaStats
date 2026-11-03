@@ -18,7 +18,7 @@ const PAGES: { to: string; name: string; what: string }[] = [
   { to: '/fantasy', name: 'Fantasy', what: 'Fantasy points in ESPN, Yahoo and DraftKings scoring or nine-category value, hot pickups and games per team this week and next.' },
   { to: '/teams', name: 'Teams', what: 'Each team in tabs: overview (results, Elo, style, injuries), lineups & rotation, shooting & passing, schedule and payroll, plus a printable season report.' },
   { to: '/salaries', name: 'Salaries', what: 'Payrolls against the cap, tax and aprons, salary vs production and Win Shares per $10M.' },
-  { to: '/draft', name: 'Draft hub', what: "This year's projected order and lottery odds, draft classes graded against their slots, which franchises draft best, every draft class since 1947 and every lottery since 1985." },
+  { to: '/draft', name: 'Draft hub', what: "This year's projected order and lottery odds (the new 3-2-1 lottery from 2027), draft classes graded against their slots, which franchises draft best, every draft class since 1947 and every lottery since 1985." },
   { to: '/trade', name: 'Trade machine', what: 'Build a two-team trade: does the salary match under the aprons, what happens to both payrolls and the Win Shares that move.' },
   { to: '/compare', name: 'Compare', what: 'Up to three current players side by side, with a full report: advanced stats, shot diet, archetype and contract value.' },
   { to: '/history', name: 'History', what: 'Every season since 1946-47: careers, comparisons across eras, Hall of Fame odds, all-time leaders, greatest teams, roster continuity and on this date.' },
