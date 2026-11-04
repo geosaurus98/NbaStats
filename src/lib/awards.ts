@@ -167,6 +167,12 @@ export const ACTUAL: Record<number, Partial<Record<AwardId, [string, number][]>>
     dpoy: [['Evan Mobley', 0.57], ['Dyson Daniels', 0.394], ['Draymond Green', 0.308], ['Luguentz Dort', 0.218], ['Amen Thompson', 0.186], ['Ivica Zubac', 0.068], ['Jaren Jackson Jr.', 0.018], ['Giannis Antetokounmpo', 0.01]],
     roy: [['Stephon Castle', 0.964], ['Zaccharie Risacher', 0.49], ['Jaylen Wells', 0.246], ['Alex Sarr', 0.068], ['Zach Edey', 0.02], ["Kel'el Ware", 0.008]],
   },
+  // 2025-26: official NBA results (DPOY places below 3rd from a secondary source).
+  2026: {
+    mvp: [['Shai Gilgeous-Alexander', 0.939], ['Nikola Jokić', 0.634], ['Victor Wembanyama', 0.569], ['Luka Dončić', 0.25], ['Cade Cunningham', 0.117], ['Jaylen Brown', 0.089], ['Kawhi Leonard', 0.001], ['Donovan Mitchell', 0.001]],
+    dpoy: [['Victor Wembanyama', 1], ['Chet Holmgren', 0.394], ['Ausar Thompson', 0.12], ['Rudy Gobert', 0.082], ['Scottie Barnes', 0.042], ['Derrick White', 0.016], ['Amen Thompson', 0.012], ['Dyson Daniels', 0.01], ['OG Anunoby', 0.008]],
+    roy: [['Cooper Flagg', 0.824], ['Kon Knueppel', 0.772], ['VJ Edgecombe', 0.192]],
+  },
 };
 
 export function actualVotes(season: number, award: AwardId): Map<string, { share: number; rank: number }> | undefined {

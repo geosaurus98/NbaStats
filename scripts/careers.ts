@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { parseCSV } from './csv';
 import type { CareerData, OnThisDay } from '../src/lib/careers';
 import { CHAMPIONS } from '../src/lib/franchiseData';
+import { mergeAwardsExtra } from './awardsExtra';
 
 const BASE = 'https://raw.githubusercontent.com/sumitrodatta/bball-reference-datasets/master/Data/';
 const LEAGUES = ['NBA', 'ABA', 'BAA'];
@@ -117,6 +118,9 @@ const data: CareerData = {
   rings,
   pos,
 };
+
+// Award seasons the source doesn't have yet (official results kept in scripts/awards-extra.json).
+console.log('Awards filled in:', mergeAwardsExtra(data, teammates.players).join(', ') || 'none');
 const json = JSON.stringify(data);
 writeFileSync('src/data/careers.json', json);
 
