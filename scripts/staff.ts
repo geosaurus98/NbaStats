@@ -1,13 +1,19 @@
-// Builds src/data/staff.json: each team's head coach (season and career
-// records) and front office, from Basketball-Reference.
+// Builds src/data/staff.json: each team's head coach (season, with-team and
+// career records), its coaching history and its front office, from
+// Basketball-Reference, politely (one request every few seconds).
 //   npx tsx scripts/staff.ts          (STAFF_PROBE=1 prints the tables' columns instead)
+import { writeFileSync } from 'node:fs';
 import { brefTables } from '../src/lib/brefTables';
+import { FRANCHISES } from '../src/lib/franchises';
+import { seasonYearFor } from '../src/lib/seasons';
+import { parseExecutives, parseFranchiseCoaches, parseSeasonCoaches, type StaffData } from '../src/lib/staff';
 
 const UA = { 'User-Agent': 'NbaStatsHub/1.0 (personal stats site; one staff refresh a week)' };
 const pause = () => new Promise((r) => setTimeout(r, 3500));
 
 async function page(url: string): Promise<string | undefined> {
   const res = await fetch(url, { headers: UA }).catch(() => undefined);
+  await pause();
   if (!res?.ok) {
     console.log(`  ${url}: ${res?.status ?? 'failed'}`);
     return undefined;
@@ -15,20 +21,31 @@ async function page(url: string): Promise<string | undefined> {
   return res.text();
 }
 
-function probe(label: string, html: string | undefined) {
-  if (!html) return;
-  console.log(`== ${label}`);
-  for (const [id, rows] of brefTables(html)) {
-    console.log(`table ${id}: ${rows.length} rows; columns: ${Object.keys(rows[0] ?? {}).join(', ')}`);
-    for (const r of rows.slice(0, 3)) console.log('   ', JSON.stringify(r));
-  }
-}
+const season = seasonYearFor(new Date().toISOString().slice(0, 10));
+const base = 'https://www.basketball-reference.com';
 
-const year = new Date().getUTCMonth() >= 8 ? new Date().getUTCFullYear() + 1 : new Date().getUTCFullYear();
 if (process.env.STAFF_PROBE) {
-  probe(`coaches ${year}`, await page(`https://www.basketball-reference.com/leagues/NBA_${year}_coaches.html`));
-  await pause();
-  probe('executives OKC', await page('https://www.basketball-reference.com/teams/OKC/executives.html'));
-  await pause();
-  probe('coaches OKC', await page('https://www.basketball-reference.com/teams/OKC/coaches.html'));
+  for (const url of [`${base}/leagues/NBA_${season}_coaches.html`, `${base}/teams/OKC/executives.html`, `${base}/teams/OKC/coaches.html`]) {
+    const html = await page(url);
+    if (!html) continue;
+    console.log(`== ${url}`);
+    for (const [tid, rows] of brefTables(html)) console.log(`table ${tid}: ${rows.length} rows; ${JSON.stringify(rows.slice(0, 3))}`);
+  }
+} else {
+  let coaches = parseSeasonCoaches((await page(`${base}/leagues/NBA_${season}_coaches.html`)) ?? '');
+  // Before a season's first game the page can be empty: use last season's.
+  if (coaches.length < 30) coaches = parseSeasonCoaches((await page(`${base}/leagues/NBA_${season - 1}_coaches.html`)) ?? '');
+  const coachHistory: StaffData['coachHistory'] = {};
+  const executives: StaffData['executives'] = {};
+  for (const f of FRANCHISES) {
+    const code = f.codes[f.codes.length - 1];
+    const ch = await page(`${base}/teams/${code}/coaches.html`);
+    if (ch) coachHistory[code] = parseFranchiseCoaches(ch);
+    const ex = await page(`${base}/teams/${code}/executives.html`);
+    if (ex) executives[code] = parseExecutives(ex);
+  }
+  console.log(`${coaches.length} coaches, ${Object.keys(coachHistory).length} coaching histories, ${Object.keys(executives).length} front offices`);
+  if (coaches.length < 28 || Object.keys(executives).length < 28) throw new Error('Staff data looks incomplete; not writing it');
+  const out: StaffData = { generatedAt: new Date().toISOString(), season, coaches, coachHistory, executives };
+  writeFileSync('src/data/staff.json', JSON.stringify(out));
 }

@@ -3,7 +3,7 @@ name: Coaches and front offices
 on:
   push:
     branches: [claude/youthful-heisenberg-ag3b0v]
-    paths: [scripts/staff.ts, src/lib/brefTables.ts, .github/workflows/staff.yml]
+    paths: [scripts/staff.ts, src/lib/brefTables.ts, src/lib/staff.ts, .github/workflows/staff.yml]
   workflow_dispatch:
   schedule:
     - cron: '41 10 * * 1'
@@ -21,4 +21,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: STAFF_PROBE=1 npx --yes tsx scripts/staff.ts
+      - run: npx --yes tsx scripts/staff.ts
+      - name: Commit staff data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
+          git add src/data/staff.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Update coaches and front offices"
+          git pull --rebase
+          git push
