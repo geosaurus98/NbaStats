@@ -4,6 +4,7 @@ import { fetchLeagueGames, fetchStandings } from '../api/espn';
 import type { Conference, Game, TeamRef } from '../api/types';
 import { LineChart } from '../components/Charts';
 import { WhatIf } from '../components/WhatIf';
+import { InjuryWhatIf } from '../components/InjuryWhatIf';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
@@ -47,7 +48,7 @@ export async function buildModel(season: number, sims = SIMS): Promise<Model> {
 export function Projections() {
   const { season } = useSeason();
   const [params, setParams] = useSearchParams();
-  const tab = (['ratings', 'whatif'] as const).find((t) => t === params.get('tab')) ?? 'odds';
+  const tab = (['ratings', 'whatif', 'injury'] as const).find((t) => t === params.get('tab')) ?? 'odds';
   const { data, error, loading } = useAsync(() => buildModel(season.year), [season.year]);
   // The draft lottery moved to the Draft hub.
   if (params.get('tab') === 'lottery') return <Navigate to="/draft" replace />;
@@ -60,12 +61,14 @@ export function Projections() {
         <button className={tab === 'odds' ? 'active' : ''} aria-pressed={tab === 'odds'} onClick={() => setParams({ tab: 'odds' }, { replace: true })}>Playoff odds</button>
         <button className={tab === 'ratings' ? 'active' : ''} aria-pressed={tab === 'ratings'} onClick={() => setParams({ tab: 'ratings' }, { replace: true })}>Power ratings</button>
         <button className={tab === 'whatif' ? 'active' : ''} aria-pressed={tab === 'whatif'} onClick={() => setParams({ tab: 'whatif' }, { replace: true })}>What if</button>
+        <button className={tab === 'injury' ? 'active' : ''} aria-pressed={tab === 'injury'} onClick={() => setParams({ tab: 'injury' }, { replace: true })}>Injury what-if</button>
       </div>
       {loading && <Loading label="Rating every team and simulating the season…" />}
       {error && <ErrorBox error={error} />}
       {data && tab === 'odds' && <Odds model={data} season={season.year} />}
       {data && tab === 'ratings' && <Ratings model={data} />}
       {data && tab === 'whatif' && <WhatIf model={data} season={season.year} />}
+      {data && tab === 'injury' && <InjuryWhatIf model={data} season={season.year} />}
       <p className="muted small">
         Elo ratings (FiveThirtyEight-style: margin of victory, 100-point home edge, last season carried over at 75%). Odds come from
         simulating the remaining regular season, the play-in and every playoff series {SIMS.toLocaleString()} times. Ties in the

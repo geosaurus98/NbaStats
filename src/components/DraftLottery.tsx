@@ -1,13 +1,17 @@
-// Projections → Draft lottery, Tankathon-style: the lottery order from the
-// standings (or projected final records), each team's exact odds for every
-// pick, and a button that runs a lottery.
+// Draft hub → Lottery & order: the lottery order from the standings (or
+// projected final records), each team's odds for every pick and a button that
+// runs a lottery. Drafts up to 2026 use the 14-team lottery; 2027 on use the
+// new 3-2-1 lottery (16 teams, 37 balls, every lottery pick drawn).
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchLeagueGames } from '../api/espn';
 import type { TeamRef } from '../api/types';
 import { useAsync } from '../hooks/useAsync';
 import { isFinal, teamRecords } from '../lib/league';
-import { drawLottery, pickOdds, shareTies } from '../lib/lottery';
+import { lotteryField, lotteryFormat, lotteryOdds, runLottery } from '../lib/lottery';
+import { repeatLimits } from '../lib/lotteryHistory';
+import { loadFranchiseData } from '../lib/franchiseData';
+import { FRANCHISES } from '../lib/franchises';
 import type { Model } from '../pages/Projections';
 import { TeamLogo } from './TeamLogo';
 import { ordinal } from '../lib/format';
@@ -30,49 +34,44 @@ export function DraftLottery({ model, season }: { model: Model; season: number }
   const [draw, setDraw] = useState<number[] | undefined>();
   const projected = mode === 'projected' && remaining > 0;
 
-  const order = useMemo(() => {
+  const format = lotteryFormat(season);
+  const fr = useAsync(() => (format === '321' ? loadFranchiseData() : Promise.resolve(undefined)), [format]);
+  const { order, slots } = useMemo(() => {
     const records = teamRecords(model.teams, model.games);
     const playoffTeams = new Set((playoffs.data?.games ?? []).flatMap((g) => [g.home.team.id, g.away.team.id]));
-    const byConf = new Map<string, typeof records>();
-    for (const r of records) {
-      const c = model.conferences.get(r.team.id) ?? '';
-      byConf.set(c, [...(byConf.get(c) ?? []), r]);
-    }
     const winPct = (r: (typeof records)[number]) => (r.wins + r.losses ? r.wins / (r.wins + r.losses) : 0.5);
-    let inPlayoffs: (id: string) => boolean;
-    if (projected) {
-      const odds = [...model.odds.values()].sort((a, b) => b.playoffs - a.playoffs);
-      const top = new Set(odds.slice(0, 16).map((o) => o.teamId));
-      inPlayoffs = (id) => top.has(id);
-    } else if (playoffTeams.size >= 16) {
-      inPlayoffs = (id) => playoffTeams.has(id);
-    } else {
-      // Season still going: the top eight in each conference (after the play-in, two of 7-10 miss out, so this is approximate).
-      const top = new Set([...byConf.values()].flatMap((rs) => [...rs].sort((a, b) => winPct(b) - winPct(a)).slice(0, 8).map((r) => r.team.id)));
-      inPlayoffs = (id) => top.has(id);
-    }
-    const entries: Entry[] = records.map((r) => {
-      const o = model.odds.get(r.team.id);
-      return projected && o
-        ? { team: r.team, w: r.wins, l: r.losses, key: o.avgWins, label: `${o.avgWins.toFixed(1)} proj. W` }
-        : { team: r.team, w: r.wins, l: r.losses, key: winPct(r), label: `${r.wins}-${r.losses}` };
-    });
-    const asc = (a: Entry, b: Entry) => a.key - b.key || a.team.name.localeCompare(b.team.name);
-    const lottery = entries.filter((e) => !inPlayoffs(e.team.id)).sort(asc).slice(0, 14);
-    const rest = entries.filter((e) => !lottery.includes(e)).sort(asc);
-    return { lottery, rest };
-  }, [model, playoffs.data, projected]);
+    const entries = new Map<string, Entry>(
+      records.map((r) => {
+        const o = model.odds.get(r.team.id);
+        const e: Entry = projected && o ? { team: r.team, w: r.wins, l: r.losses, key: Math.round(o.avgWins * 10) / 10, label: `${o.avgWins.toFixed(1)} proj. W` } : { team: r.team, w: r.wins, l: r.losses, key: winPct(r), label: `${r.wins}-${r.losses}` };
+        return [r.team.id, e];
+      }),
+    );
+    const field = lotteryField(
+      [...entries.values()].map((e) => ({ id: e.team.id, conference: model.conferences.get(e.team.id) ?? '', key: e.key })),
+      format,
+      projected ? undefined : playoffTeams,
+    );
+    // Repeat limits (3-2-1): last draft's No. 1, and teams in the top five in both of the last two drafts.
+    const limits = fr.data ? repeatLimits(fr.data, season) : undefined;
+    const code = (id: string) => FRANCHISES.find((f) => f.espnId === id)?.id ?? '';
+    const lottery = field.lottery.map((s) => (limits ? { ...s, noFirst: limits.noFirst.has(code(s.id)), noTop5: limits.noTop5.has(code(s.id)) } : s));
+    return { slots: lottery, order: { lottery: lottery.map((s) => entries.get(s.id)!), rest: field.rest.map((id) => entries.get(id)!) } };
+  }, [model, playoffs.data, projected, format, fr.data, season]);
 
-  const keys = order.lottery.map((e) => (projected ? Math.round(e.key * 10) / 10 : e.key));
-  const weights = shareTies(keys);
-  const odds = useMemo(() => pickOdds(weights), [weights.join()]); // eslint-disable-line react-hooks/exhaustive-deps
+  const odds = useMemo(() => lotteryOdds(slots, format), [slots, format]);
+  const top = format === 'classic' ? 4 : 5;
   const max = Math.max(...odds.flat());
   const drawn = draw?.length === order.lottery.length ? draw : undefined;
 
   return (
     <>
       <p className="muted">
-        The 14 teams that miss the playoffs share 1,000 lottery combinations, worst record first. Four picks are drawn, so the worst team can fall to 5th.
+        {format === 'classic' ? (
+          'The 14 teams that miss the playoffs share 1,000 lottery combinations, worst record first. Four picks are drawn, so the worst team can fall to 5th.'
+        ) : (
+          <>The new <b>3-2-1 lottery</b> (2027 to 2029 drafts): 16 teams share 37 balls and all 16 lottery picks are drawn. Teams outside the play-in get 3 balls, but the three worst records are relegated to 2 (and can't fall below 12th); the 9th and 10th seeds get 2, and the losers of the 7-v-8 play-in games get 1.</>
+        )}
         {remaining > 0 ? ` ${remaining.toLocaleString()} regular-season games still to play.` : ''}
       </p>
       <div className="actions">
@@ -82,7 +81,7 @@ export function DraftLottery({ model, season }: { model: Model; season: number }
             <button className={mode === 'projected' ? 'chip active' : 'chip'} aria-pressed={mode === 'projected'} onClick={() => setMode('projected')}>Projected final records</button>
           </>
         )}
-        <button className="chip active" onClick={() => setDraw(drawLottery(weights, Math.random))}>🎲 Simulate the lottery</button>
+        <button className="chip active" onClick={() => setDraw(runLottery(slots, format, Math.random))}>🎲 Simulate the lottery</button>
         {drawn && <button className="chip" onClick={() => setDraw(undefined)}>Reset</button>}
       </div>
 
@@ -110,8 +109,9 @@ export function DraftLottery({ model, season }: { model: Model; season: number }
             <tr>
               <th>Seed</th>
               <th className="left">Team</th>
-              <th title="Lottery combinations out of 1,000">Odds #1</th>
-              <th>Top 4</th>
+              <th title={format === 'classic' ? 'Lottery combinations out of 1,000' : 'Lottery balls out of 37'}>{format === 'classic' ? 'Odds #1' : 'Balls'}</th>
+              {format === '321' && <th>Odds #1</th>}
+              <th>Top {top}</th>
               {odds.map((_, k) => (
                 <th key={k} className="lot-pick">{k + 1}</th>
               ))}
@@ -124,9 +124,23 @@ export function DraftLottery({ model, season }: { model: Model; season: number }
                 <td className="left nowrap">
                   <Link to={`/team/${e.team.id}`} className="team-cell"><TeamLogo team={e.team} size={18} /> {e.team.abbr}</Link>{' '}
                   <span className="muted small">{e.label}</span>
+                  {format === '321' && (
+                    <div className="muted small">
+                      {slots[i].group}
+                      {slots[i].noFirst ? ' · can’t win No. 1 (won it last year)' : ''}
+                      {slots[i].noTop5 ? ' · can’t pick top five (top five the last two years)' : ''}
+                    </div>
+                  )}
                 </td>
-                <td className="sorted">{(weights[i] / 10).toFixed(1)}%</td>
-                <td>{(odds[i].slice(0, 4).reduce((a, b) => a + b, 0) * 100).toFixed(1)}%</td>
+                {format === 'classic' ? (
+                  <td className="sorted">{(slots[i].weight / 10).toFixed(1)}%</td>
+                ) : (
+                  <>
+                    <td>{slots[i].weight}</td>
+                    <td className="sorted">{(odds[i][0] * 100).toFixed(1)}%</td>
+                  </>
+                )}
+                <td>{(odds[i].slice(0, top).reduce((a, b) => a + b, 0) * 100).toFixed(1)}%</td>
                 {odds[i].map((p, k) => (
                   <td
                     key={k}
@@ -144,19 +158,21 @@ export function DraftLottery({ model, season }: { model: Model; season: number }
       </div>
 
       <div className="card">
-        <h3>Picks 15–30</h3>
+        <h3>Picks {order.lottery.length + 1}–30</h3>
         <div className="lottery-rest">
           {order.rest.map((e, i) => (
             <span key={e.team.id} className="nowrap">
-              <b>{i + 15}.</b> <TeamLogo team={e.team} size={16} /> {e.team.abbr} <span className="muted small">{e.label}</span>
+              <b>{i + order.lottery.length + 1}.</b> <TeamLogo team={e.team} size={16} /> {e.team.abbr} <span className="muted small">{e.label}</span>
             </span>
           ))}
         </div>
       </div>
       <p className="muted small">
-        Percentages are exact, from every possible draw. Tied teams share their combinations equally (the league breaks the tie for the leftover
-        combination by coin flip). Traded and protected picks aren't tracked, so this is the order before trades.
-        {remaining > 0 && mode === 'current' ? ' Until the play-in, the lottery teams are those outside the top eight in each conference.' : ''}
+        {format === 'classic'
+          ? "Percentages are exact, from every possible draw. Tied teams share their combinations equally (the league breaks the tie for the leftover combination by coin flip). "
+          : 'Percentages come from 100,000 simulated draws. Seeds come from the standings, and until the play-in is played the 8th seeds are taken to lose the 7-v-8 game. Repeat limits apply: last year\'s No. 1 can\'t win No. 1, and a team that picked in the top five in both of the last two drafts can\'t again (credited to the team that made the pick). Not modelled: the league can reduce a tanking team\'s odds. '}
+        Traded and protected picks aren't tracked, so this is the order before trades.
+        {format === 'classic' && remaining > 0 && mode === 'current' ? ' Until the play-in, the lottery teams are those outside the top eight in each conference.' : ''}
       </p>
     </>
   );

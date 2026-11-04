@@ -4,6 +4,7 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { DraftLottery } from '../components/DraftLottery';
+import { LotteryRace } from '../components/LotteryRace';
 import { useCareers } from '../components/CareerStats';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
@@ -27,6 +28,7 @@ function Classes() {
 
 const TABS = [
   { id: 'order', label: 'Lottery & order' },
+  { id: 'race', label: 'Lottery race' },
   { id: 'grades', label: 'Class grades' },
   { id: 'teams', label: 'Best drafting teams' },
   { id: 'classes', label: 'Every draft class' },
@@ -54,6 +56,7 @@ export function Draft() {
         ))}
       </div>
       {tab === 'order' && <Order season={season.year} />}
+      {tab === 'race' && <LotteryRace season={season.year} />}
       {(tab === 'grades' || tab === 'teams') && <Grades tab={tab} params={params} set={set} />}
       {tab === 'classes' && <Classes />}
       {tab === 'lotteries' && <LotteryHistory />}

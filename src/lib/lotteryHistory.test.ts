@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import franchises from '../data/franchises.json';
 import type { FranchiseData } from './franchiseData';
-import { biggestJumps, lotteryHistory } from './lotteryHistory';
+import { biggestJumps, lotteryHistory, repeatLimits } from './lotteryHistory';
 
 const years = lotteryHistory(franchises as unknown as FranchiseData);
 
@@ -16,5 +16,13 @@ describe('lottery history', () => {
     const jumps = biggestJumps(years, 20).map((j) => `${j.year} ${j.team}`);
     expect(jumps).toContain('1993 ORL');
     expect(jumps).toContain('2008 CHI');
+  });
+});
+
+describe('3-2-1 repeat limits', () => {
+  it('finds who is limited for 2027', () => {
+    const r = repeatLimits(franchises as unknown as FranchiseData, 2027);
+    expect([...r.noFirst]).toEqual(['WAS']);
+    expect([...r.noTop5]).toEqual(['UTA']);
   });
 });

@@ -9,6 +9,7 @@ import { PlayFeed } from '../components/PlayFeed';
 import { GamePreview } from '../components/TeamBits';
 import { GameFactors } from '../components/TeamAnalytics';
 import { LiveCentre } from '../components/LiveCentre';
+import { ProjectedBox } from '../components/ProjectedBox';
 import { MatchupNumbers } from '../components/MatchupNumbers';
 import { RecapCard } from '../components/RecapCard';
 import { ErrorBox, Loading } from '../components/Status';
@@ -103,6 +104,7 @@ export function Game() {
         <>
           <GamePreview game={game} season={seasonOf(game.date)} />
           <MatchupNumbers game={game} season={seasonOf(game.date)} />
+          <ProjectedBox game={game} season={seasonOf(game.date)} />
           <p className="muted">Box score will appear once the game tips off.</p>
         </>
       ) : (

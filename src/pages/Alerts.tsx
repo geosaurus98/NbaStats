@@ -17,6 +17,7 @@ import { milestones } from '../lib/milestones';
 import { streaks } from '../lib/playerExtras';
 import { loadTeammateGraph } from '../lib/teammateStore';
 import { DEFAULT_SEASON } from '../lib/seasons';
+import { alertsSupported, useAlertSwitch } from '../lib/gameAlerts';
 
 interface Alert {
   day: string;
@@ -109,6 +110,7 @@ export function Alerts() {
       <p className="muted">
         Since {formatDay(since)}: {teamName ? <>results and injuries for <b>{teamName}</b></> : 'no favourite team yet'}{followed.length ? <>, plus {followed.length} player{followed.length === 1 ? '' : 's'} you follow</> : ''}. Star a team on its page and follow players on theirs; it's all kept in this browser.
       </p>
+      <GameAlertSwitch hasTeam={!!favouriteId} />
       {nothing && <Empty>Pick a favourite team (☆ on any team page) or follow a player (☆ Follow on any player page) to get alerts here.</Empty>}
       {loading && <Loading />}
       {!nothing && !loading && !alerts.length && <Empty>Nothing new since {formatDay(since)}.</Empty>}
@@ -135,5 +137,24 @@ export function Alerts() {
         </p>
       )}
     </section>
+  );
+}
+
+/** Browser notifications for the favourite team's games, while the site is open. */
+function GameAlertSwitch({ hasTeam }: { hasTeam: boolean }) {
+  const [on, toggle, problem] = useAlertSwitch();
+  if (!alertsSupported()) return null;
+  return (
+    <div className="card game-alerts">
+      <div className="page-head">
+        <div>
+          <h3>Game notifications</h3>
+          <p className="small muted">A notification when {hasTeam ? 'your team' : 'your favourite team'} tips off, when it's within five points in the last three minutes, and at the final. Works while the site is open in a tab (or installed as an app).</p>
+        </div>
+        <button className={on ? 'chip active' : 'chip'} aria-pressed={on} onClick={toggle} disabled={!hasTeam && !on}>{on ? '🔔 On' : 'Turn on'}</button>
+      </div>
+      {!hasTeam && <p className="small muted">Star a team first (☆ on any team page).</p>}
+      {problem && <p className="small loss">{problem}</p>}
+    </div>
   );
 }

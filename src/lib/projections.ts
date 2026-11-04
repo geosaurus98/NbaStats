@@ -184,3 +184,30 @@ export function simulate(
   }
   return odds;
 }
+
+/**
+ * The Elo change that adds `wins` over `games` games. Near an even matchup one
+ * Elo point is worth about 0.144% of win chance (ln 10 / 1600), so a player
+ * worth 0.1 wins a game is about 70 points. Capped at ±250.
+ */
+export function eloForWins(wins: number, games: number): number {
+  if (games <= 0) return 0;
+  const d = wins / games / (Math.LN10 / 1600);
+  return Math.max(-250, Math.min(250, d));
+}
+
+/** Regular-season games each team still has to play. */
+export function gamesLeft(games: Game[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const g of games) {
+    if (isFinal(g) || !countsInStandings(g)) continue;
+    for (const id of [g.home.team.id, g.away.team.id]) out.set(id, (out.get(id) ?? 0) + 1);
+  }
+  return out;
+}
+
+/**
+ * A player's Win Shares per game, shrunk towards zero while the sample is
+ * small (× games / (games + 10)), so a hot first week doesn't swing the odds.
+ */
+export const steadyWsPerGame = (ws: number, games: number) => (games > 0 ? (ws / games) * (games / (games + 10)) : 0);
