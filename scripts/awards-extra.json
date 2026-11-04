@@ -1,0 +1,41 @@
+{
+  "_note": "Award voting and All-NBA teams the Basketball-Reference dataset doesn't have yet. Rows: [player, share of the maximum points (null = not published), winner (1/0), first-place votes (-1 = unknown)]. Only used for seasons the source is missing. 2025-26: official NBA results (MVP 17 May 2026, DPOY 20 Apr, ROY 27 Apr, All-NBA May 2026); DPOY places below 3rd from a secondary source.",
+  "2026": {
+    "awards": {
+      "nba mvp": [
+        ["Shai Gilgeous-Alexander", 0.939, 1, 83],
+        ["Nikola Jokić", 0.634, 0, 10],
+        ["Victor Wembanyama", 0.569, 0, 5],
+        ["Luka Dončić", 0.25, 0, -1],
+        ["Cade Cunningham", 0.117, 0, 0],
+        ["Jaylen Brown", 0.089, 0, 0],
+        ["Kawhi Leonard", 0.001, 0, 0],
+        ["Donovan Mitchell", 0.001, 0, 0]
+      ],
+      "nba dpoy": [
+        ["Victor Wembanyama", 1.0, 1, 100],
+        ["Chet Holmgren", 0.394, 0, 0],
+        ["Ausar Thompson", 0.12, 0, 0],
+        ["Rudy Gobert", 0.082, 0, 0],
+        ["Scottie Barnes", 0.042, 0, 0],
+        ["Derrick White", 0.016, 0, 0],
+        ["Amen Thompson", 0.012, 0, 0],
+        ["Dyson Daniels", 0.01, 0, 0],
+        ["OG Anunoby", 0.008, 0, 0]
+      ],
+      "nba roy": [
+        ["Cooper Flagg", 0.824, 1, 56],
+        ["Kon Knueppel", 0.772, 0, 44],
+        ["VJ Edgecombe", 0.192, 0, 0]
+      ],
+      "nba smoy": [["Keldon Johnson", null, 1, -1]],
+      "nba mip": [["Nickeil Alexander-Walker", null, 1, -1]],
+      "nba clutch_poy": [["Shai Gilgeous-Alexander", null, 1, -1]]
+    },
+    "allNba": [
+      ["Shai Gilgeous-Alexander", 1], ["Nikola Jokić", 1], ["Victor Wembanyama", 1], ["Luka Dončić", 1], ["Cade Cunningham", 1],
+      ["Jaylen Brown", 2], ["Jalen Brunson", 2], ["Kevin Durant", 2], ["Kawhi Leonard", 2], ["Donovan Mitchell", 2],
+      ["Tyrese Maxey", 3], ["Jamal Murray", 3], ["Jalen Johnson", 3], ["Chet Holmgren", 3], ["Jalen Duren", 3]
+    ]
+  }
+}

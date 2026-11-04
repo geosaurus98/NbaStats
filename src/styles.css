@@ -898,3 +898,12 @@ table.zones td.left { white-space: normal; } table.zones { max-width: 100%; }
 .all-teams { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .5rem 1.5rem; }
 .all-teams h4 { margin: .3rem 0; }
 .all-teams ol { margin: 0; padding-left: 1.6rem; display: grid; gap: .25rem; }
+.date-slider label { display: grid; gap: .4rem; }
+.date-slider input[type="range"] { width: 100%; accent-color: var(--accent); }
+.date-slider .chips { margin-top: .5rem; }
+.mainnav.phone { flex-wrap: nowrap; }
+.mainnav.phone .nav-menu-button { margin-left: auto; max-width: 55vw; overflow: hidden; text-overflow: ellipsis; }
+.nav-panel-all { left: 8px; right: 8px; top: calc(100% + 2px); min-width: 0; grid-template-columns: 1fr 1fr; gap: .2rem .6rem; max-height: 75vh; overflow-y: auto; }
+.nav-panel-group { display: grid; gap: .05rem; align-content: start; }
+.nav-panel-heading { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; padding: .4rem .6rem .15rem; }
+.nav-panel-all .nav-panel-link { padding: .35rem .6rem; }

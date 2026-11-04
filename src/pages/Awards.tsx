@@ -136,8 +136,9 @@ export function Awards() {
             <p className="small">{METHOD[award]}</p>
             <p className="muted small">
               Built from every regular-season box score and play-by-play substitution in our bundled season data, refreshed daily. It’s deliberately simple:
-              voters also weigh narrative, health and fatigue with past winners, which no box score captures. On 2024-25 it had the real MVP and Rookie of
-              the Year on top.
+              voters also weigh narrative, health and fatigue with past winners, which no box score captures. It had the real MVP and Rookie of the Year on
+              top in both 2024-25 and 2025-26 (in 2025-26 its Rookie top three matched the vote exactly). Its 65-game check uses our box-score count, so a
+              player the league ruled eligible on fewer counted games (Wembanyama, the 2025-26 Defensive Player of the Year, on 64) can be left off.
             </p>
           </div>
         </>

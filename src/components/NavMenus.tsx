@@ -56,8 +56,22 @@ export const MENUS: { label: string; links: MenuLink[] }[] = [
 
 const inMenu = (path: string, links: MenuLink[]) => links.some((l) => path === l.to || path.startsWith(`${l.to}/`));
 
+function useNarrow(px = 640) {
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.innerWidth <= px);
+  useEffect(() => {
+    const onResize = () => setNarrow(window.innerWidth <= px);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [px]);
+  return narrow;
+}
+
+/** The menu number used for the single phone menu. */
+const ALL = -1;
+
 export function NavMenus() {
   const { pathname } = useLocation();
+  const narrow = useNarrow();
   const [open, setOpen] = useState<number | undefined>();
   const ref = useRef<HTMLElement>(null);
   useEffect(() => setOpen(undefined), [pathname]);
@@ -81,6 +95,32 @@ export function NavMenus() {
   }, [open]);
   // Team, player and game pages belong to "Teams & players" for highlighting.
   const current = MENUS.findIndex((m) => inMenu(pathname, m.links) || (m.label === 'Teams & players' && /^\/(team|player|franchise)\//.test(pathname)));
+  if (narrow) {
+    const here = MENUS.flatMap((m) => m.links).find((l) => pathname === l.to || pathname.startsWith(`${l.to}/`));
+    return (
+      <nav className="mainnav phone" aria-label="Main" ref={ref}>
+        <NavLink to="/" end>Home</NavLink>
+        <NavLink to="/scores">Scores</NavLink>
+        <button data-menu={ALL} className={`nav-menu-button${current >= 0 ? ' active' : ''}`} aria-expanded={open === ALL} aria-controls="menu-all" onClick={() => setOpen(open === ALL ? undefined : ALL)}>
+          ☰ {here?.label ?? 'Menu'}
+        </button>
+        {open === ALL && (
+          <div className="nav-panel nav-panel-all" id="menu-all">
+            {MENUS.map((m) => (
+              <div key={m.label} className="nav-panel-group">
+                <div className="nav-panel-heading">{m.label}</div>
+                {m.links.map((l) => (
+                  <NavLink key={l.to} to={l.to} className="nav-panel-link">
+                    <span className="nav-panel-label">{l.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </nav>
+    );
+  }
   return (
     <nav className="mainnav" aria-label="Main" ref={ref}>
       <NavLink to="/" end>Home</NavLink>

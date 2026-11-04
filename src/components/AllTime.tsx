@@ -153,7 +153,7 @@ export function Awards({ graph }: { graph: Graph }) {
                 <span className="pbar-track">
                   <span className="pbar-fill" style={{ width: `${r[2] * 100}%`, background: r[3] ? 'var(--series-2)' : 'var(--series-1)' }} />
                 </span>
-                <b className="pbar-n">{Math.round(r[2] * 100)}%</b>
+                <b className="pbar-n">{r[2] == null ? '–' : `${Math.round(r[2] * 100)}%`}</b>
                 <span className="muted small">{r[4] > 0 ? `${r[4]} 1st` : ''}</span>
               </div>
             ))}
@@ -212,7 +212,7 @@ export function Awards({ graph }: { graph: Graph }) {
           </table>
         </div>
       </div>
-      <p className="muted small">Award voting through 2024-25 (2025-26 awards aren't in the source yet).</p>
+      <p className="muted small">Award voting through {seasons[0] ? seasonLabel(seasons[0]) : '–'}, from Basketball-Reference; the latest season's results are added from the NBA's announcements until the source catches up. A dash means the vote shares weren't published.</p>
     </>
   );
 }

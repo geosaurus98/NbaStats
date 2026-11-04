@@ -1,5 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { CupTable } from '../components/CupTable';
+import { PictureByDate } from '../components/PictureByDate';
 import { fetchStandings } from '../api/espn';
 import { RaceChart } from '../components/RaceChart';
 import { ErrorBox, Loading } from '../components/Status';
@@ -11,20 +12,22 @@ export function Standings() {
   const { season } = useSeason();
   const { data, error, loading } = useAsync(() => fetchStandings(season.year), [season.year]);
   const [params, setParams] = useSearchParams();
-  const view = params.get('view') === 'cup' ? 'cup' : 'table';
+  const view = params.get('view') === 'cup' ? 'cup' : params.get('view') === 'date' ? 'date' : 'table';
 
   return (
     <section>
       <div className="page-head">
-        <h1>{season.label} {view === 'cup' ? 'NBA Cup' : 'standings'}</h1>
+        <h1>{season.label} {view === 'cup' ? 'NBA Cup' : view === 'date' ? 'standings on any date' : 'standings'}</h1>
       <h2 className="sr-only">Tables</h2>
         <div className="segmented">
           <button className={view === 'table' ? 'active' : ''} aria-pressed={view === 'table'} onClick={() => setParams({}, { replace: true })}>Standings</button>
+          <button className={view === 'date' ? 'active' : ''} aria-pressed={view === 'date'} onClick={() => setParams({ view: 'date' }, { replace: true })}>On any date</button>
           <button className={view === 'cup' ? 'active' : ''} aria-pressed={view === 'cup'} onClick={() => setParams({ view: 'cup' }, { replace: true })}>NBA Cup</button>
         </div>
       </div>
       {loading && <Loading />}
       {view === 'cup' && data && <CupTable season={season.year} conferences={data} />}
+      {view === 'date' && data && <PictureByDate season={season.year} conferences={data} />}
       {view === 'table' && (
       <>
       {error && <ErrorBox error={error} />}
