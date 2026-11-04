@@ -39,15 +39,19 @@ export interface TeamAbsences {
 }
 
 /**
- * For each team, the games its players missed between their first and last
- * appearance for it (so trades and late signings don't count), and what they
- * were worth: Win Shares per game played × games missed. A missed game is any
- * team game without minutes, so coach's decisions count too.
+ * For each team, the games its players missed from their first appearance for
+ * it (so late signings don't count) to its latest game, or to their last game
+ * for it if they have since played for another team (so trades don't count).
+ * Each is valued at Win Shares per game played × games missed. A missed game is
+ * any team game without minutes, so coach's decisions count too.
  */
 export function absences(lines: SeasonLines, wsPerGame: Map<string, number>, minGames = 3): TeamAbsences[] {
   const games = regular(lines);
   const byTeam = new Map<string, LineGame[]>();
   for (const g of games) for (const t of [g[3], g[4]]) byTeam.set(t, [...(byTeam.get(t) ?? []), g]);
+  // Each player's team in their latest game: anyone whose latest game was elsewhere has moved on.
+  const latestTeam = new Map<number, string>();
+  for (const g of games) for (const l of g[6]) if (l[L.min] > 0) latestTeam.set(l[L.p], l[L.home] ? g[3] : g[4]);
   const out: TeamAbsences[] = [];
   for (const [teamId, tg] of byTeam) {
     const appearances = new Map<number, number[]>(); // player index -> game indexes played
@@ -63,7 +67,8 @@ export function absences(lines: SeasonLines, wsPerGame: Map<string, number>, min
       const w = [0, 0] as [number, number];
       const wo = [0, 0] as [number, number];
       let missed = 0;
-      for (let i = idx[0]; i <= idx[idx.length - 1]; i++) {
+      const end = latestTeam.get(p) === teamId ? tg.length - 1 : idx[idx.length - 1];
+      for (let i = idx[0]; i <= end; i++) {
         const g = tg[i];
         const won = result(g).homeWon === (g[3] === teamId);
         const rec = played.has(i) ? w : wo;
