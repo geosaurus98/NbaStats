@@ -56,13 +56,14 @@ const data = (rows: BrefRow[] | undefined, key: string) => (rows ?? []).filter((
 
 /** leagues/NBA_<year>_coaches.html: one row per coach this season (a mid-season change gives a team two rows; the last is current). */
 export function parseSeasonCoaches(html: string): CurrentCoach[] {
-  const rows = data(brefTables(html).get('NBA_coaches'), 'coach');
+  // Data rows have a team and a number of games; the repeated header rows don't.
+  const rows = (brefTables(html).get('NBA_coaches') ?? []).filter((r) => r.coach && r.team && /^[A-Z]{3}$/.test(r.team) && /\d/.test(r.cur_g ?? r.cur_w ?? ''));
   const byTeam = new Map<string, CurrentCoach>();
   for (const r of rows) {
     byTeam.set(r.team, {
       team: r.team,
       name: r.coach,
-      bref: id(r.coach_href),
+      bref: id(r.coach_href) || r.coach.toLowerCase().replace(/[^a-z]/g, ''),
       seasonsWithTeam: n(r.seas_num_franch),
       seasons: n(r.seas_num_overall),
       season: [n(r.cur_w), n(r.cur_l)],

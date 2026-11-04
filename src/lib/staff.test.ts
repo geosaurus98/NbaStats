@@ -4,9 +4,9 @@ import { parseExecutives, parseFranchiseCoaches, parseSeasonCoaches } from './st
 // Shapes taken from the live pages (header rows included, as Basketball-Reference sends them).
 const td = (stat: string, v: string, href?: string) => `<td data-stat="${stat}">${href ? `<a href="${href}">${v}</a>` : v}</td>`;
 const season = `<table id="NBA_coaches"><thead><tr>${td('coach', 'Coach')}${td('team', 'Tm')}</tr></thead><tbody>
-<tr>${td('coach', 'Mark Daigneault', '/coaches/daignma99c.html')}${td('team', 'OKC', '/teams/OKC/2027.html')}${td('seas_num_franch', '6')}${td('seas_num_overall', '6')}${td('cur_w', '6')}${td('cur_l', '1')}${td('fr_w', '300')}${td('fr_l', '180')}${td('car_w', '300')}${td('car_l', '180')}${td('fr_w_p', '24')}${td('fr_l_p', '12')}${td('car_w_p', '24')}${td('car_l_p', '12')}</tr>
-<tr>${td('coach', 'Old Coach', '/coaches/oldco01c.html')}${td('team', 'BOS')}${td('cur_w', '1')}${td('cur_l', '3')}</tr>
-<tr>${td('coach', 'New Coach', '/coaches/newco01c.html')}${td('team', 'BOS')}${td('cur_w', '2')}${td('cur_l', '0')}</tr>
+<tr>${td('coach', 'Mark Daigneault', '/coaches/daignma99c.html')}${td('team', 'OKC', '/teams/OKC/2027.html')}${td('cur_g', '7')}${td('seas_num_franch', '6')}${td('seas_num_overall', '6')}${td('cur_w', '6')}${td('cur_l', '1')}${td('fr_w', '300')}${td('fr_l', '180')}${td('car_w', '300')}${td('car_l', '180')}${td('fr_w_p', '24')}${td('fr_l_p', '12')}${td('car_w_p', '24')}${td('car_l_p', '12')}</tr>
+<tr>${td('coach', 'Old Coach', '/coaches/oldco01c.html')}${td('team', 'BOS')}${td('cur_g', '4')}${td('cur_w', '1')}${td('cur_l', '3')}</tr>
+<tr>${td('coach', 'New Coach')}${td('team', 'BOS')}${td('cur_g', '2')}${td('cur_w', '2')}${td('cur_l', '0')}</tr>
 </tbody></table>`;
 
 describe('staff pages', () => {

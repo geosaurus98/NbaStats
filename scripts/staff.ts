@@ -32,7 +32,9 @@ if (process.env.STAFF_PROBE) {
     for (const [tid, rows] of brefTables(html)) console.log(`table ${tid}: ${rows.length} rows; ${JSON.stringify(rows.slice(0, 3))}`);
   }
 } else {
-  let coaches = parseSeasonCoaches((await page(`${base}/leagues/NBA_${season}_coaches.html`)) ?? '');
+  const seasonPage = (await page(`${base}/leagues/NBA_${season}_coaches.html`)) ?? '';
+  let coaches = parseSeasonCoaches(seasonPage);
+  if (coaches.length < 30) console.log('Sample rows:', JSON.stringify((brefTables(seasonPage).get('NBA_coaches') ?? []).slice(3, 5)));
   // Before a season's first game the page can be empty: use last season's.
   if (coaches.length < 30) coaches = parseSeasonCoaches((await page(`${base}/leagues/NBA_${season - 1}_coaches.html`)) ?? '');
   const coachHistory: StaffData['coachHistory'] = {};
