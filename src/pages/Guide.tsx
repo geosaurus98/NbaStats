@@ -21,6 +21,7 @@ const PAGES: { to: string; name: string; what: string }[] = [
   { to: '/salaries', name: 'Salaries', what: 'Payrolls against the cap, tax and aprons, salary vs production and Win Shares per $10M.' },
   { to: '/draft', name: 'Draft hub', what: "This year's projected order and lottery odds (the new 3-2-1 lottery from 2027), draft classes graded against their slots, which franchises draft best, every draft class since 1947 and every lottery since 1985. A lottery race shows No. 1 pick odds week by week and who is near relegation." },
   { to: '/trade', name: 'Trade machine', what: 'Two or three teams, players and draft picks: does the salary match under the aprons, every payroll afterwards, the Win Shares that move and each team\'s title odds after the trade.' },
+  { to: '/coaches', name: 'Coaches & front offices', what: "Every team's head coach (this season, with the team and career) and front office; each franchise page has its full coaching history and every executive's draft record." },
   { to: '/compare', name: 'Compare', what: 'Up to three current players side by side, with a full report (advanced stats, shot diet, archetype, contract value), their shot maps and how they have done head-to-head.' },
   { to: '/history', name: 'History', what: 'Every season since 1946-47: careers, comparisons across eras, Hall of Fame odds, all-time leaders, greatest teams, roster continuity and on this date.' },
   { to: '/degrees', name: '6 Degrees', what: 'How any two players connect through teammates.' },

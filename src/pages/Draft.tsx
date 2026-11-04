@@ -9,11 +9,9 @@ import { useCareers } from '../components/CareerStats';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
-import { allStarCounts, totals } from '../lib/careers';
-import { classGrades, gradePicks, teamDrafting, type DraftPick, type GradedPick } from '../lib/draftGrades';
+import { classGrades, draftPicksFrom, gradePicks, teamDrafting, type GradedPick } from '../lib/draftGrades';
 import { loadFranchiseData } from '../lib/franchiseData';
-import { franchiseValue } from '../lib/franchiseHistory';
-import { franchiseById, franchiseOf } from '../lib/franchises';
+import { franchiseById } from '../lib/franchises';
 import { useSeason } from '../SeasonContext';
 import { buildModel } from './Projections';
 import { DraftHistory } from '../components/DraftHistory';
@@ -81,13 +79,7 @@ function Grades({ tab, params, set }: { tab: 'grades' | 'teams'; params: URLSear
   const fd = useAsync(() => loadFranchiseData(), []);
   const graded = useMemo(() => {
     if (!careers.data || !fd.data) return undefined;
-    const stars = allStarCounts(careers.data);
-    const picks: DraftPick[] = fd.data.draft
-      .filter((d) => d[1] !== 1)
-      .map((d) => {
-        const t = d[5] >= 0 ? totals(careers.data!.seasons[d[5]] ?? []) : undefined;
-        return { season: d[0], pick: d[2], team: franchiseOf(d[4])?.id ?? d[4], name: d[6], player: d[5], value: t ? franchiseValue(t.values) + (stars.get(d[5]) ?? 0) * 2000 : 0 };
-      });
+    const picks = draftPicksFrom(fd.data, careers.data);
     return gradePicks(picks);
   }, [careers.data, fd.data]);
   if (careers.error || fd.error) return <ErrorBox error={(careers.error ?? fd.error)!} />;

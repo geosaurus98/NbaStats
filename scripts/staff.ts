@@ -41,10 +41,18 @@ if (process.env.STAFF_PROBE) {
   const executives: StaffData['executives'] = {};
   for (const f of FRANCHISES) {
     const code = f.codes[f.codes.length - 1];
-    const ch = await page(`${base}/teams/${code}/coaches.html`);
-    if (ch) coachHistory[code] = parseFranchiseCoaches(ch);
-    const ex = await page(`${base}/teams/${code}/executives.html`);
-    if (ex) executives[code] = parseExecutives(ex);
+    // Some franchises live under an older code on Basketball-Reference (Nets: NJN, Hornets: CHA,
+    // Pelicans: NOH): try the newest first, then the older ones, and file under the newest.
+    for (const c of [...f.codes].reverse()) {
+      const ch = await page(`${base}/teams/${c}/coaches.html`);
+      const coachRows = ch ? parseFranchiseCoaches(ch) : [];
+      if (!coachRows.length) continue;
+      coachHistory[code] = coachRows;
+      const ex = await page(`${base}/teams/${c}/executives.html`);
+      executives[code] = ex ? parseExecutives(ex) : [];
+      break;
+    }
+    if (!coachHistory[code]) console.log(`  no staff pages found for ${f.name}`);
   }
   console.log(`${coaches.length} coaches, ${Object.keys(coachHistory).length} coaching histories, ${Object.keys(executives).length} front offices`);
   if (coaches.length < 28 || Object.keys(executives).length < 28) throw new Error('Staff data looks incomplete; not writing it');

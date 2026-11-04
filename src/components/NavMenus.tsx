@@ -40,6 +40,7 @@ export const MENUS: { label: string; links: MenuLink[] }[] = [
       { to: '/h2h', label: 'Head-to-head', what: 'Two teams: meetings and numbers' },
       { to: '/salaries', label: 'Salaries', what: 'Payrolls, the cap, tax and aprons' },
       { to: '/trade', label: 'Trade machine', what: 'Does the trade work under the cap rules?' },
+      { to: '/coaches', label: 'Coaches & front offices', what: 'Every coach and GM, with records' },
     ],
   },
   {

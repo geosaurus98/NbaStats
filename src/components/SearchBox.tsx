@@ -52,6 +52,7 @@ const PAGES = [
   { label: 'All-NBA, All-Defensive and All-Rookie teams', to: '/awards?award=teams', words: 'all-nba all nba all-defensive all defense all-rookie teams first second third' },
   { label: 'Injury what-if', to: '/projections?tab=injury', words: 'injury what if sit player out return odds title playoffs' },
   { label: 'Game notifications', to: '/alerts', words: 'notifications notify alert tip off final close game browser' },
+  { label: 'Coaches & front offices', to: '/coaches', words: 'coach coaches head coach gm general manager front office executive president records' },
   { label: 'Draft hub', to: '/draft', words: 'draft hub order lottery picks grades class steals busts prospects' },
   { label: 'Draft class grades', to: '/draft?tab=grades', words: 'draft grades class steals busts best drafting teams' },
   { label: 'Trade machine', to: '/trade', words: 'trade machine salary matching deal swap aprons' },
