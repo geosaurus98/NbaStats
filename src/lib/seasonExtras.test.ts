@@ -21,6 +21,22 @@ describe('season extras', () => {
     expect(sga.withoutRec[0] + sga.withoutRec[1]).toBe(sga.missed);
     expect(sga.wsLost).toBeCloseTo(0.25 * sga.missed, 10);
   });
+  it('counts players still out to today, but not games after a trade', () => {
+    // Lines: [p, home, starter, min, pts, ...]; team T is always home. Player 0 plays every game,
+    // player 1 plays the first three and is still out, player 2 plays three then moves to team U.
+    const line = (p: number, home: number) => [p, home, 1, 30, 10, 4, 8, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0];
+    const games = Array.from({ length: 6 }, (_, i) => {
+      const gl = [line(0, 1)];
+      if (i < 3) gl.push(line(1, 1), line(2, 1));
+      return [`g${i}`, `2026-01-0${i + 1}`, 2, 'T', i < 3 ? 'X' : 'U', 0, gl];
+    });
+    games[5][6] = [...(games[5][6] as number[][]), line(2, 0)]; // player 2 now plays for U, away
+    const fake = { year: 2026, ids: ['a', 'b', 'c'], games } as unknown as SeasonLines;
+    const t = absences(fake, new Map([['b', 0.1]])).find((x) => x.teamId === 'T')!;
+    expect(t.players.find((p) => p.playerId === 'b')).toMatchObject({ played: 3, missed: 3 });
+    expect(t.players.find((p) => p.playerId === 'c')).toMatchObject({ played: 3, missed: 0 });
+    expect(t.players.find((p) => p.playerId === 'b')!.wsLost).toBeCloseTo(0.3, 10);
+  });
   it('grades the model', () => {
     const r = modelReport([
       { home: 'A', away: 'B', date: '2026-01-02', pHome: 0.7, homeWon: true },

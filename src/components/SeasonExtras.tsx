@@ -42,7 +42,7 @@ export function InjuryTable({ season }: { season: number }) {
   if (!rows) return <Loading />;
   return (
     <>
-      <p className="muted">Games each team's players have missed, and what those players were worth: Win Shares per game played (shrunk while the sample is small) × games missed. Only games between a player's first and last appearance for the team count, so trades and late signings don't; coach's decisions and rest days count as missed.</p>
+      <p className="muted">Games each team's players have missed, and what those players were worth: Win Shares per game played (shrunk while the sample is small) × games missed. A player's missed games count from their first game for the team (so late signings don't count) to today, or to their last game for it if they have since played for another team (so trades don't). Players still out count; coach's decisions and rest days count as missed too.</p>
       <div className="table-wrap">
         <table>
           <thead>
@@ -62,7 +62,7 @@ export function InjuryTable({ season }: { season: number }) {
                 <td>{t.missed}</td>
                 <td><b>{t.wsLost.toFixed(1)}</b></td>
                 <td className="left small">
-                  {t.players.filter((p) => p.missed > 0).slice(0, 2).map((p, k) => (
+                  {t.players.filter((p) => p.missed > 0).slice(0, 3).map((p, k) => (
                     <span key={p.playerId}>{k > 0 && ' · '}<Link to={`/player/${p.playerId}`}>{names[p.playerId] ?? p.playerId}</Link> {p.missed} <span className="muted">({rec(p.withRec)} / {rec(p.withoutRec)})</span></span>
                   ))}
                 </td>
