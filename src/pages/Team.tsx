@@ -22,6 +22,7 @@ import { InjuryList } from '../components/TeamBits';
 import { TeamPayroll } from '../components/TeamPayroll';
 import { DEFAULT_SEASON, seasonInfo } from '../lib/seasons';
 import { CoachCard } from '../components/Staff';
+import { ComebacksCard } from '../components/SeasonExtras';
 import { PageTabs, usePageTab, type PageTab } from '../components/PageTabs';
 import { formatShortDate, formatTime, parseISODate, toISODate } from '../lib/dates';
 import { downloadFile, gamesToICS } from '../lib/ics';
@@ -115,6 +116,7 @@ export function Team() {
           {results.length > 1 && <TeamCharts id={id} results={results} onSelect={(g) => navigate(`/game/${g.id}`)} />}
           {type === 2 && results.length > 0 && <SeasonPace teamId={id} season={season.year} />}
           {type === 2 && results.length > 0 && <EloHistory teamId={id} season={season.year} />}
+          {type === 2 && results.length > 0 && <ComebacksCard teamId={id} season={season.year} />}
           {season.year === DEFAULT_SEASON && <CoachCard teamId={id} />}
           {season.year === DEFAULT_SEASON && (
             <div className="card">

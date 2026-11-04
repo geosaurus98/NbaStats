@@ -13,6 +13,7 @@ import { ArchetypesView, FreeThrowPressure } from '../components/PlayerExtras';
 import { HotHandView } from '../components/HotHand';
 import { ShotSituations } from '../components/ShotSituations';
 import { Empty } from '../components/Status';
+import { BackToBackTable } from '../components/SeasonExtras';
 import { TeamLogo } from '../components/TeamLogo';
 import { formatShortDate } from '../lib/dates';
 import type { DramaRow } from '../lib/pbpStats';
@@ -31,15 +32,16 @@ const TABS = [
   { id: 'situations', label: 'Shot situations' },
   { id: 'usage', label: 'Usage vs efficiency' },
   { id: 'archetypes', label: 'Player archetypes' },
+  { id: 'rest', label: 'Rest & fatigue' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 const GROUPS: TabGroup<Tab>[] = [
   { label: 'Games & form', tabs: TABS.filter((t) => (['drama', 'night', 'hot', 'clutch'] as Tab[]).includes(t.id)) },
   { label: 'Shooting', tabs: TABS.filter((t) => (['zones', 'shots', 'hothand', 'situations'] as Tab[]).includes(t.id)) },
-  { label: 'Players', tabs: TABS.filter((t) => (['usage', 'archetypes', 'combos', 'duos'] as Tab[]).includes(t.id)) },
+  { label: 'Players', tabs: TABS.filter((t) => (['usage', 'archetypes', 'combos', 'duos', 'rest'] as Tab[]).includes(t.id)) },
 ];
 /** Tabs that only cover the regular season. */
-const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'usage', 'archetypes']);
+const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'usage', 'archetypes', 'rest']);
 /** Team tabs that moved to Rankings: old links still work. */
 const MOVED = new Set(['sources', 'styles', 'schedule']);
 
@@ -76,6 +78,7 @@ export function Insights() {
       {hasData && tab === 'archetypes' && <ArchetypesView season={season.year} />}
       {hasData && tab === 'hothand' && <HotHandView season={season.year} type={type} />}
       {hasData && tab === 'situations' && <ShotSituations season={season.year} type={type} />}
+      {hasData && tab === 'rest' && <BackToBackTable season={season.year} />}
       {hasData && tab === 'combos' && <Combos season={season.year} type={type} />}
     </section>
   );
