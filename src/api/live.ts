@@ -62,15 +62,29 @@ async function fetchOnce(url: string): Promise<unknown> {
   return res.json();
 }
 
+/**
+ * When ESPN can't be reached at all (a blocked network, or offline), stop
+ * trying for a minute so pages go straight to the bundled data instead of
+ * waiting on retries for every request.
+ */
+const UNREACHABLE_MS = 60_000;
+let unreachableUntil = 0;
+
 async function getJSON(url: string, fresh = false, store = true): Promise<unknown> {
   const hit = cache.get(url);
   if (!fresh && hit && Date.now() - hit.at < TTL_MS) return hit.data;
+  if (Date.now() < unreachableUntil) throw new ApiError("Couldn't reach ESPN. Your network may be blocking it", 'network');
   for (let attempt = 0; ; attempt++) {
     try {
       const data = await fetchOnce(url);
       if (store) cache.set(url, { at: Date.now(), data });
       return data;
     } catch (e) {
+      // A refused connection is a block, not a blip: don't retry it.
+      if (e instanceof ApiError && e.kind === 'network') {
+        unreachableUntil = Date.now() + UNREACHABLE_MS;
+        throw e;
+      }
       const retryable = e instanceof ApiError && e.kind !== 'not-found';
       if (!retryable || attempt >= RETRIES) throw e;
       await wait(800 * 2 ** attempt * (e.kind === 'rate-limit' ? 3 : 1));

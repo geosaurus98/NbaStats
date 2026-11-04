@@ -113,7 +113,7 @@ export function FranchiseStaff({ franchise }: { franchise: Franchise }) {
                   <tr key={`${e.bref}-${e.start}`}>
                     <td className="left nowrap">{e.name}{e.notes ? <span className="muted small"> · {e.notes}</span> : null}</td>
                     <td className="left muted small nowrap">{year(e.start)}–{e.end === 'present' || !e.end ? 'now' : year(e.end)}</td>
-                    <td>{graded ? picks.length : ''}</td>
+                    <td>{graded ? (picks.length || Number(year(e.end === 'present' || !e.end ? '9999' : e.end)) >= 1990 ? picks.length : '–') : ''}</td>
                     <td className={picks.length ? (surplus >= 0 ? 'win' : 'loss') : 'muted'}>{graded && picks.length ? k(surplus) : '–'}</td>
                     <td className="left small">{best ? `${best.name} (${best.season}, No. ${best.pick})` : ''}</td>
                   </tr>
@@ -121,7 +121,7 @@ export function FranchiseStaff({ franchise }: { franchise: Franchise }) {
               })}
             </tbody>
           </table>
-          <p className="muted small">Draft grade: the career value of every pick made on their watch against what those slots usually produce (as on the <Link to="/draft?tab=grades">Draft hub</Link>). Trades aren't included: no data source for them yet.</p>
+          <p className="muted small">Draft grade: the career value of every pick made on their watch against what those slots usually produce (as on the <Link to="/draft?tab=grades">Draft hub</Link>), for drafts since 1990. Trades aren't included: no data source for them yet.</p>
         </div>
       </div>
       <p className="muted small">From Basketball-Reference, refreshed weekly{s.generatedAt ? ` (last ${updated(s)})` : ''}.</p>

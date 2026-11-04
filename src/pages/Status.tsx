@@ -9,6 +9,7 @@ import { loadCareers } from '../lib/careers';
 import { loadFranchiseData } from '../lib/franchiseData';
 import { loadTeammateGraph } from '../lib/teammateStore';
 import { DEFAULT_SEASON, seasonInfo } from '../lib/seasons';
+import { loadStaff } from '../lib/staff';
 
 /** The GitHub repository the site is published from (for the daily job's history). */
 function repo(): string {
@@ -42,8 +43,8 @@ export function Status() {
         return { y, snap, lines };
       }),
     );
-    const [careers, fr, graph] = await Promise.all([loadCareers(), loadFranchiseData(), loadTeammateGraph()]);
-    return { seasons, careers, fr, graph };
+    const [careers, fr, graph, staff] = await Promise.all([loadCareers(), loadFranchiseData(), loadTeammateGraph(), loadStaff()]);
+    return { seasons, careers, fr, graph, staff };
   }, []);
   const runs = useAsync(async () => {
     const res = await fetch(`https://api.github.com/repos/${repo()}/actions/workflows/snapshot.yml/runs?per_page=8`);
@@ -52,7 +53,7 @@ export function Status() {
     return j.workflow_runs;
   }, []);
   if (data.loading || !data.data) return <Loading label="Checking every dataset…" />;
-  const { seasons, careers, fr, graph } = data.data;
+  const { seasons, careers, fr, graph, staff } = data.data;
   const checks = (s: (typeof seasons)[number]): Check[] => {
     const snap = s.snap;
     if (!snap) return [{ label: 'Snapshot', value: 'missing', ok: false }];
@@ -81,6 +82,7 @@ export function Status() {
   const history: Check[] = [
     { label: 'Career stats', value: `through ${seasonInfo(latestCareer).label}`, ok: latestCareer >= DEFAULT_SEASON - 1, note: 'Basketball-Reference adds a season once it has finished.' },
     { label: 'Franchise seasons and drafts', value: `through ${seasonInfo(latestFranchise).label}`, ok: latestFranchise >= DEFAULT_SEASON - 1 },
+    { label: 'Coaches & front offices', value: staff?.generatedAt ? `${staff.coaches.length} coaches, built ${ago(staff.generatedAt)}` : 'not fetched yet', ok: !!staff?.generatedAt && hoursAgo(staff.generatedAt) < 9 * 24, note: 'Refreshed every Monday from Basketball-Reference.' },
     { label: 'Teammate graph (6 Degrees)', value: `${graph.data.players.length.toLocaleString()} players, built ${ago(graph.data.generatedAt)}`, ok: hoursAgo(graph.data.generatedAt) < 72 },
     { label: 'Hall of Fame list', value: `${careers.hof?.length ?? 0} players`, ok: (careers.hof?.length ?? 0) > 100 },
   ];

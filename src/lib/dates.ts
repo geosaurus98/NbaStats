@@ -35,9 +35,12 @@ export function formatShortDate(dateTime: string): string {
 }
 
 /** The NBA's (US Eastern) calendar date for a moment: ESPN's scoreboard is keyed by it. */
+// One formatter for every call: building an Intl.DateTimeFormat is slow, and this runs for every game.
+let usFormat: Intl.DateTimeFormat | undefined;
 export function usDate(d: Date = new Date()): string {
   try {
-    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+    usFormat ??= new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
+    return usFormat.format(d);
   } catch {
     return toISODate(new Date(d.getTime() - 5 * 3600e3 + d.getTimezoneOffset() * 60e3));
   }

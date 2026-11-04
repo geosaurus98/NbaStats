@@ -41,9 +41,12 @@ export async function buildModel(season: number, sims = SIMS): Promise<Model> {
     const prev = await fetchLeagueGames(season - 1, 2).catch(() => undefined);
     if (prev) start = carryOver(runElo(prev.games).ratings);
   }
+  // Let the page paint before the heavy work (ratings, then thousands of simulated seasons).
+  await new Promise((r) => setTimeout(r, 0));
   const elo = runElo(league.games, start);
   const conferences = new Map<string, string>();
   for (const c of standings) for (const r of c.rows) conferences.set(r.team.id, c.name);
+  await new Promise((r) => setTimeout(r, 0));
   const odds = simulate(league.games, conferences, elo.ratings, sims, seededRandom(season));
   return { teams: league.teams, standings, conferences, games: league.games, elo, odds, start };
 }
