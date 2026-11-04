@@ -16,6 +16,7 @@ import { lotteryField, lotteryFormat } from '../lib/lottery';
 import { scheduleAhead } from '../lib/scheduleAhead';
 import { predict, results, seasonElo } from '../lib/teamContext';
 import { useSeason } from '../SeasonContext';
+import { TeamMilestones } from '../components/TeamMilestones';
 import { buildModel } from './Projections';
 import { oddsPct } from '../lib/format';
 
@@ -137,6 +138,7 @@ function Hub({ teamId }: { teamId: string }) {
           <InjuryList teamId={teamId} />
         </div>
       </div>
+      <TeamMilestones teamId={teamId} season={season.year} />
 
       <SeasonPace teamId={teamId} season={season.year} />
 

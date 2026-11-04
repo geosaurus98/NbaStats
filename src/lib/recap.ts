@@ -160,3 +160,36 @@ export function newSeasonHighs(lines: SeasonLines, start: string): { playerId: s
 export function weeksWithGames(games: Game[]): string[] {
   return [...new Set(games.filter((g) => isFinal(g) && countsInStandings(g)).map((g) => weekStart(dayOf(g))))].sort().reverse();
 }
+
+export interface TableRow {
+  teamId: string;
+  w: number;
+  l: number;
+  rank: number;
+}
+
+/** Each conference's table from the games finished before `day` (US date, exclusive), best first. */
+export function tableBefore(games: Game[], conferenceOf: Map<string, string>, day: string): Map<string, TableRow[]> {
+  const rec = new Map<string, [number, number]>();
+  for (const t of conferenceOf.keys()) rec.set(t, [0, 0]);
+  for (const g of games) {
+    if (!isFinal(g) || !countsInStandings(g) || dayOf(g) >= day) continue;
+    for (const t of [g.home.team.id, g.away.team.id]) {
+      const r = rec.get(t);
+      if (r) r[won(g, t) ? 0 : 1]++;
+    }
+  }
+  const pct = ([w, l]: [number, number]) => (w + l ? w / (w + l) : 0.5);
+  const out = new Map<string, TableRow[]>();
+  for (const conf of [...new Set(conferenceOf.values())].sort()) {
+    const teams = [...conferenceOf].filter(([, c]) => c === conf).map(([t]) => t);
+    teams.sort((a, b) => pct(rec.get(b)!) - pct(rec.get(a)!) || rec.get(b)![0] - rec.get(a)![0] || a.localeCompare(b));
+    out.set(conf, teams.map((t, i) => ({ teamId: t, w: rec.get(t)![0], l: rec.get(t)![1], rank: i + 1 })));
+  }
+  return out;
+}
+
+/** Every US date with a finished regular-season game, in order. */
+export function gameDays(games: Game[]): string[] {
+  return [...new Set(games.filter((g) => isFinal(g) && countsInStandings(g)).map(dayOf))].sort();
+}

@@ -37,3 +37,18 @@ describe('weekly recap', () => {
     expect(newSeasonHighs(lines, week).every((h) => h.pts > h.previous)).toBe(true);
   });
 });
+
+import { gameDays, tableBefore } from './recap';
+describe('standings on a date', () => {
+  it('builds each conference table as it stood', () => {
+    const days = gameDays(games);
+    expect(days.length).toBeGreaterThan(150);
+    const end = tableBefore(games, conf, '2026-04-13');
+    for (const rows of end.values()) {
+      expect(rows).toHaveLength(15);
+      expect(rows.reduce((s, r) => s + r.w + r.l, 0)).toBeGreaterThan(15 * 80);
+    }
+    const opening = tableBefore(games, conf, days[0]);
+    for (const rows of opening.values()) expect(rows.every((r) => r.w + r.l === 0)).toBe(true);
+  });
+});
