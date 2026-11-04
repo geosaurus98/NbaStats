@@ -1,0 +1,24 @@
+name: Coaches and front offices
+# Rebuilds src/data/staff.json from Basketball-Reference once a week.
+on:
+  push:
+    branches: [claude/youthful-heisenberg-ag3b0v]
+    paths: [scripts/staff.ts, src/lib/brefTables.ts, .github/workflows/staff.yml]
+  workflow_dispatch:
+  schedule:
+    - cron: '41 10 * * 1'
+
+permissions:
+  contents: write
+
+jobs:
+  staff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: STAFF_PROBE=1 npx --yes tsx scripts/staff.ts
