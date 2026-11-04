@@ -104,6 +104,7 @@ export function Alerts() {
     <section>
       <div className="page-head">
         <h1>Alerts</h1>
+        <h2 className="sr-only">Your alerts</h2>
         <button className="chip" onClick={() => { const d = toISODate(new Date()); markSeen(d); setSince(d); }}>Mark all as seen</button>
       </div>
       <CurrentSeasonNote />
