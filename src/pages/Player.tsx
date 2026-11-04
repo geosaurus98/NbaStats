@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { RestCard } from '../components/SeasonExtras';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { fetchAthlete, fetchGameLog, playerAssistPartners, seasonShots, snapshotPlayers } from '../api/espn';
 import type { LogSeasonType } from '../api/types';
@@ -174,6 +175,7 @@ export function Player() {
         <>
           {type === 'regular' && <PlayerTimeline playerId={id} season={season.year} />}
           <GameCalendar playerId={id} season={season.year} />
+          {type === 'regular' && <RestCard playerId={id} season={season.year} />}
           {games.length > 0 && (
             <>
               <h2>Game log</h2>

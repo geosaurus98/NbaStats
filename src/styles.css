@@ -909,3 +909,17 @@ table.zones td.left { white-space: normal; } table.zones { max-width: 100%; }
 .nav-panel-all .nav-panel-link { padding: .35rem .6rem; }
 th button.link { color: inherit; font: inherit; text-transform: inherit; letter-spacing: inherit; padding: 0; }
 th.sorted button.link { color: var(--accent); }
+
+/* Roster continuity bar */
+.cont-bar { display: inline-block; width: 80px; height: 8px; border-radius: 4px; background: var(--neutral); vertical-align: middle; overflow: hidden; }
+.cont-bar > span { display: block; height: 100%; background: var(--series-1); border-radius: 4px; }
+
+/* Your power poll */
+.poll { list-style: none; padding: 0; margin: 0.5rem 0; max-width: 560px; }
+.poll li { display: grid; grid-template-columns: 2rem 1fr auto auto; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 4px; background: var(--surface); cursor: grab; }
+.poll li.dragging { opacity: 0.5; }
+.poll-rank { font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.poll-model { white-space: nowrap; }
+.poll-move { display: flex; gap: 4px; }
+.poll-move .chip { min-width: 2rem; }
+@media (max-width: 640px) { .poll li { grid-template-columns: 1.6rem 1fr auto auto; gap: 0.35rem; } }
