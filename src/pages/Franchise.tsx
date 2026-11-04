@@ -67,6 +67,7 @@ export function Franchise() {
         <h1 className="team-title">
           <TeamLogo team={team} size={44} /> <span>{f.name} <span className="muted">history</span></span>
         </h1>
+        <h2 className="sr-only">Franchise history</h2>
         <div className="actions">
           <Link className="chip" to={`/team/${f.espnId}`}>This season →</Link>
           <select value={f.id} onChange={(e) => (window.location.hash = `#/franchise/${e.target.value}`)} aria-label="Pick a franchise">

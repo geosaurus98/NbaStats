@@ -593,7 +593,7 @@ table.zones.wide { max-width: 440px; }
 /* Franchise → all-time starting five */
 .five { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .6rem; }
 .five-player { display: flex; flex-direction: column; gap: .15rem; padding: .6rem .7rem; border: 1px solid var(--border); border-radius: 10px; min-width: 0; }
-.five-slot { font-weight: 800; color: var(--series-1); font-size: .8rem; letter-spacing: .05em; }
+.five-slot { font-weight: 800; color: var(--cold-ink); font-size: .8rem; letter-spacing: .05em; }
 @media (max-width: 900px) { .five { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 420px) { .five { grid-template-columns: 1fr; } }
 
