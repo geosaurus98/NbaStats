@@ -2,6 +2,7 @@ import { useSearchParams } from 'react-router-dom';
 import { fetchScoreboard } from '../api/espn';
 import { GameCard } from '../components/GameCard';
 import { MyTeamCard } from '../components/MyTeamCard';
+import { TonightProjections } from '../components/ProjectedBox';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { useAsync } from '../hooks/useAsync';
 import { addDays, slateLabel } from '../lib/dates';
@@ -58,6 +59,7 @@ export function Scores() {
 
       {live.length > 0 && <GameGrid title="Live" games={live} isFav={isFav} />}
       {fixtures.length > 0 && <GameGrid title="Upcoming" games={fixtures} isFav={isFav} />}
+      {fixtures.length > 0 && <TonightProjections games={fixtures} season={season.year} />}
       {results.length > 0 && <GameGrid title="Results" games={results} isFav={isFav} />}
     </section>
   );

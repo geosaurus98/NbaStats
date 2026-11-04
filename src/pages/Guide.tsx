@@ -6,25 +6,26 @@ import { InstallButton } from '../components/AppStatus';
 
 const PAGES: { to: string; name: string; what: string }[] = [
   { to: '/', name: 'Home', what: "Today's games, your team, last night in brief, the standings, title odds, the awards race and on this day." },
-  { to: '/scores', name: 'Scores', what: 'Any day\'s games. Open one for the box score, charts, play-by-play and (after the final) a shareable recap card; before tip-off, a preview with a projected score.' },
+  { to: '/scores', name: 'Scores', what: 'Any day\'s games. Open one for the box score, charts, play-by-play and (after the final) a shareable recap card; before tip-off, a preview with a projected score. Before tip-off: projected box scores and tonight\'s likeliest 30-point games, double-doubles and triple-doubles.' },
   { to: '/myteam', name: 'My team', what: 'Everything about the team you star: next game, form, odds, injuries and payroll.' },
   { to: '/recap', name: 'This week', what: 'A Monday-to-Sunday round-up: team and player of the week, best performances, new season highs, standings movers and upsets.' },
   { to: '/standings', name: 'Standings', what: 'Conference tables, the race chart (games above .500), seed by week and the NBA Cup groups and knockout bracket.' },
-  { to: '/projections', name: 'Projections', what: 'Playoff and title odds from 2,000 simulated seasons, power ratings and what-if standings.' },
+  { to: '/playoffs', name: 'Playoffs', what: 'The bracket with series odds after every game, series leaders and a bracket challenge; before the playoffs, the projected first round and play-in odds.' },
+  { to: '/projections', name: 'Projections', what: 'Playoff and title odds from 2,000 simulated seasons, power ratings, what-if standings and an injury what-if (sit or bring back players and see the odds move).' },
   { to: '/leaders', name: 'Leaders', what: 'Season averages and highs, streaks, milestone watch, advanced stats (PER, Win Shares), win probability added, on/off, shot quality and a build-your-own ranking.' },
-  { to: '/awards', name: 'Awards', what: 'MVP, Defensive Player and Rookie of the Year ladders, win odds while the season is on, the rookie ladder, and every past winner and MVP vote.' },
+  { to: '/awards', name: 'Awards', what: 'MVP, Defensive Player and Rookie of the Year ladders, win odds while the season is on, the rookie ladder, and every past winner and MVP vote. Also All-NBA, All-Defensive and All-Rookie team predictions.' },
   { to: '/rankings', name: 'Rankings', what: 'Every team ranked: SRS, four factors, luck, quarter splits, scoring runs, garbage time, rest & travel, team styles, points by source and schedule ahead.' },
   { to: '/insights', name: 'Insights', what: 'Exciting games, player of the night, hot & cold, clutch, shooting (zones, shot types, hot hand, situations) and players (usage, archetypes, duos).' },
   { to: '/fantasy', name: 'Fantasy', what: 'Fantasy points in ESPN, Yahoo and DraftKings scoring or nine-category value, hot pickups and games per team this week and next.' },
   { to: '/teams', name: 'Teams', what: 'Each team in tabs: overview (results, Elo, style, injuries), lineups & rotation, shooting & passing, schedule and payroll, plus a printable season report.' },
   { to: '/salaries', name: 'Salaries', what: 'Payrolls against the cap, tax and aprons, salary vs production and Win Shares per $10M.' },
-  { to: '/draft', name: 'Draft hub', what: "This year's projected order and lottery odds (the new 3-2-1 lottery from 2027), draft classes graded against their slots, which franchises draft best, every draft class since 1947 and every lottery since 1985." },
-  { to: '/trade', name: 'Trade machine', what: 'Build a two-team trade: does the salary match under the aprons, what happens to both payrolls and the Win Shares that move.' },
-  { to: '/compare', name: 'Compare', what: 'Up to three current players side by side, with a full report: advanced stats, shot diet, archetype and contract value.' },
+  { to: '/draft', name: 'Draft hub', what: "This year's projected order and lottery odds (the new 3-2-1 lottery from 2027), draft classes graded against their slots, which franchises draft best, every draft class since 1947 and every lottery since 1985. A lottery race shows No. 1 pick odds week by week and who is near relegation." },
+  { to: '/trade', name: 'Trade machine', what: 'Two or three teams, players and draft picks: does the salary match under the aprons, every payroll afterwards, the Win Shares that move and each team\'s title odds after the trade.' },
+  { to: '/compare', name: 'Compare', what: 'Up to three current players side by side, with a full report (advanced stats, shot diet, archetype, contract value), their shot maps and how they have done head-to-head.' },
   { to: '/history', name: 'History', what: 'Every season since 1946-47: careers, comparisons across eras, Hall of Fame odds, all-time leaders, greatest teams, roster continuity and on this date.' },
   { to: '/degrees', name: '6 Degrees', what: 'How any two players connect through teammates.' },
   { to: '/games', name: 'Games', what: 'Daily puzzles: the franchise grid, connect the players, guess the player, stat-line and trivia.' },
-  { to: '/alerts', name: 'Alerts', what: 'What happened to your team and the players you follow since your last visit.' },
+  { to: '/alerts', name: 'Alerts', what: 'What happened to your team and the players you follow since your last visit, plus optional notifications when your team tips off, is in a close finish, or finishes.' },
 ];
 
 const GLOSSARY: { term: string; what: string }[] = [

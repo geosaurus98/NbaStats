@@ -10,6 +10,19 @@ export interface LotteryYear {
   picks: { pick: number; team: string; player: string; playerIndex: number; rank?: number }[];
 }
 
+/**
+ * The 3-2-1 lottery's repeat limits for a draft, by franchise code: the last
+ * draft's No. 1 pick can't win No. 1, and a team that picked in the top five
+ * in both of the last two drafts can't land there again. Picks are credited to
+ * the team that made them.
+ */
+export function repeatLimits(fr: FranchiseData, draftYear: number): { noFirst: Set<string>; noTop5: Set<string> } {
+  const top = (year: number, n: number) => new Set(fr.draft.filter((d) => d[0] === year && d[1] === 0 && d[2] <= n).map((d) => d[4]));
+  const last5 = top(draftYear - 1, 5);
+  const before5 = top(draftYear - 2, 5);
+  return { noFirst: top(draftYear - 1, 1), noTop5: new Set([...last5].filter((c) => before5.has(c))) };
+}
+
 export function lotteryHistory(fr: FranchiseData, from = 1985, top = 4): LotteryYear[] {
   const out: LotteryYear[] = [];
   const years = [...new Set(fr.draft.filter((d) => d[1] === 0 && d[0] >= from).map((d) => d[0]))].sort((a, b) => b - a);

@@ -27,3 +27,16 @@ describe('playoff mode', () => {
     expect(scoreBracket({ series: { a: 'A', b: 'B', c: 'A' }, champion: 'A' }, [s('a', 1, 'A'), s('b', 2, 'A'), s('c', 3), s('f', 4, 'A')])).toEqual({ points: 11, right: 2, decided: 3 });
   });
 });
+
+import { playIn } from './playoffMode';
+describe('play-in', () => {
+  it('adds up and favours the 7th seed', () => {
+    const r = new Map([['A', 1600], ['B', 1500], ['C', 1500], ['D', 1400]]);
+    const odds = playIn(['A', 'B', 'C', 'D'], (id) => r.get(id)!);
+    for (const o of odds) expect(o.seventh + o.eighth + o.out).toBeCloseTo(1, 10);
+    expect(odds.reduce((s, o) => s + o.seventh, 0)).toBeCloseTo(1, 10);
+    expect(odds.reduce((s, o) => s + o.eighth, 0)).toBeCloseTo(1, 10);
+    expect(odds[0].seventh).toBeGreaterThan(0.6);
+    expect(odds[2].seventh + odds[3].seventh).toBe(0);
+  });
+});

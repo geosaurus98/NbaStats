@@ -5,6 +5,7 @@ import { allSnapshotPlayers, fetchAthlete, fetchGameLog, seasonShots } from '../
 import type { GameLogEntry, LogSeasonType, PlayerProfile } from '../api/types';
 import { LineChart } from '../components/Charts';
 import { SeasonShotMap } from '../components/SeasonShotMap';
+import { PlayerHeadToHead } from '../components/PlayerHeadToHead';
 import { ErrorBox, Loading } from '../components/Status';
 import { useAsync } from '../hooks/useAsync';
 import { averages, statValue, type Averages } from '../lib/playerStats';
@@ -192,6 +193,8 @@ export function Compare() {
               yFormat={(v) => (Number.isInteger(v) ? String(v) : v.toFixed(1))}
             />
           </div>
+
+          <PlayerHeadToHead players={players.map((p) => ({ id: p.id, name: nameOf(p) }))} />
 
           {shots && players.some((p) => shots.players[p.id]) && (
             <>

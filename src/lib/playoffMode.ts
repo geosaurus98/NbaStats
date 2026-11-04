@@ -152,3 +152,37 @@ export function useBracket(season: number): [BracketPicks, (next: BracketPicks) 
   );
   return [picks, save];
 }
+
+export interface PlayInOdds {
+  teamId: string;
+  seed: number;
+  /** Chance of finishing as the 7th seed, the 8th seed, or out. */
+  seventh: number;
+  eighth: number;
+  out: number;
+}
+
+/**
+ * The play-in for one conference from Elo ratings: 7 hosts 8 (winner is the
+ * 7th seed), 9 hosts 10 (loser is out), then the 7-v-8 loser hosts the 9-v-10
+ * winner for the 8th seed. `ids` are the 7th to 10th seeds in order.
+ */
+export function playIn(ids: [string, string, string, string], rating: (id: string) => number): PlayInOdds[] {
+  const [s7, s8, s9, s10] = ids;
+  const p = (home: string, away: string) => winProb(rating(home), rating(away));
+  const out = new Map(ids.map((id, i) => [id, { teamId: id, seed: i + 7, seventh: 0, eighth: 0, out: 0 }]));
+  const pA = p(s7, s8);
+  const pB = p(s9, s10);
+  for (const [winA, loseA, wA] of [[s7, s8, pA], [s8, s7, 1 - pA]] as const) {
+    out.get(winA)!.seventh += wA;
+    for (const [winB, loseB, wB] of [[s9, s10, pB], [s10, s9, 1 - pB]] as const) {
+      out.get(loseB)!.out += wA * wB;
+      const pC = p(loseA, winB);
+      out.get(loseA)!.eighth += wA * wB * pC;
+      out.get(winB)!.out += wA * wB * pC;
+      out.get(winB)!.eighth += wA * wB * (1 - pC);
+      out.get(loseA)!.out += wA * wB * (1 - pC);
+    }
+  }
+  return [...out.values()];
+}

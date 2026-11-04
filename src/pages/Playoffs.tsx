@@ -4,8 +4,8 @@ import { fetchLeagueGames, fetchStandings, seasonSnapshot } from '../api/espn';
 import { loadLines } from '../api/linesStore';
 import type { Conference } from '../api/types';
 import type { SeasonLines } from '../lib/boxTotals';
-import { oddsPath, projectedFirstRound, roundPoints, scoreBracket, seriesLeaders, seriesProb, useBracket, type BracketPicks } from '../lib/playoffMode';
-import { ELO_MEAN, ratingsAt, runElo, type EloRun } from '../lib/projections';
+import { oddsPath, playIn, projectedFirstRound, roundPoints, scoreBracket, seriesLeaders, seriesProb, useBracket, type BracketPicks } from '../lib/playoffMode';
+import { ELO_MEAN, ratingsAt, runElo, winProb as winProbHome, type EloRun } from '../lib/projections';
 import { Empty, ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
@@ -193,6 +193,48 @@ function Projected({ standings, elo }: { standings: Conference[]; elo: EloRun })
             </table>
           </div>
         ))}
+      </div>
+      <h2>Play-in</h2>
+      <p className="muted small">Seeds 7 to 10 from the current standings. The 7th seed hosts the 8th (the winner is the 7th seed); the 9th hosts the 10th (the loser is out); then the 7-v-8 loser hosts the 9-v-10 winner for the 8th seed. Odds from Elo ratings with home court. In the 3-2-1 lottery, the 9th and 10th seeds get 2 lottery balls and the 7-v-8 losers 1, whatever happens next.</p>
+      <div className="two-col">
+        {standings.map((c) => {
+          const rows = [...c.rows].sort((a, b) => (a.seed ?? 99) - (b.seed ?? 99));
+          if (rows.length < 10) return null;
+          const ids = rows.slice(6, 10).map((x) => x.team.id) as [string, string, string, string];
+          const odds = playIn(ids, r);
+          const pA = winProbHome(r(ids[0]), r(ids[1]));
+          const pB = winProbHome(r(ids[2]), r(ids[3]));
+          return (
+            <div key={c.name} className="table-wrap">
+              <h3 className="table-title">{c.name}</h3>
+              <p className="small muted playin-games">
+                7 v 8: {rows[6].team.abbr} {Math.round(pA * 100)}% · 9 v 10: {rows[8].team.abbr} {Math.round(pB * 100)}%
+              </p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Seed</th>
+                    <th className="left">Team</th>
+                    <th>7th seed</th>
+                    <th>8th seed</th>
+                    <th>Out</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {odds.map((o, i) => (
+                    <tr key={o.teamId}>
+                      <td>{o.seed}</td>
+                      <td className="left"><Link to={`/team/${o.teamId}`} className="team-cell"><TeamLogo team={rows[6 + i].team} size={20} />{rows[6 + i].team.abbr}</Link></td>
+                      <td>{Math.round(o.seventh * 100)}%</td>
+                      <td>{Math.round(o.eighth * 100)}%</td>
+                      <td className="muted">{Math.round(o.out * 100)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })}
       </div>
     </>
   );

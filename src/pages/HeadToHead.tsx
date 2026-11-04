@@ -7,6 +7,8 @@ import { useAsync } from '../hooks/useAsync';
 import { formatShortDate, formatTime } from '../lib/dates';
 import { involves, isFinal, sides, teamRecords, won } from '../lib/league';
 import { useSeason } from '../SeasonContext';
+import { seasonShots } from '../api/espn';
+import { SeasonShotMap } from '../components/SeasonShotMap';
 
 export function HeadToHead() {
   const { season } = useSeason();
@@ -52,6 +54,7 @@ export function HeadToHead() {
       {h2h.loading && a && b && a !== b && <Loading />}
       {h2h.error && <ErrorBox error={h2h.error} />}
       {h2h.data && teamA && teamB && <Comparison a={teamA} b={teamB} {...h2h.data} />}
+      {teamA && teamB && a !== b && <ShotMaps season={season.year} teams={[teamA, teamB]} />}
     </section>
   );
 }
@@ -154,6 +157,26 @@ function Comparison({ a, b, meetings, seasonA, seasonB }: { a: TeamRef; b: TeamR
           </table>
         </div>
       )}
+    </>
+  );
+}
+
+/** Both teams' season shot maps side by side (red = hot, blue = cold against the league). */
+function ShotMaps({ season, teams }: { season: number; teams: [TeamRef, TeamRef] }) {
+  const shots = seasonShots(season, 2);
+  if (!shots || !teams.some((t) => shots.teams[t.id])) return null;
+  return (
+    <>
+      <h2>Where they shoot from</h2>
+      <div className="compare-shots">
+        {teams.map((t) =>
+          shots.teams[t.id] ? (
+            <SeasonShotMap key={t.id} title={t.name} bins={shots.teams[t.id]} size={shots.teamSize} league={shots.league} leagueSize={shots.teamSize} />
+          ) : (
+            <div key={t.id} className="card muted small">{t.name}: no shot data.</div>
+          ),
+        )}
+      </div>
     </>
   );
 }

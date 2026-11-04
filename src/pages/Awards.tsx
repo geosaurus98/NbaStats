@@ -34,6 +34,7 @@ export function Awards() {
   const [params, setParams] = useSearchParams();
   const award = (AWARDS.find((a) => a.id === params.get('award'))?.id ?? 'mvp') as AwardId;
   const past = params.get('award') === 'history';
+  const allTeams = params.get('award') === 'teams';
   const snap = seasonSnapshot(season.year);
   const model = useMemo(() => (snap ? candidates(snap) : undefined), [snap]);
   const ranked = useMemo(() => (model ? rankAward(award, model.list, model.leagueDrtg) : []), [model, award]);
@@ -62,12 +63,15 @@ export function Awards() {
       <h2 className="sr-only">Award races</h2>
       <div className="tabs">
         {AWARDS.map((a) => (
-          <button key={a.id} className={a.id === award && !past ? 'active' : ''} aria-pressed={a.id === award && !past} onClick={() => setParams({ award: a.id }, { replace: true })}>{a.name}</button>
+          <button key={a.id} className={a.id === award && !past && !allTeams ? 'active' : ''} aria-pressed={a.id === award && !past && !allTeams} onClick={() => setParams({ award: a.id }, { replace: true })}>{a.name}</button>
         ))}
+        <button className={allTeams ? 'active' : ''} aria-pressed={allTeams} onClick={() => setParams({ award: 'teams' }, { replace: true })}>All-NBA teams</button>
         <button className={past ? 'active' : ''} aria-pressed={past} onClick={() => setParams({ award: 'history' }, { replace: true })}>Past winners & voting</button>
       </div>
       {past ? (
         <PastAwards />
+      ) : allTeams ? (
+        model?.list.length ? <AllTeams list={model.list} leagueDrtg={model.leagueDrtg} teams={teams} done={done} /> : <Empty>No box-score totals for this season yet.</Empty>
       ) : !model?.list.length ? (
         <Empty>No box-score totals for this season yet.</Empty>
       ) : (
@@ -189,5 +193,45 @@ function Row({ r, rank, best, award, team, actual, showActual, odds }: { r: Rank
       {odds != null && <td className={odds >= 0.2 ? 'strong' : odds < 0.01 ? 'muted' : undefined}>{odds < 0.01 ? '<1%' : `${Math.round(odds * 100)}%`}</td>}
       {showActual && <td>{actual ? `${Math.round(actual.share * 100)}% · #${actual.rank}` : <span className="muted">–</span>}</td>}
     </tr>
+  );
+}
+
+/** All-NBA (three teams of five, positionless), All-Defensive and All-Rookie (two teams each), from the award models. */
+function AllTeams({ list, leagueDrtg, teams, done }: { list: Parameters<typeof rankAward>[1]; leagueDrtg: number; teams: Map<string, { id: string; abbr: string; name: string; shortName: string; logo?: string }>; done: boolean }) {
+  const groups = [
+    { title: 'All-NBA', award: 'mvp' as AwardId, sets: ['First team', 'Second team', 'Third team'], note: 'From the MVP model. Since 2023-24 the teams are positionless and need the 65-game minimum.' },
+    { title: 'All-Defensive', award: 'dpoy' as AwardId, sets: ['First team', 'Second team'], note: 'From the Defensive Player model (65-game minimum).' },
+    { title: 'All-Rookie', award: 'roy' as AwardId, sets: ['First team', 'Second team'], note: 'From the Rookie of the Year model.' },
+  ];
+  return (
+    <>
+      <p className="muted">{done ? 'The model’s picks for the season.' : 'If the teams were picked today. Early in the season these move a lot.'}</p>
+      {groups.map((g) => {
+        const ranked = rankAward(g.award, list, leagueDrtg).filter((r) => r.eligible).slice(0, g.sets.length * 5);
+        return (
+          <div key={g.title} className="card">
+            <h3>{g.title}</h3>
+            <div className="all-teams">
+              {g.sets.map((label, k) => (
+                <div key={label}>
+                  <h4>{label}</h4>
+                  <ol start={k * 5 + 1}>
+                    {ranked.slice(k * 5, k * 5 + 5).map((r) => {
+                      const t = teams.get(r.c.teamId);
+                      return (
+                        <li key={r.c.id}>
+                          {t && <TeamLogo team={t} size={16} />} <Link to={`/player/${r.c.id}`}>{r.c.name}</Link> <span className="muted small">{t?.abbr} · {r.c.ppg.toFixed(1)}/{r.c.rpg.toFixed(1)}/{r.c.apg.toFixed(1)}</span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              ))}
+            </div>
+            <p className="muted small">{g.note} Numbers are points/rebounds/assists per game.</p>
+          </div>
+        );
+      })}
+    </>
   );
 }

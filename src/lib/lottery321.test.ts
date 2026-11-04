@@ -46,3 +46,15 @@ describe('3-2-1 lottery', () => {
     expect(lottery[0].weight).toBe(140);
   });
 });
+
+describe('3-2-1 repeat limits in the draw', () => {
+  it('keeps limited teams off No. 1 and out of the top five', () => {
+    const { lottery } = lotteryField(teams, '321');
+    const limited = lottery.map((s) => (s.id === 'E11' ? { ...s, noFirst: true } : s.id === 'E12' ? { ...s, noTop5: true } : s));
+    const odds = lotteryOdds(limited, '321', 20_000);
+    const row = (id: string) => odds[limited.findIndex((t) => t.id === id)];
+    expect(row('E11')[0]).toBe(0);
+    expect(row('E11')[1]).toBeGreaterThan(0.08);
+    expect(row('E12').slice(0, 5).reduce((a, b) => a + b, 0)).toBe(0);
+  });
+});

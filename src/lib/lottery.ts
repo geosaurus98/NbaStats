@@ -73,8 +73,9 @@ export function drawLottery(weights: number[], rand: () => number, drawn = DRAWN
 //  - The loser of each 7-v-8 play-in game gets 1 ball (even if it goes on
 //    to win the 8th seed). The 7-v-8 winners aren't in the lottery.
 //  - Picks 17-30 go to everyone else in reverse order of record.
-// Not modelled: no team may win No. 1 two years running or pick in the top
-// five three drafts in a row, and the league can cut a tanking team's odds.
+//  - Repeat limits: last draft's No. 1 can't win No. 1 again, and a team that
+//    picked in the top five in both of the last two drafts can't again.
+// Not modelled: the league's power to cut a tanking team's odds.
 
 export type LotteryFormat = 'classic' | '321';
 
@@ -96,6 +97,9 @@ export interface LotterySlot {
   relegated?: boolean;
   /** Why the team is in the lottery. */
   group: string;
+  /** Repeat limits: can't win No. 1 / can't land in the top five. */
+  noFirst?: boolean;
+  noTop5?: boolean;
 }
 
 export const RELEGATED_FLOOR = 12;
@@ -144,9 +148,12 @@ export function draw321(slots: LotterySlot[], rand: () => number): number[] {
     if (relegated.length && RELEGATED_FLOOR - pick + 1 <= relegated.length) {
       chosen = relegated[0]; // out of draws: the worst record left takes this pick
     } else {
-      let r = rand() * left.reduce((s, i) => s + slots[i].weight, 0);
-      chosen = left[left.length - 1];
-      for (const i of left) {
+      // Repeat limits: some teams sit out the first pick or the top five.
+      const allowed = left.filter((i) => !(pick === 1 && slots[i].noFirst) && !(pick <= 5 && slots[i].noTop5));
+      const pool = allowed.length ? allowed : left;
+      let r = rand() * pool.reduce((s, i) => s + slots[i].weight, 0);
+      chosen = pool[pool.length - 1];
+      for (const i of pool) {
         r -= slots[i].weight;
         if (r < 0) {
           chosen = i;
