@@ -1,5 +1,9 @@
 // Draft grades: each pick's career value against what that slot usually
 // produces, adjusted for how long the class has had to build careers.
+import { allStarCounts, totals, type CareerData } from './careers';
+import type { FranchiseData } from './franchiseData';
+import { franchiseValue } from './franchiseHistory';
+import { franchiseOf } from './franchises';
 
 export interface DraftPick {
   season: number;
@@ -101,4 +105,23 @@ export function teamDrafting(graded: GradedPick[], from: number, to: number): { 
     by.set(p.team, r);
   }
   return [...by.values()].sort((a, b) => b.surplus - a.surplus);
+}
+
+
+/** Every NBA/BAA pick with its career value (franchise ids, not historical codes). */
+export function draftPicksFrom(fd: FranchiseData, careers: CareerData): DraftPick[] {
+  const stars = allStarCounts(careers);
+  return fd.draft
+    .filter((d) => d[1] !== 1)
+    .map((d) => {
+      const t = d[5] >= 0 ? totals(careers.seasons[d[5]] ?? []) : undefined;
+      return { season: d[0], pick: d[2], team: franchiseOf(d[4])?.id ?? d[4], name: d[6], player: d[5], value: t ? franchiseValue(t.values) + (stars.get(d[5]) ?? 0) * 2000 : 0 };
+    });
+}
+
+/** Drafts held during a tenure (dates as Basketball-Reference gives them: "1994-07-21", "1967", "present"). */
+export function draftsDuring(start: string, end: string): (year: number) => boolean {
+  const from = start.length === 4 ? `${start}-01-01` : start;
+  const to = end === 'present' || !end ? '9999-12-31' : end.length === 4 ? `${end}-12-31` : end;
+  return (year) => `${year}-06-25` >= from && `${year}-06-25` <= to;
 }

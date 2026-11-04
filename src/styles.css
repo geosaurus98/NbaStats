@@ -907,3 +907,5 @@ table.zones td.left { white-space: normal; } table.zones { max-width: 100%; }
 .nav-panel-group { display: grid; gap: .05rem; align-content: start; }
 .nav-panel-heading { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; padding: .4rem .6rem .15rem; }
 .nav-panel-all .nav-panel-link { padding: .35rem .6rem; }
+th button.link { color: inherit; font: inherit; text-transform: inherit; letter-spacing: inherit; padding: 0; }
+th.sorted button.link { color: var(--accent); }
