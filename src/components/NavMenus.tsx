@@ -16,6 +16,7 @@ export const MENUS: { label: string; links: MenuLink[] }[] = [
     links: [
       { to: '/standings', label: 'Standings', what: 'Conference tables, the race and the NBA Cup' },
       { to: '/recap', label: 'This week', what: 'The week in the NBA: best games, movers and upsets' },
+      { to: '/review', label: 'Season review', what: 'A whole season on one page: champion, awards, upsets' },
       { to: '/playoffs', label: 'Playoffs', what: 'Bracket, series odds and your bracket challenge' },
       { to: '/projections', label: 'Projections', what: 'Playoff and title odds, power ratings, what if' },
       { to: '/awards', label: 'Awards', what: 'MVP, DPOY and ROY races, and past winners' },

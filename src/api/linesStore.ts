@@ -12,3 +12,6 @@ export function loadLines(year: number): Promise<SeasonLines | undefined> {
   if (!pending.has(year)) pending.set(year, load());
   return pending.get(year)!;
 }
+
+/** Seasons we have every player's lines for, newest first. */
+export const linesYears = (): number[] => [...byYear.keys()].sort((a, b) => b - a);

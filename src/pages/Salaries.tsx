@@ -1,6 +1,7 @@
 // Salaries: every team's payroll against the cap, tax line and aprons, the
 // biggest contracts and the best value for money this season.
 import { Link, useNavigate } from 'react-router-dom';
+import { ContractYearWatch } from '../components/PlayerHistory';
 import { CurrentSeasonNote } from '../components/SeasonNote';
 import { loadSnapshot } from '../api/espn';
 import { SalaryScatter } from '../components/MoreGraphs';
@@ -156,6 +157,7 @@ export function Salaries() {
       <p className="muted small">
         Payrolls from Basketball-Reference, refreshed daily. Totals are the players under contract; they don't include dead money or cap holds, so they can differ a little from official cap sheets. Thresholds: {levels.estimated ? 'estimated (the league hasn\'t published this season\'s yet)' : <a href={levels.source}>NBA</a>}.
       </p>
+      <ContractYearWatch season={DEFAULT_SEASON} />
     </section>
   );
 }

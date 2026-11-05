@@ -129,3 +129,53 @@ export function RefereeTable({ season }: { season: number }) {
     </>
   );
 }
+
+/** Game page: tonight's crew, with each official's numbers this season against the league. */
+export function RefCrew({ officials, season }: { officials: string[]; season: number }) {
+  const snap = seasonSnapshot(season);
+  const lines = useAsync(() => loadLines(season), [season]);
+  const table = useMemo(() => (lines.data && snap?.officials ? refereeTable(lines.data, snap.officials, 1) : undefined), [lines.data, snap]);
+  if (!officials.length) return null;
+  const by = new Map((table?.refs ?? []).map((r) => [r.name, r]));
+  const league = table?.league;
+  const crew = officials.map((name) => ({ name, r: by.get(name) }));
+  const known = crew.filter((c) => c.r && c.r.games >= 5);
+  const avg = (k: 'fouls' | 'fta') => (known.length ? known.reduce((a, c) => a + c.r![k] * c.r!.games, 0) / known.reduce((a, c) => a + c.r!.games, 0) : undefined);
+  const fouls = avg('fouls');
+  return (
+    <div className="card">
+      <h3>Referees</h3>
+      {league && fouls !== undefined && (
+        <p className="small">
+          This crew’s games average <b>{f1(fouls)} fouls</b> and <b>{f1(avg('fta')!)} free throws</b>, against a league average of {f1(league.fouls)} and {f1(league.fta)}
+          {Math.abs(fouls - league.fouls) >= 1 ? ` — expect a ${fouls > league.fouls ? 'whistle-heavy' : 'free-flowing'} game.` : '.'}
+        </p>
+      )}
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th className="left">Official</th>
+              <th>Games</th>
+              <th title="Personal fouls per game, both teams">Fouls</th>
+              <th title="Free-throw attempts per game, both teams">FTA</th>
+              <th>Home win %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {crew.map(({ name, r }) => (
+              <tr key={name}>
+                <td className="left nowrap">{name}</td>
+                <td>{r?.games ?? 0}</td>
+                <td>{r ? f1(r.fouls) : '–'}</td>
+                <td>{r ? f1(r.fta) : '–'}</td>
+                <td>{r ? pct(r.homeWins, r.games) : '–'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="muted small">This season’s regular-season games each official has worked. <Link to="/insights?tab=refs">Every referee →</Link></p>
+    </div>
+  );
+}

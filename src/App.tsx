@@ -39,6 +39,7 @@ const Guide = lazy(() => import('./pages/Guide').then((m) => ({ default: m.Guide
 const Alerts = lazy(() => import('./pages/Alerts').then((m) => ({ default: m.Alerts })));
 const Draft = lazy(() => import('./pages/Draft').then((m) => ({ default: m.Draft })));
 const Coaches = lazy(() => import('./pages/Coaches').then((m) => ({ default: m.Coaches })));
+const SeasonReview = lazy(() => import('./pages/SeasonReview').then((m) => ({ default: m.SeasonReview })));
 const Recap = lazy(() => import('./pages/Recap').then((m) => ({ default: m.Recap })));
 const Trade = lazy(() => import('./pages/Trade').then((m) => ({ default: m.Trade })));
 const Status = lazy(() => import('./pages/Status').then((m) => ({ default: m.Status })));
@@ -111,6 +112,7 @@ export function App() {
           <Route path="/trade" element={<Trade />} />
           <Route path="/recap" element={<Recap />} />
           <Route path="/coaches" element={<Coaches />} />
+          <Route path="/review" element={<SeasonReview />} />
           <Route path="/draft" element={<Draft />} />
         </Routes>
         </Suspense>
