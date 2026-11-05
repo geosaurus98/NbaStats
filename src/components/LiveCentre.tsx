@@ -3,7 +3,7 @@
 // (with their lines and foul trouble), team fouls and the latest plays.
 import { Link } from 'react-router-dom';
 import type { GameSummary, TeamBox } from '../api/types';
-import { currentRun, foulTrouble, mmss, onCourt, teamFouls } from '../lib/liveGame';
+import { currentRun, foulTrouble, fouledOut, mmss, onCourt, teamFouls } from '../lib/liveGame';
 import { TeamLogo } from './TeamLogo';
 
 const periodName = (p: number) => (p <= 4 ? `Q${p}` : `OT${p - 4}`);
@@ -72,7 +72,7 @@ export function LiveCentre({ summary }: { summary: GameSummary }) {
           </li>
         ))}
       </ol>
-      <p className="muted small">Who's on the floor is worked out from ESPN's substitutions, so it can lag a play behind. Players in foul trouble are flagged (2 fouls in the 1st, 3 in the 2nd, 4 in the 3rd, 5 in the 4th).</p>
+      <p className="muted small">Who's on the floor is worked out from ESPN's substitutions, so it can lag a play behind. Players in foul trouble are flagged (2 fouls in the 1st, 3 in the 2nd, 4 in the 3rd, 5 in the 4th and overtime); a sixth foul and they've fouled out.</p>
     </div>
   );
 }
@@ -81,7 +81,10 @@ function Floor({ box, ids, period }: { box: TeamBox; ids: string[]; period: numb
   const col = (l: string) => box.labels.indexOf(l);
   const [pts, reb, ast, pf, min, pm] = ['PTS', 'REB', 'AST', 'PF', 'MIN', '+/-'].map(col);
   const players = ids.map((id) => box.players.find((p) => p.id === id)).filter((p) => !!p);
-  const bench = box.players.filter((p) => !p.dnp && p.id && !ids.includes(p.id) && pf >= 0 && foulTrouble(Number(p.stats[pf]) || 0, period));
+  const fouls = (p: (typeof box.players)[number]) => (pf >= 0 ? Number(p.stats[pf]) || 0 : 0);
+  const others = box.players.filter((p) => !p.dnp && p.id && !ids.includes(p.id));
+  const bench = others.filter((p) => foulTrouble(fouls(p), period));
+  const out = others.filter((p) => fouledOut(fouls(p)));
   return (
     <div className="table-wrap flush">
       <h4 className="team-title"><TeamLogo team={box.team} size={20} /> {box.team.shortName ?? box.team.name}</h4>
@@ -99,7 +102,7 @@ function Floor({ box, ids, period }: { box: TeamBox; ids: string[]; period: numb
         </thead>
         <tbody>
           {players.map((p) => {
-            const fouls = Number(p.stats[pf]) || 0;
+            const f = fouls(p);
             return (
               <tr key={p.id}>
                 <td className="left nowrap"><Link to={`/player/${p.id}`}>{p.shortName ?? p.name}</Link></td>
@@ -107,14 +110,15 @@ function Floor({ box, ids, period }: { box: TeamBox; ids: string[]; period: numb
                 <td>{p.stats[pts] ?? '-'}</td>
                 <td>{p.stats[reb] ?? '-'}</td>
                 <td>{p.stats[ast] ?? '-'}</td>
-                <td className={foulTrouble(fouls, period) ? 'loss' : undefined}>{fouls}{foulTrouble(fouls, period) && <span aria-label="foul trouble"> ⚠</span>}</td>
+                <td className={foulTrouble(f, period) || fouledOut(f) ? 'loss' : undefined}>{f}{fouledOut(f) ? <span className="small"> fouled out</span> : foulTrouble(f, period) && <span aria-label="foul trouble"> ⚠</span>}</td>
                 <td>{p.stats[pm] ?? '-'}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      {bench.length > 0 && <p className="small muted">On the bench in foul trouble: {bench.map((p) => `${p.shortName ?? p.name} (${p.stats[pf]})`).join(', ')}</p>}
+      {bench.length > 0 && <p className="small muted">On the bench in foul trouble: {bench.map((p) => `${p.shortName ?? p.name} (${fouls(p)})`).join(', ')}</p>}
+      {out.length > 0 && <p className="small muted">Fouled out: {out.map((p) => p.shortName ?? p.name).join(', ')}</p>}
     </div>
   );
 }

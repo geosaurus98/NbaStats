@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FeedItem, TeamBox } from '../api/types';
-import { currentRun, foulTrouble, onCourt, teamFouls } from './liveGame';
+import { currentRun, fouledOut, foulTrouble, onCourt, teamFouls } from './liveGame';
 
 const box = (team: string, ids: string[]): TeamBox => ({
   team: { id: team, abbr: team, name: team, shortName: team } as TeamBox['team'],
@@ -30,5 +30,12 @@ describe('live game', () => {
     expect(teamFouls(feed, 1)).toEqual(new Map([['H', 1], ['A', 1]]));
     expect(foulTrouble(2, 1)).toBe(true);
     expect(foulTrouble(3, 3)).toBe(false);
+  });
+  it('treats a sixth foul as fouled out, not foul trouble', () => {
+    expect(fouledOut(6)).toBe(true);
+    expect(fouledOut(5)).toBe(false);
+    expect(foulTrouble(6, 4)).toBe(false);
+    expect(foulTrouble(5, 4)).toBe(true);
+    expect(foulTrouble(5, 5)).toBe(true); // overtime
   });
 });

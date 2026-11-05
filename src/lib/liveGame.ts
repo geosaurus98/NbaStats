@@ -90,8 +90,12 @@ export function teamFouls(feed: FeedItem[], period: number): Map<string, number>
   return out;
 }
 
-/** Personal fouls that usually earn a seat on the bench by this point in the game. */
-export const foulTrouble = (fouls: number, period: number) => fouls >= Math.min(6, Math.max(2, period + 1));
+/** Six personal fouls and a player is out of the game. */
+export const FOUL_LIMIT = 6;
+export const fouledOut = (fouls: number) => fouls >= FOUL_LIMIT;
+
+/** Personal fouls that usually earn a seat on the bench by this point in the game (2 in the 1st up to 5 from the 4th, overtime included); not once fouled out. */
+export const foulTrouble = (fouls: number, period: number) => !fouledOut(fouls) && fouls >= Math.min(FOUL_LIMIT - 1, Math.max(2, period + 1));
 
 /** "4:32" for a number of seconds. */
 export const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
