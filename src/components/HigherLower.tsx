@@ -1,6 +1,7 @@
 // Higher or lower: which of two players had more of a career stat? Keep the
 // streak going; best streak is remembered on this device.
 import { useMemo, useState } from 'react';
+import { inEra, type Era } from '../lib/games';
 import { allStarCounts, perGame, totals, type CareerData } from '../lib/careers';
 import { careerSegments } from '../lib/history';
 import type { Graph } from '../lib/teammates';
@@ -34,19 +35,20 @@ function stats(graph: Graph, data: CareerData): Stat[] {
   ];
 }
 
-export function HigherLower({ graph }: { graph: Graph }) {
+export function HigherLower({ graph, era }: { graph: Graph; era: Era }) {
+  const bestKey = era === 'modern' ? `${BEST_KEY}-since2000` : BEST_KEY;
   const careers = useCareers();
   const pool = useMemo(() => {
     if (!careers.data) return [];
     const d = careers.data;
-    return graph.data.players.map((_, p) => p).filter((p) => totals(d.seasons[p] ?? []).values.pts >= 9000);
-  }, [graph, careers.data]);
+    return graph.data.players.map((_, p) => p).filter((p) => inEra(graph, p, era) && totals(d.seasons[p] ?? []).values.pts >= 9000);
+  }, [graph, careers.data, era]);
   const statList = useMemo(() => (careers.data ? stats(graph, careers.data) : []), [graph, careers.data]);
   const [round, setRound] = useState(0);
   const [streak, setStreak] = useState(0);
   const [best, setBest] = useState(() => {
     try {
-      return Number(localStorage.getItem(BEST_KEY)) || 0;
+      return Number(localStorage.getItem(bestKey)) || 0;
     } catch {
       return 0;
     }
@@ -86,7 +88,7 @@ export function HigherLower({ graph }: { graph: Graph }) {
       if (s > best) {
         setBest(s);
         try {
-          localStorage.setItem(BEST_KEY, String(s));
+          localStorage.setItem(bestKey, String(s));
         } catch {
           /* storage unavailable */
         }

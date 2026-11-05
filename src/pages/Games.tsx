@@ -10,7 +10,7 @@ import { HigherLower } from '../components/HigherLower';
 import { PlayerDatalist } from '../components/PlayerInput';
 import { TeamLogo } from '../components/TeamLogo';
 import { espnLogo, franchiseById } from '../lib/franchises';
-import { franchiseSets, hint, linkingRosters, makeConnect, makeGrid, obscurity, seededRandom, seedFromString, todayKey } from '../lib/games';
+import { franchiseSets, hint, linkingRosters, makeConnect, makeGrid, obscurity, seededRandom, seedFromString, todayKey, dailyKey, randomKey, type Era, ERAS, inEra } from '../lib/games';
 import { useTeammateGraph } from '../lib/teammateStore';
 import { Loading as GraphLoading } from '../components/Status';
 import { bfs, findPlayer, pathTo, seasonLabel, type Graph } from '../lib/teammates';
@@ -60,29 +60,57 @@ function GamesPage({ graph }: { graph: Graph }) {
     { id: 'higher', label: 'Higher or lower' },
   ];
   const tab = tabs.find((t) => t.id === params.get('tab'))?.id ?? 'grid';
+  const [era, setEraState] = useState<Era>(() => {
+    try {
+      return localStorage.getItem(ERA_KEY) === 'modern' ? 'modern' : 'all';
+    } catch {
+      return 'all';
+    }
+  });
+  const setEra = (e: Era) => {
+    setEraState(e);
+    try {
+      localStorage.setItem(ERA_KEY, e);
+    } catch {
+      /* storage unavailable */
+    }
+  };
   return (
     <section>
       <PlayerDatalist graph={graph} />
-      <h1>Games</h1>
+      <div className="page-head">
+        <h1>Games</h1>
+        <div className="segmented" role="group" aria-label="Players from">
+          {ERAS.map((e) => (
+            <button key={e.id} className={era === e.id ? 'active' : ''} aria-pressed={era === e.id} onClick={() => setEra(e.id)}>{e.label}</button>
+          ))}
+        </div>
+      </div>
       <div className="tabs">
         {tabs.map((t) => (
           <button key={t.id} className={tab === t.id ? 'active' : ''} aria-pressed={tab === t.id} onClick={() => setParams({ tab: t.id }, { replace: true })}>{t.label}</button>
         ))}
       </div>
-      {tab === 'grid' && <GridGame graph={graph} />}
-      {tab === 'connect' && <ConnectGame graph={graph} />}
-      {tab === 'guess' && <GuessPlayer graph={graph} />}
-      {tab === 'statline' && <StatLineGame graph={graph} />}
-      {tab === 'reveal' && <CareerReveal graph={graph} />}
-      {tab === 'team' && <GuessTeam graph={graph} />}
-      {tab === 'trivia' && <TriviaGame graph={graph} />}
-      {tab === 'higher' && <HigherLower graph={graph} />}
-      <p className="muted small">Based on every BAA/NBA/ABA roster since 1946-47, grouped into today's franchises (e.g. Seattle counts as OKC).</p>
+      {tab === 'grid' && <GridGame key={era} graph={graph} era={era} />}
+      {tab === 'connect' && <ConnectGame key={era} graph={graph} era={era} />}
+      {tab === 'guess' && <GuessPlayer key={era} graph={graph} era={era} />}
+      {tab === 'statline' && <StatLineGame key={era} graph={graph} era={era} />}
+      {tab === 'reveal' && <CareerReveal key={era} graph={graph} era={era} />}
+      {tab === 'team' && <GuessTeam key={era} graph={graph} era={era} />}
+      {tab === 'trivia' && <TriviaGame key={era} graph={graph} era={era} />}
+      {tab === 'higher' && <HigherLower key={era} graph={graph} era={era} />}
+      <p className="muted small">
+        Based on every BAA/NBA/ABA roster since 1946-47, grouped into today's franchises (e.g. Seattle counts as OKC).
+        {era === 'modern' ? ' Since 2000: players with most of their career from 2000-01 on, and seasons from 2000-01 on. Each version has its own daily puzzles.' : ''}
+      </p>
     </section>
   );
 }
 
 // ---------- Played for both ----------
+
+/** Remembered choice of all-time or since-2000 games. */
+const ERA_KEY = 'nba-games-era';
 
 const GUESSES = 9;
 
@@ -92,11 +120,11 @@ interface GridState {
   gaveUp: boolean;
 }
 
-function GridGame({ graph }: { graph: Graph }) {
+function GridGame({ graph, era }: { graph: Graph; era: Era }) {
   const players = graph.data.players;
-  const [seed, setSeed] = useState(() => `grid-${todayKey()}`);
-  const daily = seed === `grid-${todayKey()}`;
-  const sets = useMemo(() => franchiseSets(graph), [graph]);
+  const [seed, setSeed] = useState(() => dailyKey('grid', era));
+  const daily = seed === dailyKey('grid', era);
+  const sets = useMemo(() => franchiseSets(graph, era), [graph, era]);
   const grid = useMemo(() => makeGrid(graph, seededRandom(seedFromString(seed)), sets), [graph, seed, sets]);
   const fresh: GridState = { picks: Array(9).fill(null), guessesLeft: GUESSES, gaveUp: false };
   const [state, setState] = useState<GridState>(() => load<GridState>(seed) ?? fresh);
@@ -130,6 +158,10 @@ function GridGame({ graph }: { graph: Graph }) {
     }
     const r = Math.floor(active / 3);
     const c = active % 3;
+    if (!inEra(graph, p, era)) {
+      setMessage({ ok: false, text: `${players[p][0]} is mostly before 2000: this grid only counts players since 2000-01 (no guess used).` });
+      return;
+    }
     const ok = grid.answers[r][c].includes(p);
     setState((s) => ({ ...s, guessesLeft: s.guessesLeft - 1, picks: ok ? s.picks.map((x, i) => (i === active ? p : x)) : s.picks }));
     setMessage(
@@ -144,13 +176,13 @@ function GridGame({ graph }: { graph: Graph }) {
   return (
     <>
       <p className="muted">
-        Name a player who played for <b>both</b> the row team and the column team, in any era. {GUESSES} guesses, each player once.
+        Name a player who played for <b>both</b> the row team and the column team, {era === 'modern' ? 'with both stints reaching 2000-01 or later' : 'in any era'}. {GUESSES} guesses, each player once.
         Deeper cuts score more.
       </p>
       <div className="actions">
         <span className="chip static">{daily ? `Daily grid · ${todayKey()}` : 'Random grid'}</span>
-        <button className="chip" onClick={() => setSeed(`grid-random-${Date.now()}`)}>🎲 New random grid</button>
-        {!daily && <button className="chip" onClick={() => setSeed(`grid-${todayKey()}`)}>Back to today's</button>}
+        <button className="chip" onClick={() => setSeed(randomKey('grid', era))}>🎲 New random grid</button>
+        {!daily && <button className="chip" onClick={() => setSeed(dailyKey('grid', era))}>Back to today's</button>}
       </div>
       <div className="grid-game">
         <div />
@@ -246,11 +278,11 @@ interface ConnectState {
   gaveUp: boolean;
 }
 
-function ConnectGame({ graph }: { graph: Graph }) {
+function ConnectGame({ graph, era }: { graph: Graph; era: Era }) {
   const players = graph.data.players;
-  const [seed, setSeed] = useState(() => `connect-${todayKey()}`);
-  const daily = seed === `connect-${todayKey()}`;
-  const puzzle = useMemo(() => makeConnect(graph, seededRandom(seedFromString(seed))), [graph, seed]);
+  const [seed, setSeed] = useState(() => dailyKey('connect', era));
+  const daily = seed === dailyKey('connect', era);
+  const puzzle = useMemo(() => makeConnect(graph, seededRandom(seedFromString(seed)), era), [graph, seed, era]);
   const fresh: ConnectState = { chain: [puzzle.start], hints: 0, gaveUp: false };
   const [state, setState] = useState<ConnectState>(() => load<ConnectState>(seed) ?? fresh);
   const [text, setText] = useState('');
@@ -307,8 +339,8 @@ function ConnectGame({ graph }: { graph: Graph }) {
       </p>
       <div className="actions">
         <span className="chip static">{daily ? `Daily puzzle · ${todayKey()}` : 'Random puzzle'}</span>
-        <button className="chip" onClick={() => setSeed(`connect-random-${Date.now()}`)}>🎲 New random pair</button>
-        {!daily && <button className="chip" onClick={() => setSeed(`connect-${todayKey()}`)}>Back to today's</button>}
+        <button className="chip" onClick={() => setSeed(randomKey('connect', era))}>🎲 New random pair</button>
+        {!daily && <button className="chip" onClick={() => setSeed(dailyKey('connect', era))}>Back to today's</button>}
       </div>
 
       <div className="card connect-card">

@@ -31,9 +31,34 @@ function shuffle<T>(xs: T[], rand: () => number): T[] {
   return a;
 }
 
-/** Franchise ids each player played for. */
-export function franchiseSets(g: Graph): Set<string>[] {
-  return g.data.players.map((_, p) => new Set(careerSegments(g, p).filter((s) => !s.defunct).map((s) => s.key)));
+/** Which players and seasons the games draw on: every era, or since 2000-01. */
+export type Era = 'all' | 'modern';
+/** First season (by the year it ends) of the "since 2000" games. */
+export const MODERN_FROM = 2001;
+export const ERAS: { id: Era; label: string }[] = [
+  { id: 'all', label: 'All time' },
+  { id: 'modern', label: 'Since 2000' },
+];
+/** The first season a game should use: its usual start for all time, 2000-01 for the modern version. */
+export const eraFrom = (era: Era, allTime: number) => (era === 'modern' ? Math.max(MODERN_FROM, allTime) : allTime);
+/** A daily puzzle's key: unchanged for all time (so saved progress carries over), tagged for since 2000. */
+export const dailyKey = (game: string, era: Era, day = todayKey()) => (era === 'modern' ? `${game}-since2000-${day}` : `${game}-${day}`);
+/** A random puzzle's key, tagged by era so each version keeps its own progress. */
+export const randomKey = (game: string, era: Era) => `${game}-random${era === 'modern' ? '-since2000' : ''}-${Date.now()}`;
+
+/** A "since 2000" player: at least half their seasons are 2000-01 or later. */
+export function inEra(g: Graph, p: number, era: Era): boolean {
+  if (era === 'all') return true;
+  const [, first, last] = g.data.players[p];
+  if (last < MODERN_FROM) return false;
+  return (last - Math.max(first, MODERN_FROM) + 1) * 2 >= last - first + 1;
+}
+
+/** Franchise ids each player played for (for since 2000, only stints that reach 2000-01). */
+export function franchiseSets(g: Graph, era: Era = 'all'): Set<string>[] {
+  return g.data.players.map((_, p) =>
+    inEra(g, p, era) ? new Set(careerSegments(g, p).filter((s) => !s.defunct && (era === 'all' || s.to >= MODERN_FROM)).map((s) => s.key)) : new Set<string>(),
+  );
 }
 
 export interface Grid {
@@ -71,9 +96,9 @@ export interface ConnectPuzzle {
   optimal: number;
 }
 
-/** Two well-known players (8+ seasons, from different eras) 3–4 links apart. */
-export function makeConnect(g: Graph, rand: () => number): ConnectPuzzle {
-  const known = g.data.players.map((_, p) => p).filter((p) => g.data.players[p][2] - g.data.players[p][1] >= 8);
+/** Two well-known players (8+ seasons) 3–4 links apart; for since 2000, both from that era. */
+export function makeConnect(g: Graph, rand: () => number, era: Era = 'all'): ConnectPuzzle {
+  const known = g.data.players.map((_, p) => p).filter((p) => g.data.players[p][2] - g.data.players[p][1] >= 8 && inEra(g, p, era));
   for (let attempt = 0; attempt < 500; attempt++) {
     const start = known[Math.floor(rand() * known.length)];
     const s = bfs(g, start);

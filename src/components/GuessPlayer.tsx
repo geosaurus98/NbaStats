@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { allStarCounts, perGame, totals, type CareerData } from '../lib/careers';
 import { careerSegments } from '../lib/history';
-import { seededRandom, seedFromString, todayKey } from '../lib/games';
+import { seededRandom, seedFromString, todayKey, dailyKey, randomKey, type Era, inEra } from '../lib/games';
 import { findPlayer, type Graph } from '../lib/teammates';
 import { useCareers } from './CareerStats';
 import { ShareButton } from './ShareButton';
@@ -30,13 +30,13 @@ function save(k: string, v: unknown) {
 }
 
 /** Well-known players with an interesting path: 3+ franchises, modern era, big career. */
-function candidates(graph: Graph, data: CareerData): number[] {
+function candidates(graph: Graph, data: CareerData, era: Era): number[] {
   const stars = allStarCounts(data);
   return graph.data.players
     .map((_, p) => p)
     .filter((p) => {
       const [, , last] = graph.data.players[p];
-      if (last < 1985) return false;
+      if (last < 1985 || !inEra(graph, p, era)) return false;
       const keys = new Set(careerSegments(graph, p).map((s) => s.key));
       if (keys.size < 3) return false;
       const t = totals(data.seasons[p] ?? []);
@@ -49,11 +49,11 @@ interface State {
   done: boolean;
 }
 
-export function GuessPlayer({ graph }: { graph: Graph }) {
+export function GuessPlayer({ graph, era }: { graph: Graph; era: Era }) {
   const careers = useCareers();
-  const [seed, setSeed] = useState(() => `guess-${todayKey()}`);
-  const daily = seed === `guess-${todayKey()}`;
-  const pool = useMemo(() => (careers.data ? candidates(graph, careers.data) : []), [graph, careers.data]);
+  const [seed, setSeed] = useState(() => dailyKey('guess', era));
+  const daily = seed === dailyKey('guess', era);
+  const pool = useMemo(() => (careers.data ? candidates(graph, careers.data, era) : []), [graph, careers.data, era]);
   const target = pool.length ? pool[Math.floor(seededRandom(seedFromString(seed))() * pool.length)] : undefined;
   const [state, setState] = useState<State>(() => load<State>(seed) ?? { guesses: [], done: false });
   const [text, setText] = useState('');
@@ -104,8 +104,8 @@ export function GuessPlayer({ graph }: { graph: Graph }) {
       <p className="muted">Whose career is this? Teams in order (today's franchise names). {GUESSES} guesses; every miss unlocks a hint.</p>
       <div className="actions">
         <span className="chip static">{daily ? `Daily · ${todayKey()}` : 'Random player'}</span>
-        <button className="chip" onClick={() => setSeed(`guess-random-${Date.now()}`)}>🎲 New random player</button>
-        {!daily && <button className="chip" onClick={() => setSeed(`guess-${todayKey()}`)}>Back to today's</button>}
+        <button className="chip" onClick={() => setSeed(randomKey('guess', era))}>🎲 New random player</button>
+        {!daily && <button className="chip" onClick={() => setSeed(dailyKey('guess', era))}>Back to today's</button>}
       </div>
       <div className="card connect-card">
         <div className="path-clue">
