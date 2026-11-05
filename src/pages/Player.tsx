@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { InjuryHistoryCard, VsTeamsCard } from '../components/PlayerHistory';
 import { PlayerDevelopment } from '../components/Development';
 import { RestCard } from '../components/SeasonExtras';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -177,6 +178,8 @@ export function Player() {
           {type === 'regular' && <PlayerTimeline playerId={id} season={season.year} />}
           <GameCalendar playerId={id} season={season.year} />
           {type === 'regular' && <RestCard playerId={id} season={season.year} />}
+          <VsTeamsCard playerId={id} />
+          <InjuryHistoryCard playerId={id} />
           {games.length > 0 && (
             <>
               <h2>Game log</h2>

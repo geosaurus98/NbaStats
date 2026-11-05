@@ -16,6 +16,7 @@ import { Empty } from '../components/Status';
 import { BackToBackTable } from '../components/SeasonExtras';
 import { RefereeTable } from '../components/Officiating';
 import { DevelopmentTable } from '../components/Development';
+import { ClutchShots } from '../components/ClutchShots';
 import { TeamLogo } from '../components/TeamLogo';
 import { formatShortDate } from '../lib/dates';
 import type { DramaRow } from '../lib/pbpStats';
@@ -26,6 +27,7 @@ const TABS = [
   { id: 'night', label: 'Player of the night' },
   { id: 'hot', label: 'Hot & cold' },
   { id: 'clutch', label: 'Clutch' },
+  { id: 'clutchshots', label: 'Clutch shots' },
   { id: 'refs', label: 'Referees' },
   { id: 'combos', label: 'Duos & trios' },
   { id: 'duos', label: 'Passing duos' },
@@ -40,7 +42,7 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 const GROUPS: TabGroup<Tab>[] = [
-  { label: 'Games & form', tabs: TABS.filter((t) => (['drama', 'night', 'hot', 'clutch', 'refs'] as Tab[]).includes(t.id)) },
+  { label: 'Games & form', tabs: TABS.filter((t) => (['drama', 'night', 'hot', 'clutch', 'clutchshots', 'refs'] as Tab[]).includes(t.id)) },
   { label: 'Shooting', tabs: TABS.filter((t) => (['zones', 'shots', 'hothand', 'situations'] as Tab[]).includes(t.id)) },
   { label: 'Players', tabs: TABS.filter((t) => (['usage', 'archetypes', 'combos', 'duos', 'rest', 'dev'] as Tab[]).includes(t.id)) },
 ];
@@ -82,6 +84,7 @@ export function Insights() {
       {hasData && tab === 'archetypes' && <ArchetypesView season={season.year} />}
       {hasData && tab === 'hothand' && <HotHandView season={season.year} type={type} />}
       {hasData && tab === 'situations' && <ShotSituations season={season.year} type={type} />}
+      {hasData && tab === 'clutchshots' && <ClutchShots season={season.year} type={type} />}
       {hasData && tab === 'dev' && <DevelopmentTable season={season.year} />}
       {hasData && tab === 'refs' && <RefereeTable season={season.year} />}
       {hasData && tab === 'rest' && <BackToBackTable season={season.year} />}

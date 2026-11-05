@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { RefCrew } from '../components/Officiating';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { fetchSummary } from '../api/espn';
 import { aggregateAssists } from '../api/normalize';
@@ -107,6 +108,7 @@ export function Game() {
           <GamePreview game={game} season={seasonOf(game.date)} />
           <MatchupNumbers game={game} season={seasonOf(game.date)} />
           <ProjectedBox game={game} season={seasonOf(game.date)} />
+          {data.officials?.length ? <RefCrew officials={data.officials} season={seasonOf(game.date)} /> : <p className="muted small">The referees are usually named on the morning of the game.</p>}
           <p className="muted">Box score will appear once the game tips off.</p>
         </>
       ) : (
@@ -123,6 +125,7 @@ export function Game() {
                 <BoxScore key={t.team.id} box={t} />
               ))}
               {teams.length === 2 && teams[0].teamStats.length > 0 && <TeamComparison a={teams[0]} b={teams[1]} />}
+              {data.officials?.length ? <RefCrew officials={data.officials} season={seasonOf(game.date)} /> : null}
             </>
           )}
           {tab === 'charts' && (
