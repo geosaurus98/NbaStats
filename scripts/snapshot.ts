@@ -16,6 +16,7 @@ import { GarbageAccumulator } from '../src/lib/garbageTime';
 import { QuarterAccumulator } from '../src/lib/quarters';
 import { RunAccumulator } from '../src/lib/runs';
 import { TimeoutAccumulator } from '../src/lib/timeouts';
+import { gameClutchShots, type ClutchShot } from '../src/lib/clutchShots';
 import { HotHandAccumulator } from '../src/lib/hotHand';
 import { SituationAccumulator } from '../src/lib/situations';
 import { WpaAccumulator } from '../src/lib/wpa';
@@ -46,6 +47,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
   const wpa = new WpaAccumulator();
   const runs = new RunAccumulator();
   const timeouts = new TimeoutAccumulator();
+  const clutchShots: ClutchShot[] = [];
   const officials: Record<string, string[]> = {};
   const timeoutTexts = new Map<string, number>();
   const hotHand = new HotHandAccumulator();
@@ -82,6 +84,9 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     quarters.add(s.game.home.team.id, s.game.home.linescores, s.game.away.linescores);
     runs.add(id, s.game.home.team.id, s.game.away.team.id, s.pbp.feed);
     timeouts.add(s.pbp.feed, s.game.home.team.id, s.game.away.team.id);
+    clutchShots.push(
+      ...gameClutchShots(id, s.pbp.feed, s.game.home.team.id, Object.fromEntries(s.teams.flatMap((t) => t.players.map((p) => [p.id, t.team.id]))), (s.game.home.score ?? 0) > (s.game.away.score ?? 0)),
+    );
     for (const f of s.pbp.feed) {
       if (!/time ?out/i.test(f.text)) continue;
       const k = `${f.teamId ? 'team' : 'none'}: ${f.text.replace(/^.*?(?=(full |20 sec\. |official |)time ?out)/i, '<X> ')}`;
@@ -137,7 +142,7 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
   };
   console.log(`  timeout texts: ${JSON.stringify([...timeoutTexts].sort((a, b) => b[1] - a[1]).slice(0, 12))}`);
   console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
-  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums), garbage: garbage.result(), quarters: quarters.result(), wpa: wpa.result(), runs: runs.result(), timeouts: timeouts.result(), officials, hotHand: hotHand.result(), situations: situations.result() };
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums), garbage: garbage.result(), quarters: quarters.result(), wpa: wpa.result(), runs: runs.result(), timeouts: timeouts.result(), officials, clutchShots, hotHand: hotHand.result(), situations: situations.result() };
 }
 
 const SORTS = [
@@ -195,6 +200,9 @@ async function build(year: number): Promise<SeasonSnapshot> {
     snap.runs[type] = pbp.runs;
     snap.timeouts ??= {};
     snap.timeouts[type] = pbp.timeouts;
+    snap.clutchShots ??= {};
+    snap.clutchShots[type] = pbp.clutchShots;
+    console.log(`  clutch shots: ${pbp.clutchShots.length} (${pbp.clutchShots.filter((x) => x[5]).length} made), e.g. ${JSON.stringify(pbp.clutchShots[0])}`);
     snap.officials = { ...snap.officials, ...pbp.officials };
     const tRows = Object.values(pbp.timeouts.teams);
     console.log(`  timeouts: ${tRows.reduce((a, r) => a + r[1], 0)} called in ${tRows.reduce((a, r) => a + r[0], 0) / 2} games, ${tRows.reduce((a, r) => a + r[2], 0)} during runs; officials for ${Object.keys(pbp.officials).length} games, e.g. ${JSON.stringify(Object.values(pbp.officials)[0])}`);
