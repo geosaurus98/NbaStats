@@ -3,6 +3,7 @@
 // limits). A full season of games fits in ~100 KB instead of ~45 MB of raw
 // team schedules.
 import type { SeasonHighsResult } from './live';
+import type { TimeoutTotals } from '../lib/timeouts';
 import type { PayrollPlayer } from '../lib/brefContracts';
 import type { Injury } from './types';
 import type { BoxTotals } from '../lib/boxTotals';
@@ -64,6 +65,10 @@ export interface SeasonSnapshot {
   hotHand?: Record<string, HotHand>;
   /** Per season type: shots by time into the possession, after timeouts and by score. */
   situations?: Record<string, Situations>;
+  /** Per season type: timeouts called, and what followed timeouts during an opponent run against runs left alone. */
+  timeouts?: Record<string, TimeoutTotals>;
+  /** Every game's referees, by game id. */
+  officials?: Record<string, string[]>;
   /** Regular season: rookies' draft [year, round, overall pick], null = undrafted. */
   rookieDraft?: Record<string, [number, number, number] | null>;
   /** Regular season: the best three lines of each of the last 14 nights, newest first. */

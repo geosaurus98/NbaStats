@@ -173,7 +173,7 @@ describe('normalizeSummary', () => {
           },
         ],
       },
-      gameInfo: { venue: { fullName: 'Crypto.com Arena' } },
+      gameInfo: { venue: { fullName: 'Crypto.com Arena' }, officials: [{ displayName: 'Scott Foster' }, { fullName: 'Tony Brothers' }] },
       boxscore: {
         teams: [{ team: { id: '13' }, statistics: [{ label: 'Rebounds', displayValue: '44' }] }],
         players: [
@@ -195,6 +195,7 @@ describe('normalizeSummary', () => {
     });
     expect(s.game.id).toBe('401');
     expect(s.game.venue).toBe('Crypto.com Arena');
+    expect(s.officials).toEqual(['Scott Foster', 'Tony Brothers']);
     expect(s.teams[0].labels).toEqual(['MIN', 'PTS']);
     expect(s.teams[0].players[0]).toMatchObject({ name: 'Luka Doncic', starter: true, dnp: false, stats: ['38', '35'] });
     expect(s.teams[0].players[1].dnp).toBe(true);

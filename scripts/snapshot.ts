@@ -15,6 +15,7 @@ import { ShotSplitAccumulator } from '../src/lib/shotTypes';
 import { GarbageAccumulator } from '../src/lib/garbageTime';
 import { QuarterAccumulator } from '../src/lib/quarters';
 import { RunAccumulator } from '../src/lib/runs';
+import { TimeoutAccumulator } from '../src/lib/timeouts';
 import { HotHandAccumulator } from '../src/lib/hotHand';
 import { SituationAccumulator } from '../src/lib/situations';
 import { WpaAccumulator } from '../src/lib/wpa';
@@ -44,6 +45,9 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
   const quarters = new QuarterAccumulator();
   const wpa = new WpaAccumulator();
   const runs = new RunAccumulator();
+  const timeouts = new TimeoutAccumulator();
+  const officials: Record<string, string[]> = {};
+  const timeoutTexts = new Map<string, number>();
   const hotHand = new HotHandAccumulator();
   const situations = new SituationAccumulator();
   const teamStatSums = new Map<string, { gp: number; sums: Record<string, number> }>();
@@ -77,6 +81,13 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     for (const t of s.teams) for (const p of t.players) if (p.id && p.name) fullNames[p.id] = p.name;
     quarters.add(s.game.home.team.id, s.game.home.linescores, s.game.away.linescores);
     runs.add(id, s.game.home.team.id, s.game.away.team.id, s.pbp.feed);
+    timeouts.add(s.pbp.feed, s.game.home.team.id, s.game.away.team.id);
+    for (const f of s.pbp.feed) {
+      if (!/time ?out/i.test(f.text)) continue;
+      const k = `${f.teamId ? 'team' : 'none'}: ${f.text.replace(/^.*?(?=(full |20 sec\. |official |)time ?out)/i, '<X> ')}`;
+      timeoutTexts.set(k, (timeoutTexts.get(k) ?? 0) + 1);
+    }
+    if (s.officials?.length) officials[id] = s.officials;
     wpa.add(id, s.pbp.feed, s.game.home.team.id, Object.fromEntries(s.teams.flatMap((t) => t.players.map((p) => [p.id, t.team.id]))));
     quarters.add(s.game.away.team.id, s.game.away.linescores, s.game.home.linescores);
     // Team box-score extras ESPN reports per game (points in the paint, fast break points…): sum the plain numbers.
@@ -124,8 +135,9 @@ async function playByPlay(gameIds: string[], notCounted = new Set<string>()) {
     teams: Object.fromEntries([...teams].map(([id, b]) => [id, b.rows()])),
     players: Object.fromEntries(top.map(([id, p]) => [id, { name: names[id] ?? id, team: p.team, attempts: p.bins.attempts, bins: p.bins.rows() }])),
   };
+  console.log(`  timeout texts: ${JSON.stringify([...timeoutTexts].sort((a, b) => b[1] - a[1]).slice(0, 12))}`);
   console.log(`  play-by-play: ${gameIds.length - failed}/${gameIds.length} games, ${league.attempts} shots, ${drama.length} drama rows`);
-  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums), garbage: garbage.result(), quarters: quarters.result(), wpa: wpa.result(), runs: runs.result(), hotHand: hotHand.result(), situations: situations.result() };
+  return { assists: aggregateAssists(events, names), drama, shots, fullNames, lineups: lineups.result(), box: box.result(), clutch: clutch.result(), lines, shotSplits: shotSplits.result(), teamStatSums: Object.fromEntries(teamStatSums), garbage: garbage.result(), quarters: quarters.result(), wpa: wpa.result(), runs: runs.result(), timeouts: timeouts.result(), officials, hotHand: hotHand.result(), situations: situations.result() };
 }
 
 const SORTS = [
@@ -181,6 +193,11 @@ async function build(year: number): Promise<SeasonSnapshot> {
     snap.wpa[type] = pbp.wpa;
     snap.runs ??= {};
     snap.runs[type] = pbp.runs;
+    snap.timeouts ??= {};
+    snap.timeouts[type] = pbp.timeouts;
+    snap.officials = { ...snap.officials, ...pbp.officials };
+    const tRows = Object.values(pbp.timeouts.teams);
+    console.log(`  timeouts: ${tRows.reduce((a, r) => a + r[1], 0)} called in ${tRows.reduce((a, r) => a + r[0], 0) / 2} games, ${tRows.reduce((a, r) => a + r[2], 0)} during runs; officials for ${Object.keys(pbp.officials).length} games, e.g. ${JSON.stringify(Object.values(pbp.officials)[0])}`);
     snap.hotHand ??= {};
     snap.hotHand[type] = pbp.hotHand;
     snap.situations ??= {};
