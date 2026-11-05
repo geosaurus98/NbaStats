@@ -81,6 +81,8 @@ export interface GameSummary {
   game: Game;
   teams: TeamBox[];
   pbp: PlayByPlay;
+  /** The game's referees, when ESPN lists them. */
+  officials?: string[];
 }
 
 export interface LeaderRow {

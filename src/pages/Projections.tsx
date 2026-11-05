@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ModelReportCard, PowerPoll } from '../components/SeasonExtras';
+import { PickEm } from '../components/PickEm';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { fetchLeagueGames, fetchStandings } from '../api/espn';
 import type { Conference, Game, TeamRef } from '../api/types';
@@ -55,7 +56,7 @@ export async function buildModel(season: number, sims = SIMS): Promise<Model> {
 export function Projections() {
   const { season } = useSeason();
   const [params, setParams] = useSearchParams();
-  const tab = (['ratings', 'whatif', 'injury', 'preseason', 'report', 'poll'] as const).find((t) => t === params.get('tab')) ?? 'odds';
+  const tab = (['ratings', 'whatif', 'injury', 'preseason', 'report', 'poll', 'pickem'] as const).find((t) => t === params.get('tab')) ?? 'odds';
   const { data, error, loading } = useAsync(() => buildModel(season.year), [season.year]);
   // The draft lottery moved to the Draft hub.
   if (params.get('tab') === 'lottery') return <Navigate to="/draft" replace />;
@@ -72,6 +73,7 @@ export function Projections() {
         <button className={tab === 'preseason' ? 'active' : ''} aria-pressed={tab === 'preseason'} onClick={() => setParams({ tab: 'preseason' }, { replace: true })}>Preseason vs now</button>
         <button className={tab === 'report' ? 'active' : ''} aria-pressed={tab === 'report'} onClick={() => setParams({ tab: 'report' }, { replace: true })}>Model report card</button>
         <button className={tab === 'poll' ? 'active' : ''} aria-pressed={tab === 'poll'} onClick={() => setParams({ tab: 'poll' }, { replace: true })}>Your power poll</button>
+        <button className={tab === 'pickem' ? 'active' : ''} aria-pressed={tab === 'pickem'} onClick={() => setParams({ tab: 'pickem' }, { replace: true })}>Pick'em</button>
       </div>
       {loading && <Loading label="Rating every team and simulating the season…" />}
       {error && <ErrorBox error={error} />}
@@ -82,6 +84,7 @@ export function Projections() {
       {data && tab === 'preseason' && <PreseasonVsNow model={data} season={season.year} />}
       {data && tab === 'report' && <ModelReportCard model={data} />}
       {data && tab === 'poll' && <PowerPoll model={data} season={season.year} />}
+      {data && tab === 'pickem' && <PickEm model={data} season={season.year} />}
       <p className="muted small">
         Elo ratings (FiveThirtyEight-style: margin of victory, 100-point home edge, last season carried over at 75%). Odds come from
         simulating the remaining regular season, the play-in and every playoff series {SIMS.toLocaleString()} times. Ties in the

@@ -14,6 +14,8 @@ import { HotHandView } from '../components/HotHand';
 import { ShotSituations } from '../components/ShotSituations';
 import { Empty } from '../components/Status';
 import { BackToBackTable } from '../components/SeasonExtras';
+import { RefereeTable } from '../components/Officiating';
+import { DevelopmentTable } from '../components/Development';
 import { TeamLogo } from '../components/TeamLogo';
 import { formatShortDate } from '../lib/dates';
 import type { DramaRow } from '../lib/pbpStats';
@@ -24,6 +26,7 @@ const TABS = [
   { id: 'night', label: 'Player of the night' },
   { id: 'hot', label: 'Hot & cold' },
   { id: 'clutch', label: 'Clutch' },
+  { id: 'refs', label: 'Referees' },
   { id: 'combos', label: 'Duos & trios' },
   { id: 'duos', label: 'Passing duos' },
   { id: 'zones', label: 'Shooting zones' },
@@ -33,15 +36,16 @@ const TABS = [
   { id: 'usage', label: 'Usage vs efficiency' },
   { id: 'archetypes', label: 'Player archetypes' },
   { id: 'rest', label: 'Rest & fatigue' },
+  { id: 'dev', label: 'Development' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 const GROUPS: TabGroup<Tab>[] = [
-  { label: 'Games & form', tabs: TABS.filter((t) => (['drama', 'night', 'hot', 'clutch'] as Tab[]).includes(t.id)) },
+  { label: 'Games & form', tabs: TABS.filter((t) => (['drama', 'night', 'hot', 'clutch', 'refs'] as Tab[]).includes(t.id)) },
   { label: 'Shooting', tabs: TABS.filter((t) => (['zones', 'shots', 'hothand', 'situations'] as Tab[]).includes(t.id)) },
-  { label: 'Players', tabs: TABS.filter((t) => (['usage', 'archetypes', 'combos', 'duos', 'rest'] as Tab[]).includes(t.id)) },
+  { label: 'Players', tabs: TABS.filter((t) => (['usage', 'archetypes', 'combos', 'duos', 'rest', 'dev'] as Tab[]).includes(t.id)) },
 ];
 /** Tabs that only cover the regular season. */
-const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'usage', 'archetypes', 'rest']);
+const REGULAR_ONLY = new Set<Tab>(['night', 'hot', 'usage', 'archetypes', 'rest', 'refs', 'dev']);
 /** Team tabs that moved to Rankings: old links still work. */
 const MOVED = new Set(['sources', 'styles', 'schedule']);
 
@@ -78,6 +82,8 @@ export function Insights() {
       {hasData && tab === 'archetypes' && <ArchetypesView season={season.year} />}
       {hasData && tab === 'hothand' && <HotHandView season={season.year} type={type} />}
       {hasData && tab === 'situations' && <ShotSituations season={season.year} type={type} />}
+      {hasData && tab === 'dev' && <DevelopmentTable season={season.year} />}
+      {hasData && tab === 'refs' && <RefereeTable season={season.year} />}
       {hasData && tab === 'rest' && <BackToBackTable season={season.year} />}
       {hasData && tab === 'combos' && <Combos season={season.year} type={type} />}
     </section>

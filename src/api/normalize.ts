@@ -203,7 +203,8 @@ export function normalizeSummary(raw: Raw): GameSummary {
     };
   });
 
-  return { game, teams, pbp: normalizePlays(raw, teams) };
+  const officials: string[] = (raw?.gameInfo?.officials ?? []).map((o: Raw) => o?.displayName ?? o?.fullName ?? '').filter(Boolean);
+  return { game, teams, pbp: normalizePlays(raw, teams), ...(officials.length ? { officials } : {}) };
 }
 
 const QUARTER_S = 12 * 60;
