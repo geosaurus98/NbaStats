@@ -15,6 +15,7 @@ import { RecapCard } from '../components/RecapCard';
 import { ErrorBox, Loading } from '../components/Status';
 import { TeamLogo } from '../components/TeamLogo';
 import { useAsync } from '../hooks/useAsync';
+import { fouledOut } from '../lib/liveGame';
 import { formatDay, formatTime, toISODate, usDate } from '../lib/dates';
 
 /** ESPN names a season by the year it ends: games from August on belong to the next one. */
@@ -201,6 +202,7 @@ function TeamComparison({ a, b }: { a: TeamBox; b: TeamBox }) {
 function BoxScore({ box }: { box: TeamBox }) {
   const played = box.players.filter((p) => !p.dnp);
   const dnp = box.players.filter((p) => p.dnp);
+  const pf = box.labels.indexOf('PF');
   return (
     <>
       <h2 className="team-title">
@@ -222,6 +224,7 @@ function BoxScore({ box }: { box: TeamBox }) {
                 <td className="left nowrap">
                   {p.id ? <Link to={`/player/${p.id}`}>{p.name}</Link> : p.name}{' '}
                   {p.position && <span className="muted small">{p.position}</span>}
+                  {pf >= 0 && fouledOut(Number(p.stats[pf]) || 0) && <span className="loss small"> · fouled out</span>}
                 </td>
                 {p.stats.map((s, j) => (
                   <td key={j} className={box.labels[j] === 'PTS' ? 'sorted' : undefined}>{s}</td>
