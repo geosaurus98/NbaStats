@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { allStarCounts, COL, type CareerData } from '../lib/careers';
 import { franchiseOf } from '../lib/franchises';
-import { seededRandom, seedFromString, todayKey } from '../lib/games';
+import { seededRandom, seedFromString, todayKey, dailyKey, randomKey, type Era, eraFrom } from '../lib/games';
 import { findPlayer, seasonLabel, type Graph } from '../lib/teammates';
 import { useCareers } from './CareerStats';
 import { ShareButton } from './ShareButton';
@@ -18,13 +18,13 @@ interface Pick {
   row: number[];
 }
 
-/** Memorable seasons: NBA, 1960 on, 50+ games and either 20+ points a game or an All-Star pick that year. */
-function pool(data: CareerData): Pick[] {
+/** Memorable seasons: NBA, 1960 on (2000-01 on for the since-2000 version), 50+ games and either 20+ points a game or an All-Star pick that year. */
+function pool(data: CareerData, from: number): Pick[] {
   const stars = new Set(data.allStars.map(([s, p]) => `${s}|${p}`));
   const out: Pick[] = [];
   data.seasons.forEach((rows, player) => {
     for (const r of rows) {
-      if (r[COL.lg] !== 0 || r[COL.season] < 1960 || r[COL.g] < 50) continue;
+      if (r[COL.lg] !== 0 || r[COL.season] < from || r[COL.g] < 50) continue;
       if (r[COL.pts] / r[COL.g] >= 20 || stars.has(`${r[COL.season]}|${player}`)) out.push({ player, row: r });
     }
   });
@@ -52,11 +52,11 @@ interface State {
   done: boolean;
 }
 
-export function StatLineGame({ graph }: { graph: Graph }) {
+export function StatLineGame({ graph, era }: { graph: Graph; era: Era }) {
   const careers = useCareers();
-  const [seed, setSeed] = useState(() => `statline-${todayKey()}`);
-  const daily = seed === `statline-${todayKey()}`;
-  const picks = useMemo(() => (careers.data ? pool(careers.data) : []), [careers.data]);
+  const [seed, setSeed] = useState(() => dailyKey('statline', era));
+  const daily = seed === dailyKey('statline', era);
+  const picks = useMemo(() => (careers.data ? pool(careers.data, eraFrom(era, 1960)) : []), [careers.data, era]);
   const target = picks.length ? picks[Math.floor(seededRandom(seedFromString(seed))() * picks.length)] : undefined;
   const [state, setState] = useState<State>(() => load<State>(seed) ?? { guesses: [], done: false });
   const [text, setText] = useState('');
@@ -116,8 +116,8 @@ export function StatLineGame({ graph }: { graph: Graph }) {
       <p className="muted">Whose season is this? {GUESSES} guesses; every miss reveals a hint. "–" means the stat wasn't recorded yet (steals and blocks start in 1973-74, threes in 1979-80).</p>
       <div className="actions">
         <span className="chip static">{daily ? `Daily · ${todayKey()}` : 'Random season'}</span>
-        <button className="chip" onClick={() => setSeed(`statline-random-${Date.now()}`)}>🎲 New random season</button>
-        {!daily && <button className="chip" onClick={() => setSeed(`statline-${todayKey()}`)}>Back to today's</button>}
+        <button className="chip" onClick={() => setSeed(randomKey('statline', era))}>🎲 New random season</button>
+        {!daily && <button className="chip" onClick={() => setSeed(dailyKey('statline', era))}>Back to today's</button>}
       </div>
       <div className="card connect-card">
         <div className="statline">

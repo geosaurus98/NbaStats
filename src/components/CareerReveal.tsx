@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { allStarCounts, COL, type CareerData } from '../lib/careers';
 import { franchiseOf } from '../lib/franchises';
-import { seededRandom, seedFromString, todayKey } from '../lib/games';
+import { seededRandom, seedFromString, todayKey, dailyKey, randomKey, type Era, inEra } from '../lib/games';
 import { findPlayer, seasonLabel, type Graph } from '../lib/teammates';
 import { useCareers } from './CareerStats';
 import { ShareButton } from './ShareButton';
@@ -14,13 +14,13 @@ import { ErrorBox, Loading } from './Status';
 const GUESSES = 8;
 
 /** Notable NBA careers since 1980 with at least six seasons: an All-Star pick, or 15+ points a game over 400+ games. */
-function pool(data: CareerData): number[] {
+function pool(data: CareerData, graph: Graph, era: Era): number[] {
   const stars = allStarCounts(data);
   const out: number[] = [];
   data.seasons.forEach((rows, player) => {
     const nba = rows.filter((r) => r[COL.lg] === 0);
     const seasons = new Set(nba.map((r) => r[COL.season]));
-    if (seasons.size < 6 || Math.min(...seasons) < 1980) return;
+    if (seasons.size < 6 || Math.min(...seasons) < 1980 || !inEra(graph, player, era)) return;
     const g = nba.reduce((a, r) => a + r[COL.g], 0);
     const pts = nba.reduce((a, r) => a + r[COL.pts], 0);
     if ((stars.get(player) ?? 0) > 0 || (g >= 400 && pts / g >= 15)) out.push(player);
@@ -61,11 +61,11 @@ interface State {
   done: boolean;
 }
 
-export function CareerReveal({ graph }: { graph: Graph }) {
+export function CareerReveal({ graph, era }: { graph: Graph; era: Era }) {
   const careers = useCareers();
-  const [seed, setSeed] = useState(() => `reveal-${todayKey()}`);
-  const daily = seed === `reveal-${todayKey()}`;
-  const picks = useMemo(() => (careers.data ? pool(careers.data) : []), [careers.data]);
+  const [seed, setSeed] = useState(() => dailyKey('reveal', era));
+  const daily = seed === dailyKey('reveal', era);
+  const picks = useMemo(() => (careers.data ? pool(careers.data, graph, era) : []), [careers.data, graph, era]);
   const target = picks.length ? picks[Math.floor(seededRandom(seedFromString(seed))() * picks.length)] : undefined;
   const fresh: State = { guesses: [], skips: 0, done: false };
   const [state, setState] = useState<State>(() => load<State>(seed) ?? fresh);
@@ -105,8 +105,8 @@ export function CareerReveal({ graph }: { graph: Graph }) {
       <p className="muted">Whose career is this? It starts with their rookie season; every wrong guess, or a skip, shows the next one. Years and teams stay hidden until the end. {GUESSES} wrong guesses allowed.</p>
       <div className="actions">
         <span className="chip static">{daily ? `Daily · ${todayKey()}` : 'Random career'}</span>
-        <button className="chip" onClick={() => setSeed(`reveal-random-${Date.now()}`)}>🎲 New random career</button>
-        {!daily && <button className="chip" onClick={() => setSeed(`reveal-${todayKey()}`)}>Back to today's</button>}
+        <button className="chip" onClick={() => setSeed(randomKey('reveal', era))}>🎲 New random career</button>
+        {!daily && <button className="chip" onClick={() => setSeed(dailyKey('reveal', era))}>Back to today's</button>}
       </div>
       <div className="card connect-card">
         <div className="table-wrap">

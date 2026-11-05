@@ -31,12 +31,12 @@ function ask(kind: string, text: string, right: string, wrong: string[], fact: s
   return { kind, text, options, answer: options.indexOf(right), fact };
 }
 
-export function makeQuiz(fd: FranchiseData, careers: CareerData, graph: Graph, rand: () => number): Question[] {
+export function makeQuiz(fd: FranchiseData, careers: CareerData, graph: Graph, rand: () => number, from = 1960): Question[] {
   const name = (p: number) => graph.data.players[p][0];
-  const nba = fd.teamSeasons.map((s, i) => ({ s, i })).filter(({ s }) => s[1] !== 1 && s[0] >= 1960);
+  const nba = fd.teamSeasons.map((s, i) => ({ s, i })).filter(({ s }) => s[1] !== 1 && s[0] >= from);
   const makers: (() => Question | undefined)[] = [
     () => {
-      const year = pick(Object.keys(CHAMPIONS).map(Number).filter((y) => y >= 1960 && y <= 2026), rand);
+      const year = pick(Object.keys(CHAMPIONS).map(Number).filter((y) => y >= from && y <= 2026), rand);
       const champ = fd.teamSeasons.find((s) => s[0] === year && s[2] === CHAMPIONS[year]);
       if (!champ) return undefined;
       const rivals = shuffle(fd.teamSeasons.filter((s) => s[0] === year && s[6] && s !== champ), rand).map((s) => s[3]);
@@ -58,7 +58,7 @@ export function makeQuiz(fd: FranchiseData, careers: CareerData, graph: Graph, r
     },
     () => {
       const rows = careers.awards['nba mvp'] ?? [];
-      const years = [...new Set(rows.map((r) => r[0]))].filter((y) => y >= 1960);
+      const years = [...new Set(rows.map((r) => r[0]))].filter((y) => y >= from);
       const year = pick(years, rand);
       const voted = rows.filter((r) => r[0] === year).sort((a, b) => b[2] - a[2]);
       const winner = voted.find((r) => r[3]);
@@ -66,7 +66,7 @@ export function makeQuiz(fd: FranchiseData, careers: CareerData, graph: Graph, r
       return ask('MVP', `Who won MVP in ${seasonLabel(year)}?`, name(winner[1]), voted.filter((r) => r !== winner).map((r) => name(r[1])), `${name(winner[1])} took ${(winner[2] * 100).toFixed(0)}% of the vote.`, rand);
     },
     () => {
-      const firsts = fd.draft.filter((d) => d[2] === 1 && d[1] !== 1 && d[0] >= 1960);
+      const firsts = fd.draft.filter((d) => d[2] === 1 && d[1] !== 1 && d[0] >= from);
       const d = pick(firsts, rand);
       const others = fd.draft.filter((x) => x[0] === d[0] && x[1] === d[1] && x[2] >= 2 && x[2] <= 6).map((x) => x[6]);
       return ask('Draft', `Who was the No. 1 pick in the ${d[0]} draft?`, d[6], shuffle(others, rand), `${franchiseOf(d[4])?.name ?? d[4]} took ${d[6]}${d[7] ? ` out of ${d[7]}` : ''}.`, rand);

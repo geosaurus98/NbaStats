@@ -26,7 +26,7 @@ const PAGES: { to: string; name: string; what: string }[] = [
   { to: '/compare', name: 'Compare', what: 'Up to three current players side by side, with a full report (advanced stats, shot diet, archetype, contract value), their shot maps and how they have done head-to-head.' },
   { to: '/history', name: 'History', what: 'Every season since 1946-47: careers, comparisons across eras, Hall of Fame odds, all-time leaders, greatest teams, roster continuity and on this date.' },
   { to: '/degrees', name: '6 Degrees', what: 'How any two players connect through teammates.' },
-  { to: '/games', name: 'Games', what: 'Daily puzzles: the franchise grid, connect the players, guess the player, stat-line, career reveal, guess the team and trivia.' },
+  { to: '/games', name: 'Games', what: 'Daily puzzles: the franchise grid, connect the players, guess the player, stat-line, career reveal, guess the team and trivia, each in an all-time and a since-2000 version.' },
   { to: '/alerts', name: 'Alerts', what: 'What happened to your team and the players you follow since your last visit, plus optional notifications when your team tips off, is in a close finish, or finishes.' },
 ];
 

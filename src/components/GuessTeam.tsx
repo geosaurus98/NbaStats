@@ -6,20 +6,21 @@ import { Link } from 'react-router-dom';
 import { useAsync } from '../hooks/useAsync';
 import { DETAIL, loadFranchiseData, type FranchiseData } from '../lib/franchiseData';
 import { franchiseOf, FRANCHISES } from '../lib/franchises';
-import { seededRandom, seedFromString, todayKey } from '../lib/games';
+import { seededRandom, seedFromString, todayKey, dailyKey, randomKey, type Era, eraFrom } from '../lib/games';
 import { seasonLabel, type Graph } from '../lib/teammates';
 import { ShareButton } from './ShareButton';
 import { ErrorBox, Loading } from './Status';
 
 const GUESSES = 6;
+/** First season in the all-time version. */
 const FROM = 1980;
 
 /** Memorable NBA team-seasons since 1980: made the playoffs with an SRS of +3 or better, or won fewer than 25. */
-function pool(fd: FranchiseData): number[] {
+function pool(fd: FranchiseData, from: number): number[] {
   const out: number[] = [];
   fd.teamSeasons.forEach((t, i) => {
     const [season, lg, , , w, , playoffs, srs] = t;
-    if (lg !== 0 || season < FROM || !franchiseOf(t[2])) return;
+    if (lg !== 0 || season < from || !franchiseOf(t[2])) return;
     if ((playoffs && (srs ?? 0) >= 3) || w < 25) out.push(i);
   });
   return out;
@@ -50,11 +51,12 @@ interface State {
   done: boolean;
 }
 
-export function GuessTeam({ graph }: { graph: Graph }) {
+export function GuessTeam({ graph, era }: { graph: Graph; era: Era }) {
   const fd = useAsync(() => loadFranchiseData(), []);
-  const [seed, setSeed] = useState(() => `team-${todayKey()}`);
-  const daily = seed === `team-${todayKey()}`;
-  const picks = useMemo(() => (fd.data ? pool(fd.data) : []), [fd.data]);
+  const from = eraFrom(era, FROM);
+  const [seed, setSeed] = useState(() => dailyKey('team', era));
+  const daily = seed === dailyKey('team', era);
+  const picks = useMemo(() => (fd.data ? pool(fd.data, from) : []), [fd.data, from]);
   const target = picks.length ? picks[Math.floor(seededRandom(seedFromString(seed))() * picks.length)] : undefined;
   const [state, setState] = useState<State>(() => load<State>(seed) ?? { guesses: [], done: false });
   const [team, setTeam] = useState('');
@@ -106,8 +108,8 @@ export function GuessTeam({ graph }: { graph: Graph }) {
       <p className="muted">Which team-season is this? Pick the franchise and the season. {GUESSES} guesses; each miss tells you if the team and the season are right, and shows another clue. Teams count as today’s franchise (Seattle is OKC).</p>
       <div className="actions">
         <span className="chip static">{daily ? `Daily · ${todayKey()}` : 'Random team'}</span>
-        <button className="chip" onClick={() => setSeed(`team-random-${Date.now()}`)}>🎲 New random team</button>
-        {!daily && <button className="chip" onClick={() => setSeed(`team-${todayKey()}`)}>Back to today's</button>}
+        <button className="chip" onClick={() => setSeed(randomKey('team', era))}>🎲 New random team</button>
+        {!daily && <button className="chip" onClick={() => setSeed(dailyKey('team', era))}>Back to today's</button>}
       </div>
       <div className="card connect-card">
         <dl className="clue-list">
@@ -135,7 +137,7 @@ export function GuessTeam({ graph }: { graph: Graph }) {
             </select>
             <select aria-label="Season" value={season} onChange={(e) => setSeason(e.target.value)}>
               <option value="">Season…</option>
-              {Array.from({ length: lastYear - FROM + 1 }, (_, i) => lastYear - i).map((y) => (
+              {Array.from({ length: lastYear - from + 1 }, (_, i) => lastYear - i).map((y) => (
                 <option key={y} value={y}>{seasonLabel(y)}</option>
               ))}
             </select>
