@@ -923,3 +923,23 @@ th.sorted button.link { color: var(--accent); }
 .poll-move { display: flex; gap: 4px; }
 .poll-move .chip { min-width: 2rem; }
 @media (max-width: 640px) { .poll li { grid-template-columns: 1.6rem 1fr auto auto; gap: 0.35rem; } }
+
+/* Your awards ballot */
+.ballot { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.ballot .card { margin: 0; }
+.ballot-list { padding-left: 1.4rem; margin: 0.25rem 0; }
+.ballot-list li { margin-bottom: 6px; }
+.ballot-list select { width: 100%; max-width: 100%; }
+.ballot-model { display: block; }
+
+/* Pick'em */
+.pick-list { list-style: none; padding: 0; margin: 0.5rem 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+.pick-row { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: center; }
+.pick-when { grid-column: 1 / -1; }
+.pick-team { justify-content: center; }
+.pick-chance { opacity: 0.8; }
+
+/* Starting lineups strip: one square per game */
+.starter-strip { display: flex; flex-wrap: wrap; gap: 2px; margin: 0.5rem 0 1rem; }
+.starter-cell { width: 12px; height: 12px; border-radius: 2px; display: block; }
+.starter-cell:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }

@@ -62,6 +62,7 @@ export function Game() {
         <Link to={day ? `/scores?date=${day}` : '/scores'}>← {day ? formatDay(toISODate(new Date(game.date))) : 'Scores'}</Link>
         {game.venue && ` · ${game.venue}`}
         {game.note && ` · ${game.note}`}
+        {data.officials?.length ? <> · <Link to="/insights?tab=refs">Officials</Link>: {data.officials.join(', ')}</> : null}
       </p>
       <div className="scorebug">
         <BugTeam c={game.away} showScore={game.state !== 'pre'} />

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PlayerDevelopment } from '../components/Development';
 import { RestCard } from '../components/SeasonExtras';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { fetchAthlete, fetchGameLog, playerAssistPartners, seasonShots, snapshotPlayers } from '../api/espn';
@@ -217,6 +218,7 @@ export function Player() {
       {tab === 'career' && (
         <>
           {type === 'regular' && <AgingCurve playerId={id} season={season.year} />}
+          <PlayerDevelopment playerId={id} season={season.year} />
           <SalaryHistory playerId={id} />
           {p?.name && <p className="small"><Link to={`/history?tab=careers&p=${encodeURIComponent(p.name)}`}>Full career, season by season →</Link></p>}
         </>

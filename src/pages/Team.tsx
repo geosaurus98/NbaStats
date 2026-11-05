@@ -23,6 +23,7 @@ import { TeamPayroll } from '../components/TeamPayroll';
 import { DEFAULT_SEASON, seasonInfo } from '../lib/seasons';
 import { CoachCard } from '../components/Staff';
 import { ComebacksCard } from '../components/SeasonExtras';
+import { StartingLineups } from '../components/StartingLineups';
 import { PageTabs, usePageTab, type PageTab } from '../components/PageTabs';
 import { formatShortDate, formatTime, parseISODate, toISODate } from '../lib/dates';
 import { downloadFile, gamesToICS } from '../lib/ics';
@@ -137,6 +138,7 @@ export function Team() {
       {tab === 'lineups' && (
         <>
           {results.length > 0 && <TeamLineups teamId={id} season={season.year} seasonType={type} />}
+          {type === 2 && <StartingLineups teamId={id} season={season.year} />}
           <LineupExplorer teamId={id} season={season.year} type={type} />
           <RotationChart teamId={id} season={season.year} type={type} />
           <ClutchLineups teamId={id} season={season.year} type={type} />

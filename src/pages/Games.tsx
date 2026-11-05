@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { StatLineGame } from '../components/StatLineGame';
 import { TriviaGame } from '../components/TriviaGame';
 import { GuessPlayer } from '../components/GuessPlayer';
+import { CareerReveal } from '../components/CareerReveal';
 import { ShareButton } from '../components/ShareButton';
 import { HigherLower } from '../components/HigherLower';
 import { PlayerDatalist } from '../components/PlayerInput';
@@ -52,6 +53,7 @@ function GamesPage({ graph }: { graph: Graph }) {
     { id: 'connect', label: 'Connect the players' },
     { id: 'guess', label: 'Guess the player' },
     { id: 'statline', label: 'Who am I?' },
+    { id: 'reveal', label: 'Career reveal' },
     { id: 'trivia', label: 'Trivia' },
     { id: 'higher', label: 'Higher or lower' },
   ];
@@ -69,6 +71,7 @@ function GamesPage({ graph }: { graph: Graph }) {
       {tab === 'connect' && <ConnectGame graph={graph} />}
       {tab === 'guess' && <GuessPlayer graph={graph} />}
       {tab === 'statline' && <StatLineGame graph={graph} />}
+      {tab === 'reveal' && <CareerReveal graph={graph} />}
       {tab === 'trivia' && <TriviaGame graph={graph} />}
       {tab === 'higher' && <HigherLower graph={graph} />}
       <p className="muted small">Based on every BAA/NBA/ABA roster since 1946-47, grouped into today's franchises (e.g. Seattle counts as OKC).</p>

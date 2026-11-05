@@ -24,7 +24,7 @@ export interface TimeoutTotals {
 }
 
 /** A team's own timeout (not an official or TV timeout). */
-export const isTeamTimeout = (p: { text: string; teamId: string }) => !!p.teamId && /time ?out/i.test(p.text) && !/official|tv |media/i.test(p.text);
+export const isTeamTimeout = (p: { text: string; teamId: string }) => !!p.teamId && /time ?out/i.test(p.text) && !/official|tv |media|technical|turnover/i.test(p.text);
 
 interface Moment {
   team: string;

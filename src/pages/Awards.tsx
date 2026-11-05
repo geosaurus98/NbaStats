@@ -13,6 +13,8 @@ import { useSeason } from '../SeasonContext';
 import { Awards as AwardsHistory } from '../components/AllTime';
 import { Loading } from '../components/Status';
 import { useTeammateGraph } from '../lib/teammateStore';
+import { MoreAwardRace, YourBallot } from '../components/AwardsMore';
+import { MORE_AWARDS } from '../lib/awardsMore';
 
 /** Every season's award winners and MVP voting (moved here from History). */
 function PastAwards() {
@@ -35,6 +37,9 @@ export function Awards() {
   const award = (AWARDS.find((a) => a.id === params.get('award'))?.id ?? 'mvp') as AwardId;
   const past = params.get('award') === 'history';
   const allTeams = params.get('award') === 'teams';
+  const more = MORE_AWARDS.find((a) => a.id === params.get('award'))?.id;
+  const ballot = params.get('award') === 'ballot';
+  const other = past || allTeams || !!more || ballot;
   const snap = seasonSnapshot(season.year);
   const model = useMemo(() => (snap ? candidates(snap) : undefined), [snap]);
   const ranked = useMemo(() => (model ? rankAward(award, model.list, model.leagueDrtg) : []), [model, award]);
@@ -63,13 +68,21 @@ export function Awards() {
       <h2 className="sr-only">Award races</h2>
       <div className="tabs">
         {AWARDS.map((a) => (
-          <button key={a.id} className={a.id === award && !past && !allTeams ? 'active' : ''} aria-pressed={a.id === award && !past && !allTeams} onClick={() => setParams({ award: a.id }, { replace: true })}>{a.name}</button>
+          <button key={a.id} className={a.id === award && !other ? 'active' : ''} aria-pressed={a.id === award && !other} onClick={() => setParams({ award: a.id }, { replace: true })}>{a.name}</button>
         ))}
+        {MORE_AWARDS.map((a) => (
+          <button key={a.id} className={more === a.id ? 'active' : ''} aria-pressed={more === a.id} onClick={() => setParams({ award: a.id }, { replace: true })}>{a.name}</button>
+        ))}
+        <button className={ballot ? 'active' : ''} aria-pressed={ballot} onClick={() => setParams({ award: 'ballot' }, { replace: true })}>Your ballot</button>
         <button className={allTeams ? 'active' : ''} aria-pressed={allTeams} onClick={() => setParams({ award: 'teams' }, { replace: true })}>All-NBA teams</button>
         <button className={past ? 'active' : ''} aria-pressed={past} onClick={() => setParams({ award: 'history' }, { replace: true })}>Past winners & voting</button>
       </div>
       {past ? (
         <PastAwards />
+      ) : more ? (
+        <MoreAwardRace award={more} season={season.year} done={done} />
+      ) : ballot ? (
+        <YourBallot season={season.year} />
       ) : allTeams ? (
         model?.list.length ? <AllTeams list={model.list} leagueDrtg={model.leagueDrtg} teams={teams} done={done} /> : <Empty>No box-score totals for this season yet.</Empty>
       ) : !model?.list.length ? (

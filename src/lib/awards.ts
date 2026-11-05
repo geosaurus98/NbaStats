@@ -17,6 +17,8 @@ export interface Candidate {
   name: string;
   teamId: string;
   gp: number;
+  /** Games started. */
+  gs: number;
   teamGames: number;
   mpg: number;
   ppg: number;
@@ -95,6 +97,7 @@ export function candidates(snap: SeasonSnapshot): { list: Candidate[]; leagueDrt
         name: snap.players?.[r[0]] ?? r[0],
         teamId: r[1],
         gp: g,
+        gs: v('gs'),
         teamGames: team?.[1] ?? g,
         mpg: v('min') / g,
         ppg: v('pts') / g,

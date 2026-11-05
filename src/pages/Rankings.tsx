@@ -14,6 +14,8 @@ import { ScheduleAheadTab } from '../components/InsightsMore';
 import { TeamStyles } from '../components/MoreGraphs';
 import { PointsBySource } from '../components/ShotGraphs';
 import { ContinuityTable, InjuryTable } from '../components/SeasonExtras';
+import { TimeoutTable } from '../components/Officiating';
+import { StarterStability } from '../components/StartingLineups';
 
 interface Col {
   key: string;
@@ -57,7 +59,9 @@ const TABS = [
   { id: 'runs', label: 'Scoring runs' },
   { id: 'rest', label: 'Rest & travel' },
   { id: 'injuries', label: 'Games lost to injury' },
+  { id: 'timeouts', label: 'Timeouts' },
   { id: 'continuity', label: 'Roster continuity' },
+  { id: 'starters', label: 'Starting lineups' },
   { id: 'styles', label: 'Team styles' },
   { id: 'sources', label: 'Points by source' },
   { id: 'schedule', label: 'Schedule ahead' },
@@ -65,8 +69,8 @@ const TABS = [
 type Tab = (typeof TABS)[number]['id'];
 const GROUPS: TabGroup<Tab>[] = [
   { label: 'Ratings', tabs: TABS.filter((t) => (['table', 'srs', 'factors', 'luck'] as Tab[]).includes(t.id)) },
-  { label: 'Situations', tabs: TABS.filter((t) => (['quarters', 'runs', 'garbage', 'rest', 'injuries'] as Tab[]).includes(t.id)) },
-  { label: 'Style & schedule', tabs: TABS.filter((t) => (['styles', 'sources', 'schedule', 'continuity'] as Tab[]).includes(t.id)) },
+  { label: 'Situations', tabs: TABS.filter((t) => (['quarters', 'runs', 'garbage', 'rest', 'injuries', 'timeouts'] as Tab[]).includes(t.id)) },
+  { label: 'Style & schedule', tabs: TABS.filter((t) => (['styles', 'sources', 'schedule', 'continuity', 'starters'] as Tab[]).includes(t.id)) },
 ];
 
 export function Rankings() {
@@ -78,7 +82,7 @@ export function Rankings() {
     <section>
       <div className="page-head">
         <h1>{season.label} team rankings</h1>
-        {!['luck', 'srs', 'rest', 'styles', 'sources', 'schedule', 'injuries', 'continuity'].includes(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
+        {!['luck', 'srs', 'rest', 'styles', 'sources', 'schedule', 'injuries', 'continuity', 'timeouts', 'starters'].includes(tab) && <SeasonTypeToggle value={type} onChange={setType} />}
       </div>
       <GroupedTabs groups={GROUPS} active={tab} onChange={(t) => setParams(t === 'table' ? {} : { tab: t }, { replace: true })} />
       {tab === 'table' && <RankingTable season={season.year} type={type} />}
@@ -92,7 +96,9 @@ export function Rankings() {
       {tab === 'styles' && <TeamStyles season={season.year} />}
       {tab === 'sources' && <PointsBySource season={season.year} />}
       {tab === 'injuries' && <InjuryTable season={season.year} />}
+      {tab === 'timeouts' && <TimeoutTable season={season.year} />}
       {tab === 'continuity' && <ContinuityTable season={season.year} />}
+      {tab === 'starters' && <StarterStability season={season.year} />}
       {tab === 'schedule' && <ScheduleAheadTab season={season.year} start={season.start} end={season.regularEnd} />}
     </section>
   );
