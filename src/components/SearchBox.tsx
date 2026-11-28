@@ -60,6 +60,7 @@ const PAGES = [
   { label: 'Starting lineups', to: '/rankings?tab=starters', words: 'starting lineups starters five changes rotation' },
   { label: 'Career reveal (puzzle)', to: '/games?tab=reveal', words: 'career reveal puzzle guess player season by season' },
   { label: 'Guess the team (puzzle)', to: '/games?tab=team', words: 'guess the team puzzle team season quiz' },
+  { label: 'Perfect Season (82-0 draft game)', to: '/games?tab=perfect', words: '82-0 82 0 perfect season roll team era draft starting five simulate undefeated game' },
   { label: 'Clutch shots (game-tying and go-ahead)', to: '/insights?tab=clutchshots', words: 'clutch shots game winner buzzer beater go ahead tying last minute' },
   { label: 'Season review', to: '/review', words: 'season review wrap up recap year in review champion summary' },
   { label: 'Contract-year watch', to: '/salaries#contract-year', words: 'contract year expiring free agent option deal' },

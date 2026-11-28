@@ -5,6 +5,7 @@ import { TriviaGame } from '../components/TriviaGame';
 import { GuessPlayer } from '../components/GuessPlayer';
 import { CareerReveal } from '../components/CareerReveal';
 import { GuessTeam } from '../components/GuessTeam';
+import { PerfectSeason } from '../components/PerfectSeason';
 import { ShareButton } from '../components/ShareButton';
 import { HigherLower } from '../components/HigherLower';
 import { PlayerDatalist } from '../components/PlayerInput';
@@ -56,6 +57,7 @@ function GamesPage({ graph }: { graph: Graph }) {
     { id: 'statline', label: 'Who am I?' },
     { id: 'reveal', label: 'Career reveal' },
     { id: 'team', label: 'Guess the team' },
+    { id: 'perfect', label: 'Perfect Season (82-0)' },
     { id: 'trivia', label: 'Trivia' },
     { id: 'higher', label: 'Higher or lower' },
   ];
@@ -97,6 +99,7 @@ function GamesPage({ graph }: { graph: Graph }) {
       {tab === 'statline' && <StatLineGame key={era} graph={graph} era={era} />}
       {tab === 'reveal' && <CareerReveal key={era} graph={graph} era={era} />}
       {tab === 'team' && <GuessTeam key={era} graph={graph} era={era} />}
+      {tab === 'perfect' && <PerfectSeason key={era} graph={graph} era={era} />}
       {tab === 'trivia' && <TriviaGame key={era} graph={graph} era={era} />}
       {tab === 'higher' && <HigherLower key={era} graph={graph} era={era} />}
       <p className="muted small">
