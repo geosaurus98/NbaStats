@@ -1,18 +1,18 @@
-// Games → Perfect Season: you're dealt a random team-season each round and
-// take one of its players for an open spot in your starting five. Once all
+// Games → Perfect Season: each round rolls a franchise and an era; take one of
+// that franchise's players from that era for an open spot in your starting five. Once all
 // five are in, the season is played out: can they go 82-0?
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { allStarCounts } from '../lib/careers';
-import { franchiseOf } from '../lib/franchises';
+import { franchiseOf, FRANCHISES } from '../lib/franchises';
 import { dailyKey, eraFrom, randomKey, seededRandom, seedFromString, type Era } from '../lib/games';
-import { deck, distance, FIRST_SEASON, playSeason, rate, SLOTS, type Card, type Slot } from '../lib/perfectSeason';
+import { card, deck, decadeLabel, distance, FIRST_SEASON, playSeason, rate, SLOTS, type Card, type Deal, type Slot } from '../lib/perfectSeason';
 import { seasonLabel, type Graph } from '../lib/teammates';
 import { useCareers } from './CareerStats';
 import { ShareButton } from './ShareButton';
 import { ErrorBox, Loading } from './Status';
 
-const SKIPS = 2;
+const REROLLS = 2;
 
 interface Pick {
   player: number;
@@ -21,7 +21,7 @@ interface Pick {
 }
 interface State {
   picks: Partial<Record<Slot, Pick>>;
-  /** Deals used so far (picks plus skips). */
+  /** Rolls used so far (picks plus re-rolls). */
   dealt: number;
   skips: number;
 }
@@ -42,41 +42,50 @@ function save(k: string, v: State) {
   }
 }
 
-const fresh = (): State => ({ picks: {}, dealt: 0, skips: SKIPS });
-const teamName = (code: string) => franchiseOf(code)?.name ?? code;
+const fresh = (): State => ({ picks: {}, dealt: 0, skips: REROLLS });
+const franchiseName = (id: string) => FRANCHISES.find((f) => f.id === id)?.name ?? id;
 
 export function PerfectSeason({ graph, era }: { graph: Graph; era: Era }) {
   const careers = useCareers();
   const [seed, setSeed] = useState(() => dailyKey('perfect', era));
   const daily = seed === dailyKey('perfect', era);
   const [state, setState] = useState<State>(() => load(seed) ?? fresh());
+  const [showAll, setShowAll] = useState(false);
+  const [filter, setFilter] = useState('');
   useEffect(() => {
     setState(load(seed) ?? fresh());
   }, [seed]);
   useEffect(() => save(seed, state), [seed, state]);
 
   const from = eraFrom(era, FIRST_SEASON);
-  const all = useMemo(() => (careers.data ? deck(graph, careers.data, from) : []), [graph, careers.data, from]);
-  // The order teams are dealt in, fixed by the puzzle's seed.
-  const order = useMemo(() => {
-    const rand = seededRandom(seedFromString(seed));
-    const idx = all.map((_, i) => i);
-    for (let i = idx.length - 1; i > 0; i--) {
-      const j = Math.floor(rand() * (i + 1));
-      [idx[i], idx[j]] = [idx[j], idx[i]];
-    }
-    return idx;
-  }, [all, seed]);
+  const all = useMemo(() => (careers.data ? deck(graph, careers.data, from, (code) => franchiseOf(code)?.id) : []), [graph, careers.data, from]);
+  // Each roll: a franchise first, then one of the decades it has enough players for. Fixed by the puzzle's seed and the roll number.
+  const byFranchise = useMemo(() => {
+    const m = new Map<string, Deal[]>();
+    for (const d of all) m.set(d.franchise, [...(m.get(d.franchise) ?? []), d]);
+    return m;
+  }, [all]);
+  const roll = (n: number): Deal | undefined => {
+    const teams = [...byFranchise.keys()].sort();
+    if (!teams.length) return undefined;
+    const rand = seededRandom(seedFromString(`${seed}|roll${n}`));
+    const options = byFranchise.get(teams[Math.floor(rand() * teams.length)])!;
+    return options[Math.floor(rand() * options.length)];
+  };
 
   if (careers.error) return <ErrorBox error={careers.error} />;
-  if (!careers.data || !all.length) return <Loading label="Shuffling every team since 1973-74…" />;
+  if (!careers.data || !all.length) return <Loading label="Loading every roster since 1973-74…" />;
   const data = careers.data;
   const name = (p: number) => graph.data.players[p]?.[0] ?? '';
-  const cardOf = (p: Pick): Card | undefined => all.find((d) => d.season === p.season && d.team === p.team)?.cards.find((c) => c.player === p.player);
+  const cardOf = (p: Pick): Card | undefined => card(data.seasons[p.player] ?? [], p.player, p.season, p.team, data.pos?.[p.player] ?? '');
   const team: Partial<Record<Slot, Card>> = Object.fromEntries(SLOTS.flatMap((s) => (state.picks[s] ? [[s, cardOf(state.picks[s]!)]] : [])).filter(([, c]) => c));
   const open = SLOTS.filter((s) => !state.picks[s]);
+  const TOP = 20;
   const done = open.length === 0;
-  const deal = done ? undefined : all[order[state.dealt % order.length]];
+  const deal = done ? undefined : roll(state.dealt);
+  const matching = deal ? deal.cards.filter((c) => !filter || name(c.player).toLowerCase().includes(filter.toLowerCase())) : [];
+  // The best players first; the rest of the roster on request (or when searching).
+  const shown = showAll || filter ? matching : matching.slice(0, TOP);
   const rating = rate(team);
   const result = done ? playSeason(rating.net, seededRandom(seedFromString(`${seed}|${SLOTS.map((s) => state.picks[s]!.player).join(',')}`))) : undefined;
   const stars = allStarCounts(data);
@@ -85,9 +94,13 @@ export function PerfectSeason({ graph, era }: { graph: Graph; era: Era }) {
 
   const take = (c: Card, slot: Slot) => {
     setState((s) => ({ ...s, picks: { ...s.picks, [slot]: { player: c.player, season: c.season, team: c.team } }, dealt: s.dealt + 1 }));
+    setShowAll(false);
+    setFilter('');
   };
   const skip = () => {
     setState((s) => ({ ...s, dealt: s.dealt + 1, skips: s.skips - 1 }));
+    setShowAll(false);
+    setFilter('');
   };
   const verdict = !result
     ? ''
@@ -104,9 +117,9 @@ export function PerfectSeason({ graph, era }: { graph: Graph; era: Era }) {
   return (
     <>
       <p className="muted">
-        Each round you’re dealt a real team-season. Take one of its players for an open spot in your starting five (you get that player as they were that season).
-        Fill all five and the season is played out: can they go 82-0? {SKIPS} skips per game. Players out of position, too many shots for one ball, or too few rebounds cost you.
-        {era === 'all' ? ' Teams come from 1973-74 on, when steals and blocks start in the records.' : ''}
+        Each round rolls a team and an era. Pick any player who played for that franchise then (you get them at their best season there) for an open spot in your starting five.
+        Fill all five and the season is played out: can they go 82-0? {REROLLS} re-rolls per game. Players out of position, too many shots for one ball, or too few rebounds cost you.
+        {era === 'all' ? ' Eras run from the 1970s (1973-74 on, when steals and blocks start in the records) to the 2020s.' : ' Eras: the 2000s, 2010s and 2020s.'}
       </p>
       <div className="actions">
         <span className="chip static">{daily ? `Daily draft · ${seed.slice(-10)}` : 'Random draft'}</span>
@@ -140,14 +153,18 @@ export function PerfectSeason({ graph, era }: { graph: Graph; era: Era }) {
       {deal && (
         <div className="card">
           <h2 className="perfect-round">
-            Round {SLOTS.length - open.length + 1}: {seasonLabel(deal.season)} {teamName(deal.team)}
+            Round {SLOTS.length - open.length + 1}: <span className="roll">🎲 {franchiseName(deal.franchise)}</span> <span className="roll">🎲 {decadeLabel(deal.decade)}</span>
           </h2>
-          <p className="muted small">Pick a player by choosing the spot to put them in (a green outline is their natural position). Stats are per game that season (points / rebounds / assists).</p>
+          <div className="grid-input inline">
+            <input aria-label="Find a player in this roll" placeholder={`Find a player (${deal.cards.length} in this roll)…`} value={filter} onChange={(e) => setFilter(e.target.value)} />
+          </div>
+          <p className="muted small">Pick a player by choosing the spot to put them in (a green outline is their natural position). Each player is shown at their best season for this franchise in this era; stats are per game (points / rebounds / assists).</p>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th className="left">Player</th>
+                  <th className="left">Best season</th>
                   <th>Pos</th>
                   <th>G</th>
                   <th>MIN</th>
@@ -158,12 +175,13 @@ export function PerfectSeason({ graph, era }: { graph: Graph; era: Era }) {
                 </tr>
               </thead>
               <tbody>
-                {deal.cards.map((c) => (
+                {shown.map((c) => (
                   <tr key={c.player}>
                     <td className="left nowrap">
                       {name(c.player)}
                       {(stars.get(c.player) ?? 0) > 0 ? <span className="muted small" title="All-Star selections in their career"> ★{stars.get(c.player)}</span> : null}
                     </td>
+                    <td className="left nowrap small">{seasonLabel(c.season)} <span className="muted">{c.team}</span></td>
                     <td>{c.pos || '–'}</td>
                     <td>{c.g}</td>
                     <td>{c.mpg.toFixed(1)}</td>
@@ -182,7 +200,11 @@ export function PerfectSeason({ graph, era }: { graph: Graph; era: Era }) {
               </tbody>
             </table>
           </div>
-          {state.skips > 0 && <button className="chip" onClick={skip}>Skip this team ({state.skips} left)</button>}
+          {!showAll && !filter && matching.length > TOP && (
+            <button className="chip" onClick={() => setShowAll(true)}>Show all {matching.length} players</button>
+          )}{' '}
+          {filter && matching.length === 0 && <p className="muted small">No one by that name in this roll.</p>}
+          {state.skips > 0 && <button className="chip" onClick={skip}>🎲 Re-roll team and era ({state.skips} left)</button>}
         </div>
       )}
 

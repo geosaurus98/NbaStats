@@ -962,3 +962,4 @@ th.sorted button.link { color: var(--accent); }
 .small-chip.fit { border-color: var(--win); }
 @media (max-width: 640px) { .perfect-lineup { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .perfect-round { font-size: 1.05rem; margin-top: 0; }
+.roll { display: inline-block; border: 1px solid var(--border); border-radius: 6px; padding: 0 0.4rem; margin-right: 0.3rem; background: var(--surface); }

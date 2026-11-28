@@ -1,7 +1,8 @@
-// Perfect Season: draft a starting five, one player from each randomly dealt
-// team-season, and see whether they can go 82-0. Ratings come from each
-// player's box-score line in that season (careers.json); the season is
-// simulated game by game against opponents of varying strength.
+// Perfect Season: roll a franchise and an era, pick one of that franchise's
+// players from that era, five times over, and see whether they can go 82-0.
+// Ratings come from each player's box-score line in their best season there
+// (careers.json); the season is simulated game by game against opponents of
+// varying strength.
 import { COL, type CareerData, type SeasonRow } from './careers';
 import type { Graph } from './teammates';
 
@@ -45,22 +46,48 @@ export function card(rows: SeasonRow[], player: number, season: number, team: st
   return { player, season, team, pos, g: r[COL.g], mpg: r[COL.mp] / r[COL.g], ppg: v('pts') / r[COL.g], rpg: v('trb') / r[COL.g], apg: v('ast') / r[COL.g], gs36, shots36: fga + 0.44 * fta, reb36: trb };
 }
 
-/** A team-season to pick from: its playable cards, best first. */
+/** A roll: one franchise and one decade, with every player who played for it then, each at their best season there. */
 export interface Deal {
-  season: number;
-  team: string;
+  /** Franchise id (today's franchise, e.g. OKC for Seattle). */
+  franchise: string;
+  /** The decade, e.g. 1990 for 1990-91 to 1999-00 (see decadeOf). */
+  decade: number;
   cards: Card[];
 }
 
-/** Every NBA team-season from `from` on with at least five playable cards. */
-export function deck(graph: Graph, careers: CareerData, from: number): Deal[] {
-  const out: Deal[] = [];
+/** The decade a season belongs to, by the year it ends: 1990-91 to 1999-00 are the 1990s. */
+export const decadeOf = (season: number) => Math.floor((season - 1) / 10) * 10;
+export const decadeLabel = (decade: number) => `${decade}s`;
+
+/** How much a card adds to a team (the talent part of the rating). */
+export const impact = (c: Card) => (c.gs36 - 12) * 0.38 * Math.min(1, c.mpg / 34);
+
+/**
+ * Every franchise and decade from `from` on with at least five playable
+ * players. A player who played for the franchise across the decade appears
+ * once, at their best season there.
+ */
+export function deck(graph: Graph, careers: CareerData, from: number, franchiseOf: (code: string) => string | undefined): Deal[] {
+  const buckets = new Map<string, Map<number, Card>>();
   for (const [season, league, team, ids] of graph.data.rosters) {
     if (league !== 'NBA' || season < from) continue;
-    const cards = ids.map((p) => card(careers.seasons[p] ?? [], p, season, team, careers.pos?.[p] ?? '')).filter((c): c is Card => !!c);
-    if (cards.length >= 5) out.push({ season, team, cards: cards.sort((a, b) => b.mpg - a.mpg) });
+    const franchise = franchiseOf(team);
+    if (!franchise) continue;
+    const key = `${franchise}|${decadeOf(season)}`;
+    const best = buckets.get(key) ?? new Map<number, Card>();
+    for (const p of ids) {
+      const c = card(careers.seasons[p] ?? [], p, season, team, careers.pos?.[p] ?? '');
+      if (c && (!best.has(p) || impact(c) > impact(best.get(p)!))) best.set(p, c);
+    }
+    buckets.set(key, best);
   }
-  return out;
+  return [...buckets]
+    .filter(([, m]) => m.size >= 5)
+    .map(([key, m]) => {
+      const [franchise, decade] = key.split('|');
+      return { franchise, decade: Number(decade), cards: [...m.values()].sort((a, b) => impact(b) - impact(a)) };
+    })
+    .sort((a, b) => a.franchise.localeCompare(b.franchise) || a.decade - b.decade);
 }
 
 const ORDER: Record<string, number> = { PG: 0, G: 0.5, SG: 1, SF: 2, F: 2.5, PF: 3, C: 4 };
@@ -75,7 +102,7 @@ export interface Rating {
 /** Points per 100 possessions better than an average team. */
 export function rate(team: Partial<Record<Slot, Card>>): Rating {
   const cards = SLOTS.map((s) => team[s]).filter((c): c is Card => !!c);
-  const talent = cards.reduce((a, c) => a + (c.gs36 - 12) * 0.38 * Math.min(1, c.mpg / 34), 0);
+  const talent = cards.reduce((a, c) => a + impact(c), 0);
   const fit = -1.5 * SLOTS.filter((s) => team[s] && distance(team[s]!.pos, s) >= 2).length;
   const shots = cards.reduce((a, c) => a + c.shots36, 0);
   const oneBall = -0.15 * Math.max(0, shots - 90);
